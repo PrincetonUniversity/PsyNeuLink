@@ -22,6 +22,22 @@ marginal fitting uses the earlier simulation-block approach. The
 [legacy fitting guide](fitting_acceleration/LEGACY_FITTING.md) documents that
 marginal policy and NDT profiling, which requires the marginal likelihood.
 
+Fixed fits and conditioned adaptive fits now run through `pec.run(inputs=inputs)`.
+The adaptive policy lives in `PECOptimizationFunction`, configured with
+`fit_strategy="adaptive"` and `adaptive_options`; the Dawa driver supplies the
+model, data, budgets, and reporting callback. Final rescoring uses the public
+`pec.log_likelihood_batch(...)` method with independent seeds and a requested
+particle count. The marginal adaptive research policy remains in the Dawa scripts.
+See [the PEC interface](CONDITIONED_STAGED_FITTING.md#pec-interface) for details.
+
+For external optimizers, `pec.log_likelihood_batch(..., adaptive=True,
+adaptive_options={...})` selects a particle budget and returns mean log scores,
+Monte Carlo standard errors, and precision/work diagnostics. This is separate
+from the adaptive fitting strategy; ordinary batch calls still return score
+arrays. See [adaptive likelihood evaluation](CONDITIONED_STAGED_FITTING.md#adaptive-likelihood-evaluation)
+for paired comparisons, particle limits, and the distinction between Monte Carlo
+precision and likelihood bias.
+
 ## Install and check the GPU
 
 Use this checkout's `feat/likelihood_compile` branch, Python 3.10 or newer, and

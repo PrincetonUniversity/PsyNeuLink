@@ -3,7 +3,7 @@
 Sampling callbacks return per-trial densities with constant prior fraction.
 Each independent block simulates whole histories. No trial is resampled or
 treated as an independent Monte Carlo replicate in the uncertainty estimate.
-Conditioned likelihoods use dawa_conditioned_fit instead: their resampled state
+Conditioned likelihoods use PEC's adaptive policy instead: their resampled state
 histories cannot be combined by pooling these per-trial marginal densities.
 """
 
@@ -13,6 +13,11 @@ import time
 import numpy as np
 import optuna
 from optuna.distributions import FloatDistribution
+
+from psyneulink.core.components.functions.nonstateful.adaptivefit import (
+    CovarianceCmaEsSampler,
+    learned_covariance,
+)
 
 
 PENALTY = -1.0e10
@@ -71,55 +76,6 @@ def ranking_uncertainty(scores, pair_se, valid, tolerance):
     regret = np.maximum(0.0, 2.5 * pair_se[order[i], order[j]] - gap)
     uncertainty = float((np.abs(weights[i] - weights[j]) * regret).max())
     return uncertainty, uncertainty > tolerance
-
-
-def learned_covariance(study, names):
-    """Isolate the Optuna/cmaes bridge used at a precision-stage transition.
-
-    Optuna has no public accessor for its learned CMA covariance. Take the
-    last serialized state (which can lag one population), and validate it
-    before reusing it with the identical normalized parameter search space.
-    """
-    sampler = study.sampler
-    if not isinstance(sampler, optuna.samplers.CmaEsSampler):
-        raise TypeError("Adaptive fitting requires an Optuna CmaEsSampler")
-    optimizer = sampler._restore_optimizer(sampler._get_trials(study))
-    if optimizer is None:
-        return None
-    covariance = np.asarray(optimizer._C, dtype=float).copy()
-    if (
-        covariance.shape != (len(names), len(names))
-        or not np.isfinite(covariance).all()
-    ):
-        raise RuntimeError("Invalid CMA covariance at the refinement transition")
-    if not np.allclose(covariance, covariance.T, atol=1e-12, rtol=1e-10):
-        raise RuntimeError("Asymmetric CMA covariance at the refinement transition")
-    covariance = (covariance + covariance.T) / 2
-    if np.linalg.eigvalsh(covariance).min() <= 0:
-        raise RuntimeError("Nonpositive CMA covariance at the refinement transition")
-    return covariance
-
-
-class CovarianceCmaEsSampler(optuna.samplers.CmaEsSampler):
-    """A local restart retaining correlations in Optuna's normalized order."""
-
-    def __init__(self, *, covariance, parameter_order, **options):
-        super().__init__(**options)
-        self._initial_covariance = (
-            None if covariance is None else np.array(covariance, copy=True)
-        )
-        self._covariance_parameter_order = tuple(parameter_order)
-
-    def _init_optimizer(self, trans, direction):
-        optimizer = super()._init_optimizer(trans, direction)
-        if self._initial_covariance is not None:
-            if tuple(trans._search_space) != self._covariance_parameter_order:
-                raise RuntimeError(
-                    "Refinement covariance does not match the parameter order"
-                )
-            optimizer._C = self._initial_covariance.copy()
-            optimizer._B = optimizer._D = None
-        return optimizer
 
 
 @dataclass

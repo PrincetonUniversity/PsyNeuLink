@@ -1159,6 +1159,75 @@ class ParameterEstimationComposition(Composition):
             context=context
         )
 
+    @handle_external_context()
+    def log_likelihood_batch(
+        self,
+        parameter_values,
+        *,
+        inputs=None,
+        num_estimates=None,
+        seed=None,
+        adaptive=False,
+        adaptive_options=None,
+        context=None,
+    ):
+        """Score parameter rows with the configured batched likelihood.
+
+        Rows follow ``controller.function.fit_param_names``. Inputs are keyed by
+        model input nodes as in run(). By default returns one total log score per row.
+        An optional particle count scales the histogram pseudocount to preserve
+        alpha/N; neither the configured fitting budget nor its seed is changed.
+        Conditioned evaluations each restart the complete observed history.
+
+        With ``adaptive=True``, returns an ``AdaptiveLikelihoodResult``. The
+        supplied ``num_estimates`` (or PEC's configured count) caps particles per
+        replicate. All rows use the same count. Pilot runs increase it until the
+        estimated Monte Carlo SE of their mean log scores meets the target or
+        the cap is reached. Fresh, independent replicates at the selected count
+        supply the returned scores and precision diagnostics. A failed final
+        precision check is reported, not silently retried until it passes.
+
+        ``adaptive_options`` is a mapping with the following optional keys:
+
+        * ``min_estimates``: starting count (default min(10000, cap)).
+        * ``target_se``: positive target SE in total log-score units (default 0.2).
+        * ``repeats``: independent runs per pilot stage and final block (default
+          8, minimum 2). The target applies to their mean, not to a single run.
+        * ``growth_factor``: integer count multiplier (default 2, minimum 2).
+        * ``reference_index``: optional row index; target the SE of paired score
+          differences against that row instead of absolute scores. Requires at
+          least two rows. Absolute-score SEs are still returned.
+        * ``reserved_seeds``: seeds excluded from both pilot and final runs.
+
+        Adaptive scoring is independent of ``fit_strategy`` and the optimizer;
+        it supports the ordinary marginal, conditioned, and deterministic-history
+        batched likelihoods. It requires strict truncation checks and does not
+        yet support ``batched_observations``. ``seed`` seeds the replicate stream,
+        defaulting to the configured batched seed or PEC initial seed. Individual
+        seeds are recorded in the result for fixed-budget replay.
+
+        The returned mean log score is a finite-particle criterion. Its empirical
+        SE does not measure finite-particle bias or observation approximation
+        error, and meeting the target is not an accuracy guarantee. Repeated
+        filters are never combined by pooling their per-trial densities. Check
+        ``result.converged`` and ``result.stop_reason`` before trusting precision.
+        """
+        function = self.controller.function
+        if self.data is None or function.batched_backend is None:
+            raise ParameterEstimationCompositionError(
+                "log_likelihood_batch requires data and a batched_backend."
+            )
+        context.composition = self
+        self._prepare_pec_inputs_for_simulation(inputs, context)
+        return function.evaluate_parameter_sets(
+            parameter_values,
+            num_estimates=num_estimates,
+            seed=seed,
+            adaptive=adaptive,
+            adaptive_options=adaptive_options,
+            context=context,
+        )
+
     def _prepare_pec_inputs_for_simulation(self, inputs, context):
         """Normalize, cache, and assign inputs used by PEC optimization and likelihood simulations."""
         if inputs is None:

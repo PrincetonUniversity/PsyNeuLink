@@ -306,39 +306,31 @@ def test_pec_objective_routes_training_and_rescoring_with_complete_history(
     )
     monkeypatch.setattr(function, "_compile_batched_plan", lambda: plan)
     monkeypatch.setattr(function, "_batched_outcome_indices", lambda _: [0, 1])
-    training = function._make_objective_func()._batched_parameter_sets(STARTS)
+    training = pec.log_likelihood_batch(STARTS, inputs=inputs)
     np.testing.assert_array_equal(training, [1.0, 2.0])
-    # Rescoring must build the same conditioned closure at the fresh budget and
-    # preserve the contamination fraction by scaling alpha with particle count.
-    pec.controller.num_estimates = 128
-    function.batched_pseudocount = 1.0
-    function.batched_seed = 8101
-    validation = function._make_objective_func()._batched_parameter_sets(STARTS)
+    # Public rescoring changes precision while preserving the observation law.
+    validation = pec.log_likelihood_batch(
+        STARTS, inputs=inputs, num_estimates=128, seed=8101
+    )
     np.testing.assert_array_equal(validation, training)
     if likelihood == "conditioned":
-        from dawa_conditioned_fit import conditioned_scores
-
-        scores = conditioned_scores(
-            pec,
-            STARTS,
-            32,
-            42,
-            reference_estimates=64,
-            pseudocount=0.5,
-            invalid=[],
-            work={},
+        scores = pec.log_likelihood_batch(
+            STARTS, inputs=inputs, num_estimates=32, seed=42
         )
         np.testing.assert_array_equal(scores, training)
-        assert (
-            pec.controller.num_estimates,
-            function.batched_seed,
-            function.batched_pseudocount,
-        ) == (128, 8101, 1.0)
+    assert (
+        pec.controller.num_estimates,
+        function.batched_seed,
+        function.batched_pseudocount,
+    ) == (64, 29, 0.5)
     for index, (method, received_inputs, parameters, kwargs) in enumerate(calls):
         assert method == likelihood
         assert len(parameters) == 2
         np.testing.assert_array_equal(
-            received_inputs[node(model, "Task Input").name], frame[["T1", "T2"]]
+            np.asarray(received_inputs[node(model, "Task Input").name]).reshape(
+                len(frame), 2
+            ),
+            frame[["T1", "T2"]],
         )
         np.testing.assert_array_equal(
             kwargs["data"], frame[["decision", "response_time"]]
@@ -355,6 +347,78 @@ def test_pec_objective_routes_training_and_rescoring_with_complete_history(
             np.testing.assert_array_equal(
                 mode.values, [start[4], start[5], start[4], start[5]]
             )
+
+    calls.clear()
+    adaptive = pec.log_likelihood_batch(
+        STARTS,
+        inputs=inputs,
+        adaptive=True,
+        seed=8103,
+        adaptive_options=dict(min_estimates=16, repeats=2, reference_index=0),
+    )
+    np.testing.assert_array_equal(adaptive.log_likelihood, training)
+    assert adaptive.num_estimates == 16 and adaptive.converged
+    assert len(calls) == 4
+    for method, _, parameters, kwargs in calls:
+        assert method == likelihood
+        assert kwargs["num_estimates"] == 16
+        assert kwargs["pseudocount"] == 0.125
+        np.testing.assert_array_equal(kwargs["include_mask"], [False, True, True, True])
+        for row, start in zip(parameters, STARTS, strict=True):
+            mode = next(value for key, value in row.items() if key.endswith(".mode"))
+            np.testing.assert_array_equal(
+                mode.values, [start[4], start[5], start[4], start[5]]
+            )
+
+
+@pytest.mark.triton_gpu
+@pytest.mark.batched
+def test_gpu_adaptive_likelihood_replays_dawa_with_noise_in_every_layer(
+    tmp_path, design
+):
+    path = tmp_path / "subject.csv"
+    design.to_csv(path, index=False)
+    frame = load_subject(path, 42)
+    model, inputs, outputs = build_model(
+        trials=len(frame), c_noise=0.1, s_noise=0.1, d_noise=0.1, r_noise=0.1
+    )
+    inputs[node(model, "Task Input")] = frame[["T1", "T2"]].to_numpy()
+    inputs[node(model, "Stimulus Input")] = frame[["S1", "S2", "S3", "S4"]].to_numpy()
+    args = SimpleNamespace(
+        likelihood="conditioned",
+        evaluations=11,
+        max_steps=2000,
+        simulation_seed=29,
+        pseudocount=0.5,
+        population=2,
+        estimates=64,
+    )
+    pec = make_fit_pec(model, inputs, outputs, frame, args)
+    result = pec.log_likelihood_batch(
+        STARTS,
+        inputs=inputs,
+        adaptive=True,
+        seed=8103,
+        adaptive_options=dict(
+            min_estimates=16, repeats=2, target_se=1e6, reference_index=0
+        ),
+    )
+    replay = np.asarray(
+        [
+            pec.log_likelihood_batch(
+                STARTS, inputs=inputs, num_estimates=result.num_estimates, seed=seed
+            )
+            for seed in result.seeds
+        ]
+    )
+    np.testing.assert_array_equal(result.replicate_log_likelihoods, replay)
+    np.testing.assert_array_equal(result.log_likelihood, replay.mean(axis=0))
+    differences = replay - replay[:, 0, None]
+    np.testing.assert_array_equal(
+        result.difference_standard_error, differences.std(axis=0, ddof=1) / np.sqrt(2)
+    )
+    assert pec.controller.num_estimates == 64
+    assert pec.controller.function.batched_seed == 29
 
 
 def test_missing_subject_and_unscored_condition_are_explicit_errors(tmp_path, design):

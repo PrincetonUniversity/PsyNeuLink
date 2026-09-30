@@ -34,7 +34,7 @@ minimum exploration count are checked after a population; the actual transition
 can be a few proposals beyond the nominal count.
 
 Each filter includes **all retained observations**, including the masked rows
-that condition the next trial but do not add a score. At count N, the driver
+that condition the next trial but do not add a score. At count N, PEC
 uses `pseudocount * N / estimates`, keeping the observation contamination law
 constant. It reruns filtering from the model's initial state whenever a score
 is needed at a different count or seed. It never appends particles to an old
@@ -45,6 +45,158 @@ criterion. It does not remove count-dependent bias, and we do not claim an
 unbiased masked likelihood. The high-count checks and final validation remain
 necessary. Cached NDT profiling is still rejected because changing NDT changes
 particle weights and subsequent ancestry.
+
+## PEC interface
+
+The conditioned budget policy is implemented in the library's
+`psyneulink/core/components/functions/nonstateful/adaptivefit.py`. Dawa's driver
+uses the regular PEC execution path. The configuration can also be used with
+other models supported by the batched conditioned likelihood:
+
+```python
+optimizer = pnl.PECOptimizationFunction(
+    method=optuna.samplers.CmaEsSampler(
+        x0=initial_parameters, popsize=10, seed=101, lr_adapt=True,
+    ),
+    max_iterations=3000,
+    batched_backend="triton",
+    batched_max_steps=4000,
+    batched_parameter_batch_size=10,
+    batched_seed=29,
+    batched_strict_truncation=True,
+    conditioned_likelihood=True,
+    fit_strategy="adaptive",
+    adaptive_options={
+        "search_estimates": 10000,
+        "refine_evaluations": 600,
+        "optimizer_seed": 101,
+        "reserved_seeds": [91001, 91002, 91003],
+    },
+    fit_truncation="penalize",
+    # Supply observation bins, support, smoothing, and pseudocount for the model.
+)
+# Supply optimizer as optimization_function when constructing PEC; num_estimates
+# on PEC supplies the reference/refinement particle count (e.g. 100000).
+pec.run(inputs=inputs)
+parameters = pec.optimized_parameter_values
+training_score = pec.optimal_value
+diagnostics = pec.controller.function.fit_diagnostics
+validation_scores = pec.log_likelihood_batch(
+    [list(parameters.values())], inputs=inputs, num_estimates=1000000, seed=91001,
+)
+```
+
+`initial_parameters` must map every PEC fit coordinate name to an on-grid value;
+the names are available from `pec.controller.function.fit_param_names`. If those
+names are needed before creating the sampler, assign the configured study or
+sampler to `pec.controller.function.method` before calling `run`. A study must
+be fresh, optionally with only this starting point queued. Resuming an adaptive
+study is not yet supported. The `optimizer_seed` option seeds refinement with
+that value plus one; set the initial sampler's seed separately as above.
+
+The initial library implementation supports maximizing conditioned batched
+likelihoods with full-covariance CMA-ES, one startup trial, and an explicit
+population size. Unsupported likelihood/optimizer combinations raise. Fixed
+fitting remains the default, and marginal adaptive fitting remains in its
+research driver. The default truncation policy is `"raise"`; Dawa explicitly
+uses `"penalize"`, which retries a failed population individually and records
+truncating candidates with score -1e10. Unexpected errors still abort.
+
+`fit_callback(rows, scores, seconds, metadata)` receives search/refinement batches
+for progress reporting. `fit_diagnostics` records reference checkpoints, selected
+candidate scores, invalid proposals, and work counters; `fit_study` and
+`refinement_study` expose optimizer histories. `optimal_value` is the selected
+candidate's reference-count training score, not its fresh-seed selection mean.
+Reserved validation seeds never guide selection. Batch rescoring changes neither
+the configured particle count nor its seed, and scales the pseudocount to keep
+the observation model fixed.
+
+During migration from `61f18a3168`, fixed and adaptive GPU smoke fits on the
+eight-trial example reproduced every candidate and score, selected parameters,
+validation scores, and predictive summaries exactly. The comparison used 64
+reference particles, 16 exploration particles, and 128 validation particles;
+it checks routing parity, not statistical accuracy at those small counts.
+
+## Adaptive likelihood evaluation
+
+An external optimizer can request adaptive scoring directly, independently of
+`fit_strategy` or `pec.run()`:
+
+```python
+result = pec.log_likelihood_batch(
+    parameter_rows,  # Columns follow pec.controller.function.fit_param_names.
+    inputs=inputs,
+    adaptive=True,
+    num_estimates=100000,  # Maximum particles per replicate, not total work.
+    seed=4201,            # Seeds the reproducible replicate stream.
+    adaptive_options={
+        "min_estimates": 2000,
+        "target_se": 0.2,
+        "repeats": 8,
+        "reference_index": 0,  # Compare every candidate against row 0.
+        "reserved_seeds": [91001, 91002, 91003],
+    },
+)
+scores = result.log_likelihood
+differences = result.log_likelihood_difference
+comparison_se = result.difference_standard_error
+print(result.num_estimates, result.converged, result.stop_reason)
+```
+
+Omit `reference_index` to target precision of the absolute scores instead. A
+reference requires at least two rows; its difference with itself is exactly
+zero. The target is the estimated **standard error of the mean over replicates**,
+in total log-score units. It is neither a per-trial tolerance nor a bound on the
+error of a single filter run. A paired target uses the sample variation of whole
+score differences, preserving any correlation between the candidates' runs.
+The result always includes absolute-score `standard_error` as well.
+
+Pilot stages run `repeats` complete filters at each count, doubling the count
+(configurable with integer `growth_factor`) until all candidates meet the target
+or the cap is reached. Every row uses the same count, so a batch does not compare
+scores from different particle budgets. The final result uses another `repeats`
+independent runs at the selected count. Pilot scores are excluded from that
+result to avoid selecting unusually quiet replicates. The returned score is the
+**arithmetic mean of complete log scores** at that count; no per-trial densities,
+particle histories, or different counts are pooled.
+
+At the cap, the budget is already determined, so no redundant pilot block runs
+there: only the final replicates are needed. If the minimum equals the cap,
+evaluation goes straight to those final replicates and `history` is empty.
+
+Always check `converged` (all rows passed) or the per-row `target_met` flags:
+
+- `target_met`: the fresh final runs met the requested SE target.
+- `max_estimates`: final precision was insufficient at the particle cap.
+- `precision_not_confirmed`: the pilot stopped below the cap, but fresh final
+  runs did not confirm its precision. No further runs are silently selected on
+  those final scores; request a larger minimum count or more repeats if needed.
+
+`history` records each pilot stage's scores, SEs, count, and seeds.
+`replicate_log_likelihoods` and `seeds` record the final block; those seeds can be
+replayed with fixed `log_likelihood_batch` calls at `result.num_estimates`.
+`sampling_work` includes all pilot and final batch calls, candidate runs, and
+candidate particles per complete history. An immediate stop below the cap costs
+`2 * repeats` batch evaluations; the cap limits particles per replicate, not
+total computation or memory. This interface does not promise a speedup over a
+single fixed-budget call. It provides precision diagnostics for external searches.
+
+Defaults are `min_estimates=min(10000, cap)`, `target_se=0.2`, `repeats=8`, and
+`growth_factor=2`. Omitting `num_estimates` uses PEC's configured count as the cap;
+omitting `seed` uses its batched seed or initial seed. Both settings remain
+unchanged after evaluation. Pseudocounts scale with N to preserve alpha/N,
+observation masks still apply, and each conditioned run restarts the full history.
+Execution truncation and unexpected errors propagate rather than becoming
+penalty scores that could falsely appear precise. Strict truncation checking is
+required. Ordinary marginal, conditioned, and deterministic-history batched
+likelihoods are supported; the separate `batched_observations` path is not yet.
+
+These are empirical Monte Carlo SEs, **not an accuracy guarantee**. They cannot
+detect histogram or smoothing error, finite-particle bias, rare events missed by
+all replicates, or model misspecification. The finite-particle mean-log criterion
+can vary with count even when its SE is small. Paired precision does not remove
+parameter-dependent bias. Finalists should still be compared at a common larger
+fixed count with independent seeds, as in the existing accuracy workflow.
 
 ## Run it
 

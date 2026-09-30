@@ -24,11 +24,11 @@ import psyneulink as pnl
 import torch
 
 from psyneulink.core.batched import BatchedCompositionCompiler, BatchedTrialParameter
-from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationError
 from psyneulink.core.globals.utilities import set_global_seed
 from dawa_batched_simulation import SOURCE, build_model, fit_surface, node
 from dawa_adaptive_fit import AdaptiveConfig, fit_adaptive
-from dawa_conditioned_fit import StagedConfig, conditioned_scores, fit_staged
+from psyneulink.core.components.functions.nonstateful import adaptivefit
+from psyneulink.core.components.functions.nonstateful.adaptivefit import StagedConfig
 from dawa_ndt_profile import NDTProfile
 
 
@@ -109,13 +109,12 @@ def make_fit_pec(model, inputs, outputs, frame, args):
             batched_specialize_fixed_parameters=True,
             batched_parameter_batch_size=args.population,
             batched_triton_launch_options=LAUNCH,
+            fit_truncation="penalize",
         ),
         num_estimates=args.estimates,
         initial_seed=args.simulation_seed,
         same_seed_for_all_parameter_combinations=True,
     )
-    # Direct objective evaluation bypasses PEC.run(), which normally binds inputs.
-    pec.controller._pec_input_values_by_node = inputs
     return pec
 
 
@@ -782,13 +781,13 @@ def _run(args, frame, recovery, independent_seeds, strategy_config, manifest, st
     )
     if args.fit_strategy == "adaptive":
         manifest["adaptive_config"] = asdict(strategy_config)
-        policy_file = (
-            "dawa_conditioned_fit.py"
+        policy_path = (
+            Path(adaptivefit.__file__)
             if args.fit_policy == "staged"
-            else "dawa_adaptive_fit.py"
+            else Path(__file__).with_name("dawa_adaptive_fit.py")
         )
         manifest["adaptive_driver_sha256"] = hashlib.sha256(
-            Path(__file__).with_name(policy_file).read_bytes()
+            policy_path.read_bytes()
         ).hexdigest()
     if ndt_profile is not None:
         manifest["ndt_profile"] = ndt_profile.describe()
@@ -803,8 +802,6 @@ def _run(args, frame, recovery, independent_seeds, strategy_config, manifest, st
             ).hexdigest(),
         )
     save_json(args.output / "manifest.json", manifest)
-    objective = function._make_objective_func()
-    batch_objective = objective._batched_parameter_sets
     optimization_started = time.perf_counter()
     records = []
     invalid = []
@@ -843,32 +840,12 @@ def _run(args, frame, recovery, independent_seeds, strategy_config, manifest, st
             "completed_evaluations": len(records),
             best_key: best,
             "fit_seconds": time.perf_counter() - optimization_started,
-            "invalid_candidates": len(invalid),
+            "invalid_candidates": len(function.fit_diagnostics["invalid_proposals"])
+            if function.fit_diagnostics is not None
+            else len(invalid),
         }
         save_json(args.output / "progress.json", progress)
         print(json.dumps({"progress": progress}), flush=True)
-
-    def logged_batch(candidates):
-        begin = time.perf_counter()
-        try:
-            scores = batch_objective(candidates)
-        except BatchedTruncationError:
-            # Do not treat truncated paths as valid outcomes. Identify and
-            # record offending proposals; unexpected errors still abort.
-            scores = []
-            for candidate in candidates:
-                try:
-                    scores.append(float(batch_objective([candidate])[0]))
-                except BatchedTruncationError as error:
-                    scores.append(-1.0e10)
-                    invalid.append(
-                        {"parameters": list(candidate), "reason": str(error)}
-                    )
-        if not np.all(np.isfinite(scores)):
-            raise FloatingPointError("Nonfinite objective during fitting")
-        elapsed = time.perf_counter() - begin
-        record_batch(candidates, scores, elapsed)
-        return np.asarray(scores)
 
     def check_densities(result, candidates, estimates, seed):
         expected_shape = (
@@ -961,72 +938,65 @@ def _run(args, frame, recovery, independent_seeds, strategy_config, manifest, st
         )
         return check_densities(result, candidates, estimates, seed)
 
-    def logged_objective(*values):
-        return float(logged_batch([values])[0])
-
-    logged_objective._batched_parameter_sets = logged_batch
     strategy_report = None
-    if args.fit_strategy == "adaptive":
-        reserved_seeds = set(args.validation_seeds) | independent_seeds
-        reserved_seeds.add(
-            args.data_seed + 1000000 if recovery else args.predictive_seed
+    reserved_seeds = (set(args.validation_seeds) | independent_seeds) - {
+        args.simulation_seed
+    }
+    reserved_seeds.add(args.data_seed + 1000000 if recovery else args.predictive_seed)
+    if args.fit_strategy == "adaptive" and args.fit_policy == "block_racing":
+        # The marginal block-racing policy remains a research driver for now.
+        fit, strategy_report, refinement = fit_adaptive(
+            study,
+            optimizer_bounds,
+            optimizer_initial,
+            sample_densities,
+            frame.likelihood_include_mask.to_numpy(dtype=bool),
+            strategy_config,
+            evaluations=args.evaluations,
+            population=args.population,
+            simulation_seed=args.simulation_seed,
+            optimizer_seed=args.optimizer_seed,
+            reserved_seeds=reserved_seeds,
+            log_batch=record_batch,
+            profile_parameter=None
+            if ndt_profile is None
+            else (ndt_profile.name, ndt_profile.values),
+            sample_blocks=sample_density_blocks
+            if ndt_profile is not None and args.batch_sampling_blocks
+            else None,
         )
-        if args.fit_policy == "staged":
-
-            def sample_scores(candidates, estimates, seed):
-                return conditioned_scores(
-                    pec,
-                    candidates,
-                    estimates,
-                    seed,
-                    reference_estimates=args.estimates,
-                    pseudocount=args.pseudocount,
-                    invalid=invalid,
-                    work=sampling_work,
-                )
-
-            fit, strategy_report, refinement = fit_staged(
-                study,
-                optimizer_bounds,
-                optimizer_initial,
-                sample_scores,
-                strategy_config,
-                evaluations=args.evaluations,
-                population=args.population,
-                simulation_seed=args.simulation_seed,
-                optimizer_seed=args.optimizer_seed,
-                reserved_seeds=reserved_seeds,
-                log_batch=record_batch,
-            )
-        else:
-            fit, strategy_report, refinement = fit_adaptive(
-                study,
-                optimizer_bounds,
-                optimizer_initial,
-                sample_densities,
-                frame.likelihood_include_mask.to_numpy(dtype=bool),
-                strategy_config,
-                evaluations=args.evaluations,
-                population=args.population,
-                simulation_seed=args.simulation_seed,
-                optimizer_seed=args.optimizer_seed,
-                reserved_seeds=reserved_seeds,
-                log_batch=record_batch,
-                profile_parameter=None
-                if ndt_profile is None
-                else (ndt_profile.name, ndt_profile.values),
-                sample_blocks=(
-                    sample_density_blocks
-                    if ndt_profile is not None and args.batch_sampling_blocks
-                    else None
-                ),
-            )
         strategy_report["policy"] = args.fit_policy
+    else:
+        function.fit_callback = record_batch
+        if args.fit_strategy == "adaptive":
+            function.fit_strategy = "adaptive"
+            function.adaptive_options = {
+                key: value
+                for key, value in asdict(strategy_config).items()
+                if key != "reference_estimates"
+            }
+            function.adaptive_options.update(
+                optimizer_seed=args.optimizer_seed,
+                reserved_seeds=sorted(reserved_seeds),
+            )
+        pec.run(inputs=inputs)
+        fit = {
+            "fitted_params": pec.optimized_parameter_values,
+            "optimal_value": pec.optimal_value,
+        }
+        invalid[:] = function.fit_diagnostics["invalid_proposals"]
+        sampling_work = function.fit_diagnostics["sampling_work"]
+        if args.fit_strategy == "adaptive":
+            strategy_report = {
+                key: value
+                for key, value in function.fit_diagnostics.items()
+                if key not in ("invalid_proposals", "sampling_work")
+            }
+            refinement = function.refinement_study
+    if strategy_report is not None:
         refinement.trials_dataframe(
             attrs=("number", "value", "params", "state")
         ).to_csv(args.output / "optimizer_refinement_trials.csv", index=False)
-    else:
-        fit = function._fit(logged_objective, display_iter=False)
     fit_seconds = time.perf_counter() - optimization_started
     expected_evaluations = (
         args.evaluations
@@ -1084,8 +1054,6 @@ def _run(args, frame, recovery, independent_seeds, strategy_config, manifest, st
     validation_estimates = args.validation_estimates or args.estimates
     # Keep alpha/N fixed so higher precision does not change the observation model.
     validation_pseudocount = args.pseudocount * validation_estimates / args.estimates
-    pec.controller.num_estimates = validation_estimates
-    function.batched_pseudocount = validation_pseudocount
     manifest.update(status="validating", fit_seconds=fit_seconds)
     save_json(args.output / "manifest.json", manifest)
     validation = []
@@ -1098,9 +1066,11 @@ def _run(args, frame, recovery, independent_seeds, strategy_config, manifest, st
     }
     save_json(args.output / "validation.json", validation_record)
     for seed in args.validation_seeds:
-        function.batched_seed = seed
-        scores = function._make_objective_func()._batched_parameter_sets(
-            list(comparison.values())
+        scores = pec.log_likelihood_batch(
+            list(comparison.values()),
+            inputs=inputs,
+            num_estimates=validation_estimates,
+            seed=seed,
         )
         score = dict(zip(comparison, map(float, scores), strict=True))
         validation.append(

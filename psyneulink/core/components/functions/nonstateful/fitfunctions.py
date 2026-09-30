@@ -7,6 +7,10 @@ from scipy.interpolate import interpn
 from scipy.optimize import differential_evolution
 from beartype import beartype
 
+from psyneulink.core.components.functions.nonstateful.adaptivelikelihood import (
+    AdaptiveLikelihoodResult,
+    adaptive_log_likelihood,
+)
 from psyneulink.core.globals import SampleIterator
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import (
@@ -46,7 +50,7 @@ from rich.markup import escape
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["PECOptimizationFunction", "BadLikelihoodWarning", "PECObjectiveFuncWarning"]
+__all__ = ["PECOptimizationFunction", "BadLikelihoodWarning", "PECObjectiveFuncWarning", "AdaptiveLikelihoodResult"]
 
 
 def get_param_str(params):
@@ -599,6 +603,52 @@ class PECOptimizationFunction(OptimizationFunction):
         ``CmaEsSampler`` population and must equal its ``popsize``.  ``None``
         preserves serial candidate evaluation.
 
+    fit_strategy : {'fixed', 'adaptive'} : default 'fixed'
+        Adaptive fitting explores with fewer particles, checks and refines at
+        ``PEC.num_estimates``, then selects finalists using fresh seeds. Currently
+        requires conditioned batched data fitting and a full-covariance
+        ``CmaEsSampler`` with explicit ``popsize``, one startup trial, and ``x0``
+        for every fit coordinate. A passed study must be fresh (optionally with
+        only x0 enqueued). Fixed fitting preserves the established optimizer path.
+
+    adaptive_options : mapping : default None
+        Options for the conditioned adaptive policy. ``search_estimates`` defaults
+        to 10000; ``refine_evaluations`` to 600; ``check_every`` to 250;
+        ``min_evaluations`` to 1000; ``patience`` to 2; ``progress_tolerance`` to
+        0.25 log units; ``checkpoint_candidates`` to 4; ``selection_candidates``
+        to 8; and ``selection_repeats`` to 3. Set ``optimizer_seed`` explicitly;
+        refinement uses this seed plus one. ``reserved_seeds`` lists seeds kept
+        for independent validation or data generation. Set a fixed ``batched_seed``
+        (or PEC ``initial_seed``) for filter scoring. The reference particle count
+        comes from PEC ``num_estimates``. Each phase must allow an initial proposal
+        and at least one population. Checkpoint/selection evaluations are additional
+        to ``max_iterations``, which caps search plus refinement proposals.
+
+        The pseudocount is scaled with particle count to keep alpha/N fixed.
+        Complete filters restart at each count/seed; trial factors are never pooled.
+        Final selection averages complete masked log scores at the reference count.
+        This finite-particle criterion does not remove log-likelihood estimation bias.
+
+    fit_callback : callable : default None
+        Population-batched fitting calls ``callback(rows, scores, seconds, metadata)``
+        after each search/refinement batch. Adaptive metadata includes phase,
+        particle count, and seed. Callbacks should treat their arguments as read-only.
+        Exceptions abort fitting. Reference checks and final selection are reported
+        in ``fit_diagnostics`` rather than counted as optimizer proposals.
+
+    fit_truncation : {'raise', 'penalize'} : default 'raise'
+        With population batching and strict truncation enabled, optionally retry a
+        truncated batch by candidate and assign -1e10 to invalid proposals. Other
+        exceptions still propagate. Invalid candidates and work counts are recorded
+        in ``fit_diagnostics``. Use 'raise' when every proposal must succeed.
+
+        After population-batched fitting, ``fit_study`` and ``refinement_study`` expose the optimizer
+        studies. ``fit_diagnostics`` contains the resolved adaptive policy,
+        checkpoints, work counts, and fresh-seed selection scores. The returned
+        ``PEC.optimal_value`` is the selected candidate's reference-count training
+        score; the selection mean is reported separately. Reserved validation is
+        performed by the caller using ``PEC.log_likelihood_batch``.
+
     batched_triton_launch_options :
         Optional mapping of compiled-GPU launch controls used by the experimental
         batched Triton backend. Supported keys are ``block_size``, ``num_warps``,
@@ -746,10 +796,33 @@ class PECOptimizationFunction(OptimizationFunction):
         distributed_options: Optional[Mapping] = None,
         batched_fused_likelihood: bool = True,
         batched_specialize_fixed_parameters: bool = False,
+        fit_strategy: Literal["fixed", "adaptive"] = "fixed",
+        adaptive_options: Optional[Mapping] = None,
+        fit_callback: Optional[Callable] = None,
+        fit_truncation: Literal["raise", "penalize"] = "raise",
         **kwargs,
     ):
         self.method = method
         self._optuna_kwargs = {} if optuna_kwargs is None else {**optuna_kwargs}
+        self.fit_strategy = fit_strategy
+        self.adaptive_options = dict(adaptive_options or {})
+        self.fit_callback = fit_callback
+        self.fit_truncation = fit_truncation
+        self.fit_diagnostics = None
+        self.fit_study = None
+        self.refinement_study = None
+        if adaptive_options is not None and fit_strategy != "adaptive":
+            raise ValueError("adaptive_options requires fit_strategy='adaptive'.")
+        if fit_strategy == "adaptive" and (
+            batched_backend is None or not conditioned_likelihood
+            or batched_parameter_batch_size is None or distributed or direction != "maximize"
+        ):
+            raise ValueError(
+                "Adaptive fitting currently requires conditioned_likelihood=True, a batched_backend, "
+                "batched_parameter_batch_size, direction='maximize', and distributed=False."
+            )
+        if (fit_callback is not None or fit_truncation != "raise") and batched_parameter_batch_size is None:
+            raise ValueError("fit_callback and fit_truncation require batched_parameter_batch_size.")
 
         self.direction = direction
 
@@ -1172,7 +1245,10 @@ class PECOptimizationFunction(OptimizationFunction):
                 self._get_current_parameter_value("initial_seed", context)
             )
 
-        def parameter_batch_objfunc(parameter_values):
+        def parameter_batch_objfunc(parameter_values, *, num_estimates=None, seed_override=None, pseudocount=None):
+            count = self.owner.num_estimates if num_estimates is None else num_estimates
+            run_seed = seed if seed_override is None else seed_override
+            alpha = self.batched_pseudocount if pseudocount is None else pseudocount
             plan = self._compile_batched_plan()
             inputs = self._batched_stimulus_inputs()
             parameter_sets = [
@@ -1180,10 +1256,12 @@ class PECOptimizationFunction(OptimizationFunction):
                 for values in parameter_values
             ]
             if self.batched_observations is not None:
+                if pseudocount is not None and pseudocount != self.batched_pseudocount:
+                    raise NotImplementedError("Budget-scaled pseudocounts are not supported by batched_observations yet.")
                 generated = self._compile_batched_histogram_plan(plan)
                 result = generated.score(
-                    inputs, exp_data, parameter_sets, num_estimates=self.owner.num_estimates,
-                    seed=0 if seed is None else int(seed), include_mask=include_mask,
+                    inputs, exp_data, parameter_sets, num_estimates=count,
+                    seed=0 if run_seed is None else int(run_seed), include_mask=include_mask,
                     execution="strict" if self.batched_strict_truncation else "window",
                     triton_launch_options=self.batched_triton_launch_options,
                     max_buffer_bytes=self.batched_likelihood_buffer_bytes,
@@ -1202,17 +1280,17 @@ class PECOptimizationFunction(OptimizationFunction):
             result = likelihood_method(
                 inputs,
                 parameter_sets,
-                num_estimates=self.owner.num_estimates,
+                num_estimates=count,
                 data=exp_data,
                 categorical_dims=categorical_dims,
                 outcome_indices=outcome_indices,
                 bins=self.batched_bins,
                 bin_range=self.batched_bin_range,
                 smoothing_sigma=self.batched_smoothing_sigma,
-                pseudocount=self.batched_pseudocount,
+                pseudocount=alpha,
                 categorical_cardinalities=self.batched_categorical_cardinalities,
                 include_mask=include_mask,
-                seed=seed,
+                seed=run_seed,
                 strict_truncation=self.batched_strict_truncation,
                 triton_launch_options=self.batched_triton_launch_options,
                 **({"fused": self.batched_fused_likelihood}
@@ -1229,8 +1307,84 @@ class PECOptimizationFunction(OptimizationFunction):
         # population-batched ask/tell path discovers this companion evaluator
         # without changing OptimizationFunction's public objective signature.
         objfunc._batched_parameter_sets = parameter_batch_objfunc
+        objfunc._batched_seed = seed
 
         return objfunc
+
+    def evaluate_parameter_sets(
+        self,
+        parameter_values,
+        *,
+        num_estimates=None,
+        seed=None,
+        adaptive=False,
+        adaptive_options=None,
+        context=None,
+    ):
+        """Score batched parameter rows without changing the fitting budget or seed.
+
+        Inputs must have been bound by PEC.run or PEC.log_likelihood_batch.
+        An explicit particle count scales the pseudocount to keep alpha/N fixed.
+        Every conditioned evaluation starts a complete filter from its initial state.
+        With adaptive=True, num_estimates is a per-replicate cap and the return
+        value is an AdaptiveLikelihoodResult; see PEC.log_likelihood_batch.
+        """
+        if self.batched_backend is None or not self.data_fitting_mode:
+            raise OptimizationFunctionError(
+                "Batch likelihood evaluation requires batched data fitting."
+            )
+        reference = self.owner.num_estimates
+        count = reference if num_estimates is None else num_estimates
+        if (
+            not isinstance(count, (int, np.integer))
+            or isinstance(count, bool)
+            or count < 1
+        ):
+            raise ValueError("num_estimates must be a positive integer.")
+        if seed is not None and (
+            not isinstance(seed, (int, np.integer))
+            or isinstance(seed, bool)
+            or seed < 0
+        ):
+            raise ValueError("seed must be a nonnegative integer.")
+        if not isinstance(adaptive, bool):
+            raise ValueError("adaptive must be True or False.")
+        if not adaptive and adaptive_options is not None:
+            raise ValueError("adaptive_options requires adaptive=True.")
+        if adaptive:
+            if self.batched_observations is not None:
+                raise OptimizationFunctionError(
+                    "Adaptive likelihood evaluation does not yet support batched_observations."
+                )
+            if not self.batched_strict_truncation:
+                raise OptimizationFunctionError(
+                    "Adaptive likelihood evaluation requires batched_strict_truncation=True."
+                )
+            rows = np.asarray(parameter_values, dtype=float)
+            if rows.ndim != 2 or rows.shape[1] != len(self.fit_param_names):
+                raise ValueError(
+                    "parameter_values must have one column per PEC fit parameter."
+                )
+        objective = self._batched_objective_func(context=context)
+        if adaptive:
+            return adaptive_log_likelihood(
+                lambda rows, count, run_seed: objective._batched_parameter_sets(
+                    rows,
+                    num_estimates=count,
+                    seed_override=run_seed,
+                    pseudocount=self.batched_pseudocount * count / reference,
+                ),
+                rows,
+                max_estimates=count,
+                seed=objective._batched_seed if seed is None else seed,
+                options=adaptive_options,
+            )
+        return objective._batched_parameter_sets(
+            parameter_values,
+            num_estimates=count,
+            seed_override=seed,
+            pseudocount=self.batched_pseudocount * count / reference,
+        )
 
     def _batched_parameter_set(self, args):
         """Map PEC optimizer coordinates to scalar or per-trial model values."""
@@ -1481,6 +1635,17 @@ class PECOptimizationFunction(OptimizationFunction):
         display_iter: bool = True,
         context: Context = None,
     ):
+        self.fit_diagnostics = {"invalid_proposals": [], "sampling_work": {}}
+        self.fit_study = self.refinement_study = None
+        if self.fit_strategy == "adaptive" and (
+            not self.data_fitting_mode or not self.conditioned_likelihood or self.batched_backend is None
+            or self.batched_parameter_batch_size is None or self.distributed or self.direction != "maximize"
+        ):
+            raise OptimizationFunctionError("Adaptive fitting requires conditioned, batched data fitting with local CMA-ES.")
+        if self.method == "differential_evolution" and (
+            self.fit_strategy == "adaptive" or self.fit_callback is not None or self.fit_truncation != "raise"
+        ):
+            raise OptimizationFunctionError("Adaptive fitting, fit_callback, and fit_truncation currently require batched CMA-ES.")
         if not self.distributed:
             return self._fit_dispatch(obj_func, display_iter, context, client=None)
 
@@ -1988,6 +2153,11 @@ class PECOptimizationFunction(OptimizationFunction):
             raise OptimizationFunctionError(
                 f"max_iterations ({max_iterations}) must be >= 1."
             )
+        self.fit_study = study
+        if self.fit_strategy == "adaptive":
+            from psyneulink.core.components.functions.nonstateful.adaptivefit import run_conditioned_adaptive
+
+            return run_conditioned_adaptive(self, study, obj_func)
         param_order = list(self.fit_param_names)
         distributions = {
             name: FloatDistribution(lower, upper, step=step)
@@ -2017,8 +2187,20 @@ class PECOptimizationFunction(OptimizationFunction):
 
                 def evaluate_batch(parameter_values):
                     start = time.time()
-                    values = batch_obj_func(parameter_values)
+                    if self.fit_truncation == "penalize":
+                        from psyneulink.core.components.functions.nonstateful.adaptivefit import score_candidates
+
+                        values = score_candidates(
+                            batch_obj_func, parameter_values, estimates=self.owner.num_estimates,
+                            seed=getattr(obj_func, "_batched_seed", self.batched_seed),
+                            invalid=self.fit_diagnostics["invalid_proposals"],
+                            work=self.fit_diagnostics["sampling_work"], truncation="penalize",
+                        )
+                    else:
+                        values = batch_obj_func(parameter_values)
                     elapsed = time.time() - start
+                    if self.fit_callback is not None:
+                        self.fit_callback(parameter_values, values, elapsed, {})
                     if display_iter:
                         progress.console.print(
                             f"Evaluated {len(parameter_values)} parameter set(s), "
@@ -2065,6 +2247,11 @@ class PECOptimizationFunction(OptimizationFunction):
             name: study.best_params[name]
             for name in param_order
         }
+        if self.fit_truncation == "penalize":
+            from psyneulink.core.components.functions.nonstateful.adaptivefit import PENALTY
+
+            if study.best_value <= PENALTY:
+                raise RuntimeError("Batched fitting did not find a valid candidate.")
         return {
             "fitted_params": fitted_params,
             "optimal_value": study.best_value,

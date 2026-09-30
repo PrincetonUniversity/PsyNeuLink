@@ -13,7 +13,58 @@ import numpy as np
 import optuna
 from optuna.distributions import FloatDistribution
 
-from dawa_adaptive_fit import CovarianceCmaEsSampler, PENALTY, learned_covariance
+__all__ = []
+
+PENALTY = -1.0e10
+
+
+def learned_covariance(study, names):
+    """Isolate the Optuna/cmaes bridge used at a precision-stage transition.
+
+    Optuna has no public accessor for its learned CMA covariance. Take the
+    last serialized state (which can lag one population), and validate it
+    before reusing it with the identical normalized parameter search space.
+    """
+    sampler = study.sampler
+    if not isinstance(sampler, optuna.samplers.CmaEsSampler):
+        raise TypeError("Adaptive fitting requires an Optuna CmaEsSampler")
+    optimizer = sampler._restore_optimizer(sampler._get_trials(study))
+    if optimizer is None:
+        return None
+    covariance = np.asarray(optimizer._C, dtype=float).copy()
+    if (
+        covariance.shape != (len(names), len(names))
+        or not np.isfinite(covariance).all()
+    ):
+        raise RuntimeError("Invalid CMA covariance at the refinement transition")
+    if not np.allclose(covariance, covariance.T, atol=1e-12, rtol=1e-10):
+        raise RuntimeError("Asymmetric CMA covariance at the refinement transition")
+    covariance = (covariance + covariance.T) / 2
+    if np.linalg.eigvalsh(covariance).min() <= 0:
+        raise RuntimeError("Nonpositive CMA covariance at the refinement transition")
+    return covariance
+
+
+class CovarianceCmaEsSampler(optuna.samplers.CmaEsSampler):
+    """A local restart retaining correlations in Optuna's normalized order."""
+
+    def __init__(self, *, covariance, parameter_order, **options):
+        super().__init__(**options)
+        self._initial_covariance = (
+            None if covariance is None else np.array(covariance, copy=True)
+        )
+        self._covariance_parameter_order = tuple(parameter_order)
+
+    def _init_optimizer(self, trans, direction):
+        optimizer = super()._init_optimizer(trans, direction)
+        if self._initial_covariance is not None:
+            if tuple(trans._search_space) != self._covariance_parameter_order:
+                raise RuntimeError(
+                    "Refinement covariance does not match the parameter order"
+                )
+            optimizer._C = self._initial_covariance.copy()
+            optimizer._B = optimizer._D = None
+        return optimizer
 
 
 @dataclass
@@ -32,6 +83,24 @@ class StagedConfig:
     selection_repeats: int = 3
 
     def validate(self, evaluations, population):
+        counts = (
+            self.search_estimates,
+            self.reference_estimates,
+            self.refine_evaluations,
+            self.check_every,
+            self.min_evaluations,
+            self.patience,
+            self.checkpoint_candidates,
+            self.selection_candidates,
+            self.selection_repeats,
+            evaluations,
+            population,
+        )
+        if any(
+            not isinstance(value, (int, np.integer)) or isinstance(value, bool)
+            for value in counts
+        ):
+            raise ValueError("Adaptive counts and proposal budgets must be integers")
         if not 1 <= self.search_estimates <= self.reference_estimates:
             raise ValueError(
                 "Staged counts require 1 <= search particles <= reference particles"
@@ -62,72 +131,176 @@ class StagedConfig:
             raise ValueError("Staged progress tolerance must be finite and nonnegative")
 
 
-def conditioned_scores(
-    pec, candidates, estimates, seed, *, reference_estimates, pseudocount, invalid, work
+def score_candidates(
+    evaluate, candidates, *, estimates, seed, invalid, work, truncation
 ):
-    """Use the production PEC closure at a new count, preserving its observation law.
+    """Count work and optionally penalize proposals that exceed the execution cap.
 
-    All observations, including masked history, pass through the normal closure.
-    A failed batch is retried individually to identify truncating candidates.
-    Other errors abort, and the caller's PEC settings are restored even on failure.
+    A truncated population is retried by candidate to identify its invalid rows.
+    Unexpected exceptions and nonfinite scores propagate instead of becoming penalties.
     """
     from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationError
 
-    function = pec.controller.function
-    if not function.conditioned_likelihood:
-        raise ValueError("Staged conditioned scoring requires a conditioned PEC")
-    previous = (
-        pec.controller.num_estimates,
-        function.batched_seed,
-        function.batched_pseudocount,
-    )
+    def run(rows):
+        work["filter_batch_calls"] = work.get("filter_batch_calls", 0) + 1
+        work["candidate_filter_runs"] = work.get("candidate_filter_runs", 0) + len(rows)
+        work["candidate_particles"] = (
+            work.get("candidate_particles", 0) + len(rows) * estimates
+        )
+        return evaluate(rows)
+
     try:
-        pec.controller.num_estimates = estimates
-        function.batched_seed = seed
-        # The uniform-contamination fraction depends on alpha/N. Scaling both
-        # together changes Monte Carlo precision while preserving the observation law.
-        function.batched_pseudocount = pseudocount * estimates / reference_estimates
-        objective = function._make_objective_func()._batched_parameter_sets
+        scores = run(candidates)
+    except BatchedTruncationError:
+        if truncation == "raise":
+            raise
+        scores = []
+        for candidate in candidates:
+            try:
+                scores.append(float(run([candidate])[0]))
+            except BatchedTruncationError as error:
+                scores.append(PENALTY)
+                invalid.append(
+                    {
+                        "parameters": list(candidate),
+                        "estimates": estimates,
+                        "seed": seed,
+                        "reason": str(error),
+                    }
+                )
+    scores = np.asarray(scores, dtype=float)
+    if scores.shape != (len(candidates),) or not np.isfinite(scores).all():
+        raise FloatingPointError(
+            "Expected one finite complete-filter score per candidate"
+        )
+    return scores
 
-        def run(rows):
-            work["filter_batch_calls"] = work.get("filter_batch_calls", 0) + 1
-            work["candidate_filter_runs"] = work.get("candidate_filter_runs", 0) + len(
-                rows
-            )
-            work["candidate_particles"] = (
-                work.get("candidate_particles", 0) + len(rows) * estimates
-            )
-            return objective(rows)
 
-        try:
-            scores = run(candidates)
-        except BatchedTruncationError:
-            scores = []
-            for candidate in candidates:
-                try:
-                    scores.append(float(run([candidate])[0]))
-                except BatchedTruncationError as error:
-                    scores.append(PENALTY)
-                    invalid.append(
-                        {
-                            "parameters": list(candidate),
-                            "estimates": estimates,
-                            "seed": seed,
-                            "reason": str(error),
-                        }
-                    )
-        scores = np.asarray(scores, dtype=float)
-        if scores.shape != (len(candidates),) or not np.isfinite(scores).all():
-            raise FloatingPointError(
-                "Expected one finite complete-filter score per candidate"
+def run_conditioned_adaptive(function, study, objective):
+    """Adapt PEC's batched objective to complete-filter CMA-ES budget stages."""
+    from psyneulink.core.components.functions.nonstateful.optimizationfunctions import (
+        OptimizationFunctionError,
+    )
+
+    if study.direction != optuna.study.StudyDirection.MAXIMIZE:
+        raise OptimizationFunctionError(
+            "Adaptive likelihood fitting requires a maximizing study."
+        )
+    sampler = study.sampler
+    if getattr(sampler, "_n_startup_trials", 1) != 1:
+        raise OptimizationFunctionError(
+            "Adaptive fitting currently requires one CMA-ES startup trial."
+        )
+    if getattr(sampler, "_use_separable_cma", False) or getattr(
+        sampler, "_with_margin", False
+    ):
+        raise OptimizationFunctionError(
+            "Adaptive refinement requires ordinary full-covariance CMA-ES."
+        )
+    options = dict(function.adaptive_options)
+    optimizer_seed = options.pop("optimizer_seed", getattr(sampler, "_seed", None))
+    reserved = options.pop("reserved_seeds", ())
+    simulation_seed = getattr(objective, "_batched_seed", None)
+    if any(
+        not isinstance(seed, (int, np.integer)) or isinstance(seed, bool) or seed < 0
+        for seed in (optimizer_seed, simulation_seed, *reserved)
+    ):
+        raise ValueError(
+            "Adaptive fitting requires nonnegative integer optimizer, simulation, and reserved seeds."
+        )
+    if "reference_estimates" in options:
+        raise ValueError(
+            "Set the adaptive reference count with PEC.num_estimates, not adaptive_options."
+        )
+    if simulation_seed in reserved:
+        raise ValueError(
+            "The filter training seed must not be reserved for validation or generation."
+        )
+    config = StagedConfig(reference_estimates=function.owner.num_estimates, **options)
+    evaluations = int(function.parameters.max_iterations.get())
+    population = int(function.batched_parameter_batch_size)
+    config.validate(evaluations, population)
+    bounds = function.fit_param_bounds
+    initial = getattr(sampler, "_x0", None)
+    if initial is None or set(initial) != set(bounds):
+        raise ValueError(
+            "Adaptive fitting requires CmaEsSampler(x0=...) for every fit coordinate."
+        )
+    initial = {name: initial[name] for name in bounds}
+    for name, value in initial.items():
+        lo, hi, step = bounds[name]
+        if (
+            not np.isfinite(value)
+            or not lo <= value <= hi
+            or not np.isclose((value - lo) / step, round((value - lo) / step))
+        ):
+            raise ValueError(
+                f"Adaptive initial value must lie on its parameter grid: {name}={value}"
             )
-        return scores
-    finally:
-        (
-            pec.controller.num_estimates,
-            function.batched_seed,
-            function.batched_pseudocount,
-        ) = previous
+    if study.trials:
+        if (
+            len(study.trials) != 1
+            or study.trials[0].state != optuna.trial.TrialState.WAITING
+            or study.trials[0].system_attrs.get("fixed_params") != initial
+        ):
+            raise ValueError(
+                "Adaptive fitting requires a fresh study, optionally with only x0 enqueued."
+            )
+    else:
+        study.enqueue_trial(initial)
+
+    diagnostics = function.fit_diagnostics
+    batch = objective._batched_parameter_sets
+    alpha = function.batched_pseudocount
+
+    def sample(candidates, count, seed):
+        return score_candidates(
+            lambda rows: batch(
+                rows,
+                num_estimates=count,
+                seed_override=seed,
+                pseudocount=alpha * count / config.reference_estimates,
+            ),
+            candidates,
+            estimates=count,
+            seed=seed,
+            invalid=diagnostics["invalid_proposals"],
+            work=diagnostics["sampling_work"],
+            truncation=function.fit_truncation,
+        )
+
+    def record(candidates, scores, elapsed, metadata):
+        function.num_evals += len(candidates)
+        if function.fit_callback is not None:
+            function.fit_callback(candidates, scores, elapsed, metadata)
+
+    function.num_evals = 0
+    fit, report, refinement = fit_staged(
+        study,
+        bounds,
+        initial,
+        sample,
+        config,
+        evaluations=evaluations,
+        population=population,
+        simulation_seed=simulation_seed,
+        optimizer_seed=optimizer_seed,
+        reserved_seeds=reserved,
+        log_batch=record,
+    )
+    diagnostics.update(report, policy="staged")
+    function.refinement_study = refinement
+    return fit
+
+
+def _evaluate_pending(study, trials, evaluate):
+    """Leave an aborted study with failed trials, rather than stranded RUNNING rows."""
+    try:
+        return evaluate()
+    except BaseException:
+        for trial in trials:
+            study.tell(trial, state=optuna.trial.TrialState.FAIL)
+        raise
 
 
 def fit_staged(
@@ -196,7 +369,11 @@ def fit_staged(
             [[trial.params[name] for name in names] for trial in trials]
         )
         started = time.perf_counter()
-        scores = evaluate(candidates, config.search_estimates, simulation_seed)
+        scores = _evaluate_pending(
+            study,
+            trials,
+            lambda: evaluate(candidates, config.search_estimates, simulation_seed),
+        )
         elapsed = time.perf_counter() - started
         for trial, candidate, score in zip(trials, candidates, scores, strict=True):
             study.tell(trial, float(score))
@@ -236,7 +413,6 @@ def fit_staged(
                     "stale_checks": stale,
                 }
             )
-            print({"staged_checkpoint": checkpoints[-1]}, flush=True)
             recent.clear()
             next_check = completed + config.check_every
             if completed >= config.min_evaluations and stale >= config.patience:
@@ -269,7 +445,7 @@ def fit_staged(
             [[trial.params[name] for name in names] for trial in trials]
         )
         started = time.perf_counter()
-        scores = reference(candidates)
+        scores = _evaluate_pending(refinement, trials, lambda: reference(candidates))
         elapsed = time.perf_counter() - started
         for trial, score in zip(trials, scores, strict=True):
             refinement.tell(trial, float(score))

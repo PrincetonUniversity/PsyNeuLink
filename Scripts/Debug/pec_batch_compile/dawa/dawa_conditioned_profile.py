@@ -362,7 +362,9 @@ def main(argv=None):
     function = pec.controller.function
     assert list(function.fit_param_names) == names
     plan = function._compile_batched_plan()
-    objective = function._make_objective_func()._batched_parameter_sets
+
+    def objective(rows):
+        return pec.log_likelihood_batch(rows, inputs=inputs)
 
     def evaluate(rows):
         try:
