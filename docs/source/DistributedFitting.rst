@@ -57,8 +57,8 @@ the fit starts: ``srun`` tasks minus two with the launcher (see
 Any optuna sampler or study and ``differential_evolution`` are supported.
 
 The same ``pec_factory`` and ``distributed_options`` can distribute the simulations used to train a
-:ref:`neural likelihood <NeuralLikelihood>`; a fit scored by a trained estimator is not
-distributed.
+:ref:`neural likelihood <NeuralLikelihood>`. A fit of one model scored by a trained estimator is not
+distributed; a :ref:`hierarchical fit <HierarchicalFitting>` of participants scored by one can be.
 
 
 .. _Distributed_Fitting_Running:

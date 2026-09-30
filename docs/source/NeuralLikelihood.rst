@@ -10,18 +10,15 @@ likelihood is a density estimator that is trained beforehand, on data simulated 
 used in place of those simulations. Each evaluation of the likelihood then requires a single evaluation
 of the estimator, and the likelihood varies smoothly with the parameter values.
 
-An estimator is trained once for a given model and range of parameter values, and can be reused for
-any fit of that model within that range, including a :ref:`hierarchical fit <HierarchicalFitting>`.
-
 
 .. _Neural_Likelihood_Training:
 
 Training an Estimator
 ---------------------
 
-`train_neural_likelihood` simulates the model at parameter values drawn from within the ranges specified
-in **bounds**, and trains an estimator on the results. The model can be specified directly, together with
-the inputs used to run it::
+`train_neural_likelihood` simulates the model at parameter values drawn uniformly from within the ranges
+specified in **bounds**, and trains an estimator on the results. The model can be specified directly,
+together with the inputs used to run it::
 
     likelihood = pnl.train_neural_likelihood(
         bounds={"rate": (-1.5, 1.5), "threshold": (0.3, 1.5)},
@@ -44,13 +41,19 @@ in place of **pec**, together with **distributed_options** (see :ref:`Distribute
         bounds={"rate": (-1.5, 1.5), "threshold": (0.3, 1.5)},
         outcome_names=("decision", "response_time"),
         pec_factory=build_pec,
-        n_trials_per_sample=100,
+        n_trials_per_sample=500,
         distributed_options={"n_workers": 8},
     )
 
 ``build_pec(data) -> (pec, inputs)`` is a top-level function that builds the model, as for distributed
 fitting. Each worker calls it with a table of **n_trials_per_sample** rows to build its own copy of the
 model.
+
+`train_neural_likelihood` generates an error if the estimator's negative log-likelihood on the data held
+out from training is not finite, and records the held-out negative log-likelihood per trial with the
+estimator, as ``metadata.val_nll``. This identifies an estimator that failed to train, but not one that is
+inaccurate. The accuracy of an estimator for a given model can be assessed by fitting data simulated at
+known parameter values, and comparing the estimates with those values.
 
 
 .. _Neural_Likelihood_Fitting:
@@ -94,8 +97,7 @@ Trial Features
 
 Where trials differ from one another (for example, congruent and incongruent trials), an estimator
 represents the distribution of outcomes on each kind of trial, which it distinguishes by the values of the
-model's inputs on each trial. Those inputs that vary across the trials simulated in training are recorded
-with the estimator, and those that do not are recorded with their values.
+model's inputs on each trial.
 
 When fitting, the same inputs are taken from those specified for `run <Composition.run>` or
 `log_likelihood <ParameterEstimationComposition.log_likelihood>`, including any that do not vary in the
@@ -109,8 +111,9 @@ otherwise an error is generated, since the estimator has no information about su
 Matching an Estimator to a Model
 --------------------------------
 
-An estimator records the model for which it was trained, and generates an error if it is used to fit one
-that differs in any of the following:
+An estimator is valid only for the model, and the ranges of parameter values, for which it was trained;
+within those ranges, it can be reused for any fit of that model. It records the following, and generates
+an error if it is used to fit a model that differs in any of them:
 
 * the fitted parameters, or their order;
 * the range of any parameter, which must lie within the range used for training;
@@ -121,22 +124,8 @@ Other properties of the model, such as the values of parameters that are not fit
 estimator should be retrained if any of these are changed.
 
 An error is also generated if the **data** contain values that are not finite or, where the estimator
-models a continuous outcome on a logarithmic scale (as it does for response times), values of it that are
-not positive.
-
-
-.. _Neural_Likelihood_Validation:
-
-Validation
-----------
-
-`train_neural_likelihood` generates an error if the estimator's negative log-likelihood on the data held
-out from training is not finite. The held-out negative log-likelihood per trial is recorded with the
-estimator, as ``metadata.val_nll``.
-
-This identifies an estimator that failed to train, but not one that is inaccurate. The accuracy of
-an estimator for a given model can be assessed by fitting data simulated at known parameter values, and
-comparing the estimates with those values.
+models a continuous outcome on a logarithmic scale (as it does for response times when another outcome is
+categorical), values of it that are not positive.
 
 
 .. _Neural_Likelihood_Limitations:
@@ -144,15 +133,10 @@ comparing the estimates with those values.
 Limitations
 -----------
 
-* An estimator is valid only for the model, and the ranges of parameter values, for which it was trained
-  (see `Neural_Likelihood_Matching`).
-* The accuracy of a fit is limited by that of the estimator, which depends on the amount of simulated
-  data and training.
-* Parameter values are drawn uniformly from within **bounds** for training, so regions of the parameter space
-  in which the model's behavior changes rapidly are not represented in more detail than others.
 * At least one outcome must be continuous, such as a response time: an estimator cannot be trained for a
   model whose outcomes are all categorical.
-* A fit that uses a neural likelihood cannot be distributed (``distributed=True``).
+* A fit of one model that uses a neural likelihood cannot be distributed (``distributed=True``); a
+  :ref:`hierarchical fit <HierarchicalFitting>` of participants that use one can be.
 
 
 .. _Neural_Likelihood_Requirements:
@@ -165,10 +149,8 @@ includes `sbi <https://sbi-dev.github.io/sbi/>`_ and PyTorch.
 
 :download:`train_neural_likelihood.py
 <../../Scripts/Examples/ParameterEstimation/neural_likelihood/train_neural_likelihood.py>` trains an
-estimator for a drift-diffusion model, and uses it to fit simulated data;
-:download:`train_neural_likelihood_distributed.py
-<../../Scripts/Examples/ParameterEstimation/neural_likelihood/train_neural_likelihood_distributed.py>`
-does the same with the simulations for training distributed over a Dask cluster.
+estimator for a drift-diffusion model, in one process or, with ``--distributed``, over a Dask cluster, and
+uses it to fit simulated data.
 
 
 .. _Neural_Likelihood_Class_Reference:
