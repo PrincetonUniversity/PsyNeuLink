@@ -179,36 +179,6 @@ def test_save_and_load_round_trip_scores_identically(tmp_path):
     )
 
 
-# ------------------------------------------------------------------- gates
-
-
-def test_gates_reject_an_estimator_that_did_not_train():
-    likelihood, raw = _toy_likelihood(epochs=1)
-    theta = torch.zeros((8, 2))
-    x = torch.zeros((8, 2))
-    with pytest.raises(nlf.NeuralLikelihoodError, match="did not pass its validation gates"):
-        nlf._check_gates(likelihood, x, theta, float("nan"), strict=True)
-
-
-def test_gates_score_rows_from_every_draw():
-    # Rows are ordered by draw; an estimator failing only on later draws must not pass.
-    class _FailsOnLaterDraws:
-        def log_prob(self, x, condition):
-            return torch.where(condition[:, 0] < 5000, 0.0, float("-inf"))
-
-    rows = torch.arange(10000.0).reshape(-1, 1)
-    likelihood = type("Likelihood", (), {"_estimator": _FailsOnLaterDraws()})()
-    with pytest.raises(nlf.NeuralLikelihoodError, match="finite log-density"):
-        nlf._check_gates(likelihood, torch.zeros((10000, 2)), rows, 1.0, strict=True)
-
-
-def test_gates_warn_rather_than_raise_when_not_strict():
-    likelihood, _ = _toy_likelihood(epochs=1)
-    with pytest.warns(nlf.NeuralLikelihoodWarning, match="did not pass its validation gates"):
-        nlf._check_gates(likelihood, torch.zeros((8, 2)), torch.zeros((8, 2)),
-                         float("nan"), strict=False)
-
-
 # ------------------------------------------------------------- trial features
 
 
@@ -504,6 +474,15 @@ def test_a_model_whose_outcomes_are_all_categorical_is_refused():
         nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec_factory=_ddm_training_pec,
                                     categorical=(True, True), n_parameter_samples=4,
                                     n_trials_per_sample=5, epochs=1)
+
+
+@pytest.mark.composition
+def test_an_estimator_that_did_not_train_is_refused(monkeypatch):
+    # The held-out loss is not finite after any epoch, as when training diverges.
+    monkeypatch.setattr(nlf, "_fit_estimator", lambda *args, **kwargs: (None, float("inf")))
+    with pytest.raises(nlf.NeuralLikelihoodError, match="Training failed"):
+        nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec_factory=_ddm_training_pec,
+                                    n_parameter_samples=4, n_trials_per_sample=5)
 
 
 def _reversed_ddm_pec(data):

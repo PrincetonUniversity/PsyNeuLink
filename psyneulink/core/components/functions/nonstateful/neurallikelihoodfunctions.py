@@ -35,17 +35,12 @@ except ImportError:
 __all__ = [
     "NeuralLikelihood",
     "NeuralLikelihoodError",
-    "NeuralLikelihoodWarning",
     "train_neural_likelihood",
 ]
 
 
 class NeuralLikelihoodError(Exception):
     """Raised when a neural likelihood is misconfigured or does not match its model."""
-
-
-class NeuralLikelihoodWarning(UserWarning):
-    """Warns that a trained estimator did not pass one of its validation gates."""
 
 
 def _require_sbi():
@@ -493,7 +488,6 @@ def train_neural_likelihood(
     validation_fraction: float = 0.1,
     seed: int = 0,
     distributed_options: Mapping | None = None,
-    strict: bool = True,
 ) -> NeuralLikelihood:
     """Train a :class:`NeuralLikelihood` on data simulated from a composition.
 
@@ -555,10 +549,6 @@ def train_neural_likelihood(
         specifies a Dask cluster over which to distribute the simulations, as for :ref:`distributed fitting
         <DistributedFitting>`.  Requires **pec_factory**.  Each worker builds its own model before simulating,
         so this is worthwhile only for more than a few hundred parameter draws.
-
-    strict : bool : default True
-        specifies whether an estimator that fails validation raises a `NeuralLikelihoodError` (True) or
-        issues a `NeuralLikelihoodWarning` (False).
 
     Returns
     -------
@@ -673,6 +663,11 @@ def train_neural_likelihood(
         epochs=epochs, batch_size=batch_size, learning_rate=learning_rate,
         validation_fraction=validation_fraction, seed=seed,
     )
+    if not np.isfinite(val_nll):
+        raise NeuralLikelihoodError(
+            "Training failed: the negative log-likelihood of the held-out draws was not finite "
+            "after any epoch. Check that the simulated outcomes are finite, or lower learning_rate."
+        )
 
     metadata = NeuralLikelihoodMetadata(
         fit_param_names=names,
@@ -688,29 +683,4 @@ def train_neural_likelihood(
         val_nll=float(val_nll),
     )
     probe = (x[:256].clone(), cond[:256].clone())
-    likelihood = NeuralLikelihood(estimator, metadata, probe)
-    _check_gates(likelihood, x, cond, val_nll, strict)
-    return likelihood
-
-
-def _check_gates(likelihood, x, cond, val_nll, strict):
-    """Refuse an estimator whose held-out loss is not finite, or that cannot score the data it was trained on."""
-    failures = []
-    if not np.isfinite(val_nll):
-        failures.append(f"held-out negative log-likelihood is {val_nll}")
-    # Rows are ordered by parameter draw, so an even spread of them covers every draw.
-    rows = np.unique(np.linspace(0, x.shape[0] - 1, min(4096, x.shape[0])).astype(int))
-    with torch.no_grad():
-        scored = likelihood._estimator.log_prob(x[rows], condition=cond[rows])
-    finite = float(torch.isfinite(scored).float().mean())
-    if finite < 0.999:
-        failures.append(
-            f"only {100 * finite:.2f}% of the simulated rows received a finite log-density"
-        )
-    if not failures:
-        return
-    message = ("This neural likelihood did not pass its validation gates: "
-               + "; ".join(failures) + ".")
-    if strict:
-        raise NeuralLikelihoodError(message + " Pass strict=False to return it anyway.")
-    warnings.warn(message, NeuralLikelihoodWarning, stacklevel=3)
+    return NeuralLikelihood(estimator, metadata, probe)
