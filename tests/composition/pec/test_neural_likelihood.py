@@ -262,10 +262,9 @@ def test_a_mismatched_artifact_is_rejected_before_fitting(ddm_data):
     """The check happens against the PEC, not only at training time."""
     likelihood, _ = _toy_likelihood(epochs=1)
     object.__setattr__(likelihood.metadata, "fit_param_names", ("rate", "non_decision_time"))
-    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
-                   likelihood_estimator_kwargs={"artifact": likelihood})
     with pytest.raises(nlf.NeuralLikelihoodError, match="trained for parameters"):
-        pec._setup_neural_likelihood()
+        _ddm_pec(ddm_data, likelihood_estimator="neural",
+                 likelihood_estimator_kwargs={"artifact": likelihood})
 
 
 def _ddm_training_pec(data):
@@ -543,11 +542,9 @@ def test_excluded_trials_do_not_reach_the_estimator(ddm_data):
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood},
                    likelihood_include_mask=mask)
-    pec._setup_neural_likelihood()
-    scored = pec.controller.function._neural_outcomes
 
-    assert len(scored) == 2
-    np.testing.assert_allclose(scored, pec._data_numpy[mask])
+    expected = likelihood.log_likelihood([0.3, 0.9], pec._data_numpy[mask])
+    assert pec.log_likelihood(0.3, 0.9) == pytest.approx(expected, rel=1e-5)
 
 
 @pytest.mark.composition
@@ -569,44 +566,56 @@ def test_a_fit_scores_with_the_estimator(ddm_data):
 def test_a_distributed_fit_is_refused_with_a_neural_likelihood(ddm_data):
     """Workers score the models the factory builds, so the estimator would go unused."""
     likelihood, _ = _toy_likelihood(epochs=1)
-    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
-                   likelihood_estimator_kwargs={"artifact": likelihood},
-                   optimization_function="differential_evolution",
-                   distributed=True, distributed_options={"pec_factory": _ddm_training_pec})
-    with pytest.raises(Exception, match="cannot be combined"):
-        pec.run(inputs={pec.nodes[0]: np.ones((len(ddm_data), 1))})
+    with pytest.raises(pnl.ParameterEstimationCompositionError, match="cannot be combined"):
+        _ddm_pec(ddm_data, likelihood_estimator="neural",
+                 likelihood_estimator_kwargs={"artifact": likelihood},
+                 optimization_function="differential_evolution",
+                 distributed=True, distributed_options={"pec_factory": _ddm_training_pec})
 
 
 @pytest.mark.composition
-def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
+def _record_trial_features(likelihood, monkeypatch):
+    """Make ``likelihood`` record the trial features it is asked to score with, and score zero."""
+    seen = []
+
+    def log_likelihood(theta, outcomes, trial_features=None):
+        seen.append(trial_features)
+        return 0.0
+
+    monkeypatch.setattr(likelihood, "log_likelihood", log_likelihood)
+    return seen
+
+
+@pytest.mark.composition
+def test_trial_features_follow_the_inputs_of_each_call(ddm_data, monkeypatch):
     """A later call with different inputs must not be scored against the first call's."""
     likelihood, _ = _toy_likelihood(epochs=1)
     object.__setattr__(likelihood.metadata, "trial_feature_columns", (0,))
     object.__setattr__(likelihood.metadata, "constant_inputs", ())
+    seen = _record_trial_features(likelihood, monkeypatch)
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
     node = pec.nodes[0]
 
-    pec._setup_neural_likelihood({node: np.arange(4.0).reshape(-1, 1)})
-    first = pec.controller.function._neural_trial_features.copy()
-    pec._setup_neural_likelihood({node: (10 + np.arange(4.0)).reshape(-1, 1)})
-    second = pec.controller.function._neural_trial_features
+    pec.log_likelihood(0.3, 0.9, inputs={node: np.arange(4.0).reshape(-1, 1)})
+    pec.log_likelihood(0.3, 0.9, inputs={node: (10 + np.arange(4.0)).reshape(-1, 1)})
 
-    assert not np.allclose(first, second)
-    np.testing.assert_allclose(second.ravel(), [10.0, 11.0, 12.0, 13.0])
+    np.testing.assert_allclose(seen[0].ravel(), [0.0, 1.0, 2.0, 3.0])
+    np.testing.assert_allclose(seen[1].ravel(), [10.0, 11.0, 12.0, 13.0])
 
 
 @pytest.mark.composition
-def test_trial_features_are_the_columns_training_used(ddm_data):
+def test_trial_features_are_the_columns_training_used(ddm_data, monkeypatch):
     """Taken by position, even where the column training used does not vary in these data."""
     likelihood, _ = _toy_likelihood(epochs=1)
     object.__setattr__(likelihood.metadata, "trial_feature_columns", (0,))
+    seen = _record_trial_features(likelihood, monkeypatch)
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
 
     one_condition = np.column_stack([np.full(4, 3.0), np.ones(4)])
-    pec._setup_neural_likelihood({pec.nodes[0]: one_condition})
-    np.testing.assert_allclose(pec.controller.function._neural_trial_features.ravel(), 3.0)
+    pec.log_likelihood(0.3, 0.9, inputs={pec.nodes[0]: one_condition})
+    np.testing.assert_allclose(seen[0].ravel(), 3.0)
 
 
 @pytest.mark.composition
@@ -616,7 +625,7 @@ def test_inputs_laid_out_differently_from_training_are_refused(ddm_data):
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
     with pytest.raises(nlf.NeuralLikelihoodError, match="laid out as they were"):
-        pec._setup_neural_likelihood({pec.nodes[0]: np.arange(4.0).reshape(-1, 1)})
+        pec.log_likelihood(0.3, 0.9, inputs={pec.nodes[0]: np.arange(4.0).reshape(-1, 1)})
 
 
 @pytest.mark.composition
@@ -625,9 +634,9 @@ def test_an_input_held_constant_in_training_has_to_keep_its_value(ddm_data):
     likelihood, _ = _toy_likelihood(epochs=1)
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
-    pec._setup_neural_likelihood({pec.nodes[0]: np.ones((4, 1))})
+    pec.log_likelihood(0.3, 0.9, inputs={pec.nodes[0]: np.ones((4, 1))})
     with pytest.raises(nlf.NeuralLikelihoodError, match="held at"):
-        pec._setup_neural_likelihood({pec.nodes[0]: np.full((4, 1), 2.0)})
+        pec.log_likelihood(0.3, 0.9, inputs={pec.nodes[0]: np.full((4, 1), 2.0)})
 
 
 @pytest.mark.composition
@@ -636,10 +645,9 @@ def test_outcomes_the_estimator_cannot_score_are_refused(ddm_data, response_time
     """The estimator models the logarithm of response times, so they have to be positive."""
     likelihood, _ = _toy_likelihood(epochs=1)
     ddm_data.loc[1, "response_time"] = response_time
-    pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
-                   likelihood_estimator_kwargs={"artifact": likelihood})
     with pytest.raises(nlf.NeuralLikelihoodError, match="cannot score"):
-        pec._setup_neural_likelihood()
+        _ddm_pec(ddm_data, likelihood_estimator="neural",
+                 likelihood_estimator_kwargs={"artifact": likelihood})
 
 
 @pytest.mark.composition

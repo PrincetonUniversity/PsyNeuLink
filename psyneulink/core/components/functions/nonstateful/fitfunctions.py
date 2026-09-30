@@ -586,10 +586,7 @@ class PECOptimizationFunction(OptimizationFunction):
         self._pec_objective_function = objective_function
 
         # Set by the PEC when likelihood_estimator="neural"; the likelihood is then computed without simulating.
-        self._neural_likelihood = None
-        self._neural_outcomes = None
-        self._neural_parameter_index = None
-        self._neural_trial_features = None
+        self._neural_log_likelihood = None
 
         # Are we in data fitting mode, or generic optimization. This is set automatically by the PEC when
         # PECOptimizationFunction is passed to it. It only really determines whether some cosmetic
@@ -637,28 +634,12 @@ class PECOptimizationFunction(OptimizationFunction):
             aggregation_function=None,
         )
 
-    def set_neural_likelihood(self, likelihood, outcomes, parameter_index, trial_features=None):
+    def set_neural_likelihood(self, log_likelihood):
         """Score with a trained `NeuralLikelihood` instead of by simulating.
 
-        ``parameter_index[t, k]`` is the position, among the values being fitted, of the value the
-        model's k-th parameter takes on trial t.
+        ``log_likelihood(*values)`` is the log-likelihood of the data at the values being fitted.
         """
-        self._neural_likelihood = likelihood
-        self._neural_outcomes = outcomes
-        self._neural_parameter_index = parameter_index
-        self._neural_trial_features = trial_features
-
-    def _neural_log_likelihood(self, *args):
-        """Log-likelihood of the observed data under one parameter setting."""
-        if len(args) != len(self.fit_param_names):
-            raise ValueError(
-                f"Expected {len(self.fit_param_names)} arguments, got {len(args)}"
-            )
-        return self._neural_likelihood.log_likelihood(
-            np.asarray(args, dtype=float)[self._neural_parameter_index],
-            self._neural_outcomes,
-            self._neural_trial_features,
-        )
+        self._neural_log_likelihood = log_likelihood
 
     def set_pec_objective_function(self, objective_function: Callable):
         """
@@ -754,7 +735,7 @@ class PECOptimizationFunction(OptimizationFunction):
         (self) has been assigned to an OptimizationControlMechanism.
         """
 
-        if self._neural_likelihood is not None:
+        if self._neural_log_likelihood is not None:
             return self._neural_log_likelihood
 
         def objfunc(*args):
@@ -832,15 +813,6 @@ class PECOptimizationFunction(OptimizationFunction):
     ):
         if not self.distributed:
             return self._fit_dispatch(obj_func, display_iter, context, client=None)
-
-        # Workers score the models pec_factory builds, not the estimator attached here.
-        if self._neural_likelihood is not None:
-            raise OptimizationFunctionError(
-                'Distributed fitting (distributed=True) cannot be combined with '
-                'likelihood_estimator="neural": each worker scores the model pec_factory builds, '
-                "not this one's estimator. Fit without distributed=True, since scoring with an "
-                "estimator is a single network call."
-            )
 
         # Distributed evaluation only scores log-likelihoods; reject objective-function
         # mode here rather than failing later inside a worker.
@@ -1496,7 +1468,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 "ParameterEstimationControlMechanism for more information."
             )
 
-        if self._neural_likelihood is not None:
+        if self._neural_log_likelihood is not None:
             if return_sim_data:
                 raise ValueError(
                     "return_sim_data is not available with a neural likelihood: the "

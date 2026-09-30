@@ -293,6 +293,10 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     _resolve_worker_cores,
     simulation_likelihood,
 )
+from psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions import (
+    NeuralLikelihood,
+    _input_columns,
+)
 from psyneulink.core.compositions.hierarchical.distributedestep import (
     make_distributed_estep_runner,
 )
@@ -307,6 +311,7 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
 )
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
     PECFactorySubjectLikelihood,
+    _reported_names,
     split_stacked_data,
 )
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import (
@@ -726,7 +731,7 @@ class ParameterEstimationComposition(Composition):
         distributed_options: Optional[Mapping] = None,
         fit_method: Optional[Union[FitMethod, str]] = None,
         hierarchical_options: Optional[Mapping] = None,
-        likelihood_estimator: Optional[Literal["kde", "neural"]] = None,
+        likelihood_estimator: Literal["kde", "neural"] = "kde",
         likelihood_estimator_kwargs: Optional[Mapping] = None,
         **kwargs,
     ):
@@ -879,12 +884,11 @@ class ParameterEstimationComposition(Composition):
         # it: the remaining columns are the outcome variables, which is what _validate_data expects.
         self._fit_method = fit_method
         self._subject_id = subject_id
-        self._likelihood_estimator = likelihood_estimator or "kde"
+        self._likelihood_estimator = likelihood_estimator
         self._likelihood_estimator_kwargs = dict(likelihood_estimator_kwargs or {})
-        # Loaded and checked against this composition on first use, once its data and controller
-        # are set up.
+        # The trained estimator when likelihood_estimator is "neural", loaded once the model and its
+        # data are set up.
         self._neural_likelihood = None
-        self._neural_parameter_index = None
         # Kept on the composition rather than read back off the optimization function, which only
         # receives them when `distributed` is set; a hierarchical fit needs the factory either way.
         self._pec_distributed_options = dict(distributed_options or {})
@@ -1003,6 +1007,9 @@ class ParameterEstimationComposition(Composition):
         # this to avoid infinite recursion.
         self._run_called = False
 
+        if self._likelihood_estimator == "neural":
+            self._load_neural_likelihood()
+
     #: The solver settings `hierarchical_options` carries, each a `Parameter` that holds its own
     #: default.  `subject_id` is not among them: it says how `data` is divided, which is settled
     #: when the composition is built (see `_setup_hierarchical`).
@@ -1056,6 +1063,12 @@ class ParameterEstimationComposition(Composition):
             raise ParameterEstimationCompositionError(
                 'likelihood_estimator="neural" scores observed data, so data must be '
                 "specified."
+            )
+        if self._pec_distributed:
+            raise ParameterEstimationCompositionError(
+                'distributed=True cannot be combined with likelihood_estimator="neural": each worker '
+                "scores the model pec_factory builds, not this one's estimator. Fit without "
+                "distributed=True, since scoring with an estimator is a single network call."
             )
 
     @classmethod
@@ -1447,60 +1460,51 @@ class ParameterEstimationComposition(Composition):
 
         return ocm
 
-    def _setup_neural_likelihood(self, inputs=None):
-        """Give the optimization function the estimator, and the trials of this call to score.
-
-        The estimator is loaded and checked against this model and its data on the first call only.
-        """
-        if self._likelihood_estimator != "neural":
-            return
-
-        from psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions import (
-            NeuralLikelihood,
-            _input_columns,
-        )
-        from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
-            _reported_names,
+    def _load_neural_likelihood(self):
+        """Load the trained estimator, and check it against this model and its data."""
+        artifact = self._likelihood_estimator_kwargs["artifact"]
+        likelihood = (
+            artifact
+            if isinstance(artifact, NeuralLikelihood)
+            else NeuralLikelihood.load(artifact)
         )
 
+        # Checked against the model's parameters rather than the values fitted: a parameter that
+        # depends on a condition has a value fitted for each condition, all within its range.
+        # Names are compared without the mechanism, whose name depends on construction order.
         included = self.likelihood_include_mask
-        if self._neural_likelihood is None:
-            artifact = self._likelihood_estimator_kwargs["artifact"]
-            likelihood = (
-                artifact
-                if isinstance(artifact, NeuralLikelihood)
-                else NeuralLikelihood.load(artifact)
-            )
+        categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
+        likelihood.metadata.check_matches(
+            _reported_names([f"{mech.name}.{name}" for name, mech in self.fit_parameters]),
+            [float(min(values)) for values in self.fit_parameters.values()],
+            [float(max(values)) for values in self.fit_parameters.values()],
+            tuple(str(c) for c in self.data.columns),
+            categorical,
+        )
+        likelihood.metadata.check_outcomes(self._data_numpy[included])
 
-            # Checked against the model's parameters rather than the values fitted: a parameter that
-            # depends on a condition has a value fitted for each condition, all within its range.
-            # Names are compared without the mechanism, whose name depends on construction order.
-            categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
-            likelihood.metadata.check_matches(
-                _reported_names([f"{mech.name}.{name}" for name, mech in self.fit_parameters]),
-                [float(min(values)) for values in self.fit_parameters.values()],
-                [float(max(values)) for values in self.fit_parameters.values()],
-                tuple(str(c) for c in self.data.columns),
-                categorical,
-            )
-            likelihood.metadata.check_outcomes(self._data_numpy[included])
-
-            # Where each of the model's parameters is found on each trial, among the values fitted:
-            # one that depends on a condition takes the value fitted for the trial's condition.
-            index = np.zeros((len(self.data), len(self.fit_parameters)), dtype=int)
-            fitted = 0
-            for k, key in enumerate(self.fit_parameters):
-                if self.depends_on and key in self.depends_on:
-                    for level in self.cond_levels[key]:
-                        index[np.asarray(self.cond_mask[key][level]), k] = fitted
-                        fitted += 1
-                else:
-                    index[:, k] = fitted
+        # Where each of the model's parameters is found on each trial, among the values fitted:
+        # one that depends on a condition takes the value fitted for the trial's condition.
+        index = np.zeros((len(self.data), len(self.fit_parameters)), dtype=int)
+        fitted = 0
+        for k, key in enumerate(self.fit_parameters):
+            if self.depends_on and key in self.depends_on:
+                for level in self.cond_levels[key]:
+                    index[np.asarray(self.cond_mask[key][level]), k] = fitted
                     fitted += 1
-            self._neural_parameter_index = index[included]
-            self._neural_likelihood = likelihood
+            else:
+                index[:, k] = fitted
+                fitted += 1
+        self._neural_parameter_index = index[included]
+        self._neural_likelihood = likelihood
 
+    def _score_with_neural_likelihood(self, inputs=None):
+        """Give the optimization function the log-likelihood of the data under the estimator.
+
+        It is set again on each call, whose inputs give the trials' features.
+        """
         likelihood = self._neural_likelihood
+        included = self.likelihood_include_mask
         features = None
         metadata = likelihood.metadata
         if inputs is not None or metadata.n_trial_features:
@@ -1512,8 +1516,12 @@ class ParameterEstimationComposition(Composition):
                 features = columns[:, list(metadata.trial_feature_columns)]
 
         # Excluded trials are dropped, as they are from a simulated likelihood.
+        outcomes = self._data_numpy[included]
+        index = self._neural_parameter_index
         self.controller.function.set_neural_likelihood(
-            likelihood, self._data_numpy[included], self._neural_parameter_index, features
+            lambda *values: likelihood.log_likelihood(
+                np.asarray(values, dtype=float)[index], outcomes, features
+            )
         )
 
     @handle_external_context()
@@ -1556,7 +1564,8 @@ class ParameterEstimationComposition(Composition):
         # Get the inputs
         inputs = kwargs.get("inputs", None if not args else args[0])
 
-        self._setup_neural_likelihood(inputs)
+        if self._neural_likelihood is not None:
+            self._score_with_neural_likelihood(inputs)
 
         self._prepare_pec_inputs_for_simulation(inputs, context)
 
@@ -1661,8 +1670,8 @@ class ParameterEstimationComposition(Composition):
             )
 
         # Nothing is simulated with a neural likelihood, so nothing is compiled.
-        self._setup_neural_likelihood(inputs)
         if self._neural_likelihood is not None:
+            self._score_with_neural_likelihood(inputs)
             return self.controller.function.log_likelihood(
                 *args, return_sim_data=return_sim_data, context=context
             )
