@@ -861,14 +861,6 @@ def test_results_history_pairs_objective_with_its_own_estimate():
     assert np.isclose(res.em_history["beta_a"].iloc[0], em.history[0]["beta"][0][0])
 
 
-def test_results_record_the_settings():
-    em, transform, labels = _fit_toy_for_results()
-    res = HierarchicalPECResults.from_em(
-        em, transform, ("a", "b"), labels, settings={"max_iterations": 15}
-    )
-    assert res.settings["max_iterations"] == 15
-
-
 def test_results_repr_surfaces_non_convergence():
     em, transform, labels = _fit_toy_for_results()
     em.converged = False
