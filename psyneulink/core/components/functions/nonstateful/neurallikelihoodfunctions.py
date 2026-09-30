@@ -70,7 +70,6 @@ class NeuralLikelihoodMetadata:
     categorical: tuple[bool, ...]
     categories: tuple[tuple[float, ...], ...]
     log_transform: bool
-    n_input_columns: int
     trial_feature_columns: tuple[int, ...]
     constant_inputs: tuple[float, ...]
     val_nll: float
@@ -116,13 +115,14 @@ class NeuralLikelihoodMetadata:
         Inputs that were the same on every trial in training told the estimator nothing about the
         trial it was scoring, so it can score only trials in which they hold the same values.
         """
-        if columns.shape[1] != self.n_input_columns:
+        n_columns = self.n_trial_features + len(self.constant_inputs)
+        if columns.shape[1] != n_columns:
             raise NeuralLikelihoodError(
-                f"This neural likelihood was trained on inputs with {self.n_input_columns} "
+                f"This neural likelihood was trained on inputs with {n_columns} "
                 f"value(s) per trial; these inputs have {columns.shape[1]}. Pass inputs laid out "
                 f"as they were for training."
             )
-        held = [j for j in range(self.n_input_columns) if j not in self.trial_feature_columns]
+        held = [j for j in range(n_columns) if j not in self.trial_feature_columns]
         if not np.allclose(columns[:, held], self.constant_inputs):
             raise NeuralLikelihoodError(
                 f"This neural likelihood was trained with inputs held at "
@@ -320,8 +320,8 @@ def _check_model(pec, names):
 def _simulate(pec, inputs, thetas, names, seed=0, first_draw=0):
     """Simulate every draw through ``pec``; ``first_draw`` is the place of the first among all draws.
 
-    Returns the conditioning rows, the simulated outcomes, and the layout of the inputs: how many
-    columns they have, which of them were used, and the values of the rest.  Each draw simulates
+    Returns the conditioning rows, the simulated outcomes, and the layout of the inputs: which of
+    their columns were used, and the values of the rest.  Each draw simulates
     as many trials as ``inputs`` has, whatever the model's data.
     """
     _check_model(pec, names)
@@ -354,7 +354,7 @@ def _simulate(pec, inputs, thetas, names, seed=0, first_draw=0):
                 columns = _input_columns(inputs, n_trials, pec.model)
                 used = tuple(int(j) for j in np.flatnonzero(columns.std(axis=0) > 0))
                 held = [j for j in range(columns.shape[1]) if j not in used]
-                layout = (columns.shape[1], used, tuple(float(v) for v in columns[0, held]))
+                layout = (used, tuple(float(v) for v in columns[0, held]))
                 features = columns[:, list(used)] if used else None
             x_rows.append(sim.reshape(-1, sim.shape[-1]))
             block = np.repeat(np.asarray(theta, dtype=float).reshape(1, -1),
@@ -655,9 +655,8 @@ def train_neural_likelihood(
         categorical=flags,
         categories=categories,
         log_transform=log_transform,
-        n_input_columns=int(layout[0]),
-        trial_feature_columns=layout[1],
-        constant_inputs=layout[2],
+        trial_feature_columns=layout[0],
+        constant_inputs=layout[1],
         val_nll=float(val_nll),
     )
     probe = (x[:256].clone(), cond[:256].clone())

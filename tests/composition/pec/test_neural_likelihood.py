@@ -52,7 +52,7 @@ def _toy_likelihood(epochs=3, seed=0):
         lower=(RATE_BOUNDS[0], THRESHOLD_BOUNDS[0]),
         upper=(RATE_BOUNDS[1], THRESHOLD_BOUNDS[1]),
         outcome_names=OUTCOMES, categorical=categorical, categories=categories,
-        log_transform=True, n_input_columns=1, trial_feature_columns=(), constant_inputs=(1.0,),
+        log_transform=True, trial_feature_columns=(), constant_inputs=(1.0,),
         val_nll=val_nll,
     )
     return nlf.NeuralLikelihood(
@@ -310,8 +310,8 @@ def test_training_data_is_generated_from_the_composition():
     assert metadata.fit_param_names == ("rate", "threshold")
     assert metadata.categorical == (True, False)
     # The model is driven by a constant input, so nothing distinguishes one trial from another.
-    assert metadata.n_input_columns == 1
     assert metadata.trial_feature_columns == ()
+    assert metadata.constant_inputs == (1.0,)
     assert np.isfinite(metadata.val_nll)
 
 
@@ -600,7 +600,6 @@ def test_trial_features_follow_the_inputs_of_each_call(ddm_data):
 def test_trial_features_are_the_columns_training_used(ddm_data):
     """Taken by position, even where the column training used does not vary in these data."""
     likelihood, _ = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.metadata, "n_input_columns", 2)
     object.__setattr__(likelihood.metadata, "trial_feature_columns", (0,))
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
@@ -613,7 +612,6 @@ def test_trial_features_are_the_columns_training_used(ddm_data):
 @pytest.mark.composition
 def test_inputs_laid_out_differently_from_training_are_refused(ddm_data):
     likelihood, _ = _toy_likelihood(epochs=1)
-    object.__setattr__(likelihood.metadata, "n_input_columns", 2)
     object.__setattr__(likelihood.metadata, "trial_feature_columns", (0,))
     pec = _ddm_pec(ddm_data, likelihood_estimator="neural",
                    likelihood_estimator_kwargs={"artifact": likelihood})
