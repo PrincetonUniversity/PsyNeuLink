@@ -1138,7 +1138,9 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     for a in llvm_func.args:
         a.attributes.add('noalias')
 
-    state, params, data, data_in, data_out, trials_ptr, inputs_ptr, *continuation = llvm_func.args
+    state, params, data, data_in, data_out, trials_ptr, inputs_ptr, *continuation = (
+        llvm_func.args
+    )
 
     nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
 
@@ -1172,12 +1174,18 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     if resumable:
         # A new observation is a trial boundary, not a new run. The caller
         # owns the complete scheduler tree, including nested clocks.
-        cond, = continuation
-        first_trial = builder.icmp_unsigned("==", cond_gen.get_global_trial(builder, cond), ctx.int32_ty(0))
+        (cond,) = continuation
+        first_trial = builder.icmp_unsigned(
+            "==", cond_gen.get_global_trial(builder, cond), ctx.int32_ty(0)
+        )
         with builder.if_then(first_trial):
-            _reset_composition_nodes_exec_counts(ctx, builder, composition, state, [TimeScale.RUN])
+            _reset_composition_nodes_exec_counts(
+                ctx, builder, composition, state, [TimeScale.RUN]
+            )
     else:
-        _reset_composition_nodes_exec_counts(ctx, builder, composition, state, [TimeScale.RUN])
+        _reset_composition_nodes_exec_counts(
+            ctx, builder, composition, state, [TimeScale.RUN]
+        )
         cond_type = cond_gen.get_condition_struct_type()
         cond = builder.alloca(cond_type, name="scheduler_metadata")
         cond_init = cond_type(cond_gen.get_condition_initializer())

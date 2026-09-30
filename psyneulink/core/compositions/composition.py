@@ -5764,13 +5764,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.parameter_CIM.add_ports([interface_input_port], context=context)
                 # control signal for parameter CIM that will project directly to inner Composition's parameter
                 control_signal = ControlSignal(
-                        modulation=modulation,
-                        variable=(OWNER_VALUE, functools.partial(self.parameter_CIM.get_input_port_position, interface_input_port)),
-                        transfer_function=Identity,
-                        # Preserve the transformation when rerouting a projection
-                        # from an enclosing Composition (e.g., a seed stream offset).
-                        modulates=ControlProjection(receiver=receiver, function=comp_projection.function),
-                        name = PARAMETER_CIM_NAME + "_"  + owner.name + "_" + receiver.name,
+                    modulation=modulation,
+                    variable=(
+                        OWNER_VALUE,
+                        functools.partial(
+                            self.parameter_CIM.get_input_port_position,
+                            interface_input_port,
+                        ),
+                    ),
+                    transfer_function=Identity,
+                    # Preserve the transformation when rerouting a projection
+                    # from an enclosing Composition (e.g., a seed stream offset).
+                    modulates=ControlProjection(
+                        receiver=receiver, function=comp_projection.function
+                    ),
+                    name=PARAMETER_CIM_NAME + "_" + owner.name + "_" + receiver.name,
                 )
                 self.parameter_CIM.add_ports([control_signal], context=context)
                 # add sender and receiver to self.parameter_CIM_ports dict
@@ -9846,13 +9854,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         graph_receiver.parameter_CIM.add_ports([interface_input_port], context=context)
         # control signal for parameter CIM that will project directly to inner Composition's parameter
         # An unspecified relay can be a projection class without a function instance.
-        projection_function = projection.function if isinstance(projection, ControlProjection) else None
+        projection_function = (
+            projection.function if isinstance(projection, ControlProjection) else None
+        )
         control_signal = ControlSignal(
             modulation=modulation,
-            variable=(OWNER_VALUE, functools.partial(graph_receiver.parameter_CIM.get_input_port_position,
-                                                     interface_input_port)),
+            variable=(
+                OWNER_VALUE,
+                functools.partial(
+                    graph_receiver.parameter_CIM.get_input_port_position,
+                    interface_input_port,
+                ),
+            ),
             transfer_function=Identity,
-            modulates=ControlProjection(receiver=receiver, function=projection_function),
+            modulates=ControlProjection(
+                receiver=receiver, function=projection_function
+            ),
             name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
         )
         if receiver.owner not in graph_receiver.nodes.data + graph_receiver.cims:

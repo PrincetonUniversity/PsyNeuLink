@@ -38,9 +38,13 @@ def _random_state_paths(component, dtype, context, prefix=()):
             continue
         children = tuple(children)
         if len(field_dtype.names or ()) != len(children):
-            raise ValueError(f"Nested LLVM state layout does not match {component.name}.{attribute}.")
+            raise ValueError(
+                f"Nested LLVM state layout does not match {component.name}.{attribute}."
+            )
         for name, child in zip(field_dtype.names or (), children):
-            yield from _random_state_paths(child, field_dtype.fields[name][0], context, (*path, name))
+            yield from _random_state_paths(
+                child, field_dtype.fields[name][0], context, (*path, name)
+            )
 
 
 def _field(array, path):
@@ -62,27 +66,55 @@ class ParticleExecution(CompExecution):
 
     def __init__(self, composition, context, num_particles):
         super().__init__(composition, context)
-        if isinstance(num_particles, bool) or not isinstance(num_particles, (int, np.integer)) or num_particles < 1:
+        if (
+            isinstance(num_particles, bool)
+            or not isinstance(num_particles, (int, np.integer))
+            or num_particles < 1
+        ):
             raise ValueError("num_particles must be a positive integer.")
         ocm = composition.controller
-        if ocm.agent_rep is not composition or ocm.parameters.num_trials_per_estimate._get(context) != 1:
-            raise ValueError("Particle execution requires the controller's agent representation and one trial per estimate.")
+        if (
+            ocm.agent_rep is not composition
+            or ocm.parameters.num_trials_per_estimate._get(context) != 1
+        ):
+            raise ValueError(
+                "Particle execution requires the controller's agent representation and one trial per estimate."
+            )
         self.num_particles = int(num_particles)
         self._particle_binary = pnlvm.LLVMBinaryFunction.from_obj(
-            ocm, tags=frozenset({"evaluate", "alloc_range", "evaluate_type_all_results", "particle"}),
-            ctype_ptr_args=(5,), dynamic_size_args=(1, 4, 6, 8),
+            ocm,
+            tags=frozenset(
+                {"evaluate", "alloc_range", "evaluate_type_all_results", "particle"}
+            ),
+            ctype_ptr_args=(5,),
+            dynamic_size_args=(1, 4, 6, 8),
         )
-        self.params = self._get_compilation_param('_particle_params', '_get_param_initializer', 0)
-        base_state = self._get_compilation_param('_particle_state', '_get_state_initializer', 1)
-        base_data = self._get_compilation_param('_particle_data', '_get_data_initializer', 6)
+        self.params = self._get_compilation_param(
+            "_particle_params", "_get_param_initializer", 0
+        )
+        base_state = self._get_compilation_param(
+            "_particle_state", "_get_state_initializer", 1
+        )
+        base_data = self._get_compilation_param(
+            "_particle_data", "_get_data_initializer", 6
+        )
         self.states = np.repeat(np.atleast_1d(base_state), self.num_particles, axis=0)
         self.data = np.repeat(np.atleast_1d(base_data), self.num_particles, axis=0)
         binary = self._particle_binary
-        initial = binary.byref_arg_types[8](*ConditionGenerator(None, composition).get_condition_initializer())
-        self.conditions = np.repeat(np.frombuffer(initial, dtype=binary.np_arg_dtypes[8], count=1),
-                                    self.num_particles, axis=0)
-        self._rng_paths = tuple(_random_state_paths(composition, self.states.dtype, context))
-        self._outputs = binary.np_buffer_for_arg(4, extra_dimensions=(self.num_particles, 1))
+        initial = binary.byref_arg_types[8](
+            *ConditionGenerator(None, composition).get_condition_initializer()
+        )
+        self.conditions = np.repeat(
+            np.frombuffer(initial, dtype=binary.np_arg_dtypes[8], count=1),
+            self.num_particles,
+            axis=0,
+        )
+        self._rng_paths = tuple(
+            _random_state_paths(composition, self.states.dtype, context)
+        )
+        self._outputs = binary.np_buffer_for_arg(
+            4, extra_dimensions=(self.num_particles, 1)
+        )
         self._jobs = min(get_num_threads(), self.num_particles)
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=self._jobs)
         self._closed = False
@@ -101,28 +133,49 @@ class ParticleExecution(CompExecution):
         outputs = self._outputs.reshape(-1, *binary.np_arg_dtypes[4].shape)
         self._outputs[...] = np.nan
         per_job = (self.num_particles + self._jobs - 1) // self._jobs
-        futures = [self._executor.submit(
-            binary, self.params, self.states, start, min(start + per_job, self.num_particles),
-            outputs, input_arg, self.data, np.asarray(1, dtype=np.uint32), self.conditions,
-        ) for start in range(0, self.num_particles, per_job)]
+        futures = [
+            self._executor.submit(
+                binary,
+                self.params,
+                self.states,
+                start,
+                min(start + per_job, self.num_particles),
+                outputs,
+                input_arg,
+                self.data,
+                np.asarray(1, dtype=np.uint32),
+                self.conditions,
+            )
+            for start in range(0, self.num_particles, per_job)
+        ]
         # Wait for every writer before propagating an exception or resampling.
         concurrent.futures.wait(futures)
         for future in futures:
             future.result()
         dtype = self._outputs.dtype
         while dtype.names is not None or dtype.subdtype is not None:
-            dtype = dtype.fields[dtype.names[0]][0] if dtype.names else dtype.subdtype[0]
+            dtype = (
+                dtype.fields[dtype.names[0]][0] if dtype.names else dtype.subdtype[0]
+            )
         outcomes = self._outputs.view(dtype).reshape(self.num_particles, -1).copy()
         if not np.isfinite(outcomes).all():
-            raise ValueError("Particle simulation returned nonfinite outcomes or ended before the requested trial.")
+            raise ValueError(
+                "Particle simulation returned nonfinite outcomes or ended before the requested trial."
+            )
         return outcomes
 
     def resample(self, ancestors):
         """Gather complete histories; keep each destination's advanced RNGs."""
         ancestors = np.asarray(ancestors)
-        if (ancestors.shape != (self.num_particles,) or not np.issubdtype(ancestors.dtype, np.integer)
-                or np.any(ancestors < 0) or np.any(ancestors >= self.num_particles)):
-            raise ValueError("ancestors must contain one valid integer index per particle.")
+        if (
+            ancestors.shape != (self.num_particles,)
+            or not np.issubdtype(ancestors.dtype, np.integer)
+            or np.any(ancestors < 0)
+            or np.any(ancestors >= self.num_particles)
+        ):
+            raise ValueError(
+                "ancestors must contain one valid integer index per particle."
+            )
         states = self.states[ancestors].copy()
         for path in self._rng_paths:
             np.copyto(_field(states, path), _field(self.states, path))

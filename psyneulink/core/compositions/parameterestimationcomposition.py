@@ -696,7 +696,7 @@ class ParameterEstimationComposition(Composition):
         # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
         initial_seed = SharedParameter(attribute_name='controller')
         same_seed_for_all_parameter_combinations = SharedParameter(attribute_name='controller')
-        noise_stream_policy = SharedParameter(attribute_name='controller')
+        noise_stream_policy = SharedParameter(attribute_name="controller")
 
         # How a hierarchical fit is run.  These configure the composition rather than describing
         # anything it computes, and they hold still for the length of a fit, so none of them is
@@ -759,14 +759,16 @@ class ParameterEstimationComposition(Composition):
     def __init__(
         self,
         parameters: Optional[Dict] = None,
-        outcome_variables: Optional[Union[
-            List[Mechanism], Mechanism, List[OutputPort], OutputPort
-        ]] = None,
-        optimization_function: Optional[Union[
-            PECOptimizationFunction,
-            Literal["differential_evolution"],
-            Literal["grid_search"],
-        ]] = None,
+        outcome_variables: Optional[
+            Union[List[Mechanism], Mechanism, List[OutputPort], OutputPort]
+        ] = None,
+        optimization_function: Optional[
+            Union[
+                PECOptimizationFunction,
+                Literal["differential_evolution"],
+                Literal["grid_search"],
+            ]
+        ] = None,
         model: Optional[Composition] = None,
         data: Optional[pd.DataFrame] = None,
         likelihood_include_mask: Optional[np.ndarray] = None,
@@ -783,7 +785,7 @@ class ParameterEstimationComposition(Composition):
         distributed_options: Optional[Mapping] = None,
         fit_method: Optional[Union[FitMethod, str]] = None,
         hierarchical_options: Optional[Mapping] = None,
-        noise_stream_policy: str = 'independent',
+        noise_stream_policy: str = "independent",
         **kwargs,
     ):
         # We don't allow user specified controllers in PEC
@@ -1538,7 +1540,9 @@ class ParameterEstimationComposition(Composition):
     def likelihood_history(self):
         """Structural evidence used to select a conditional likelihood automatically."""
         if self.controller is None:
-            raise ParameterEstimationCompositionError("Likelihood history is defined on each subject's model PEC.")
+            raise ParameterEstimationCompositionError(
+                "Likelihood history is defined on each subject's model PEC."
+            )
         return self.controller.function.likelihood_history
 
     @handle_external_context()

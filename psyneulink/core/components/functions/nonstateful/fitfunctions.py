@@ -46,7 +46,12 @@ from rich.markup import escape
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["PECOptimizationFunction", "BadLikelihoodWarning", "PECObjectiveFuncWarning", "ParticleSupportError"]
+__all__ = [
+    "PECOptimizationFunction",
+    "BadLikelihoodWarning",
+    "PECObjectiveFuncWarning",
+    "ParticleSupportError",
+]
 
 
 def get_param_str(params):
@@ -595,7 +600,14 @@ class PECOptimizationFunction(OptimizationFunction):
     @beartype
     def __init__(
         self,
-        method: Optional[Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler], optuna.study.Study]],
+        method: Optional[
+            Union[
+                Literal["differential_evolution"],
+                optuna.samplers.BaseSampler,
+                Type[optuna.samplers.BaseSampler],
+                optuna.study.Study,
+            ]
+        ],
         optuna_kwargs: Optional[Mapping] = None,
         objective_function: Optional[Callable] = None,
         search_space=None,
@@ -773,12 +785,14 @@ class PECOptimizationFunction(OptimizationFunction):
         """
 
         if self._uses_conditioned_likelihood():
+
             def conditioned_objective(*args):
                 try:
                     return self._conditioned_evaluation(*args, context=context)[0]
                 except ParticleSupportError as error:
                     warnings.warn(BadLikelihoodWarning(str(error)))
                     return -np.inf
+
             return conditioned_objective
 
         def objfunc(*args):
@@ -790,15 +804,23 @@ class PECOptimizationFunction(OptimizationFunction):
     @property
     def likelihood_history(self):
         """Reasons for selecting the observed-history likelihood in auto mode."""
-        from psyneulink.core.compositions.likelihoodhistory import analyze_likelihood_history
+        from psyneulink.core.compositions.likelihoodhistory import (
+            analyze_likelihood_history,
+        )
+
         if self.owner is None:
             raise OptimizationFunctionError("Likelihood history requires a PEC owner.")
         pec = self.owner.composition
-        return analyze_likelihood_history(pec.model, pec.outcome_variables,
-                                          parameter_controls=pec.pec_control_mechs.values())
+        return analyze_likelihood_history(
+            pec.model,
+            pec.outcome_variables,
+            parameter_controls=pec.pec_control_mechs.values(),
+        )
 
     def _uses_conditioned_likelihood(self):
-        if self.conditioned_likelihood != "auto" and not isinstance(self.conditioned_likelihood, bool):
+        if self.conditioned_likelihood != "auto" and not isinstance(
+            self.conditioned_likelihood, bool
+        ):
             raise ValueError("conditioned_likelihood must be 'auto', True, or False.")
         if not self.data_fitting_mode:
             return False
@@ -815,25 +837,39 @@ class PECOptimizationFunction(OptimizationFunction):
         pec = ocm.composition
         self.likelihood_diagnostics = None
         if ocm.parameters.comp_execution_mode._get(context) != "LLVM":
-            raise OptimizationFunctionError("Conditional likelihood requires LLVM execution. "
-                                            "Set the PEC controller's comp_execution_mode to 'LLVM'.")
+            raise OptimizationFunctionError(
+                "Conditional likelihood requires LLVM execution. "
+                "Set the PEC controller's comp_execution_mode to 'LLVM'."
+            )
         if len(args) != len(self.fit_param_names):
-            raise ValueError(f"Expected {len(self.fit_param_names)} arguments, got {len(args)}")
+            raise ValueError(
+                f"Expected {len(self.fit_param_names)} arguments, got {len(args)}"
+            )
         observed = np.asarray(pec._data_numpy, dtype=float)
-        observation_model = ParticleObservationModel(observed, pec.data_categorical_dims, **self.likelihood_options)
+        observation_model = ParticleObservationModel(
+            observed, pec.data_categorical_dims, **self.likelihood_options
+        )
         original_inputs = ocm._pec_input_values
         if not original_inputs or pec.model not in original_inputs:
-            raise OptimizationFunctionError("Conditional likelihood requires prepared PEC inputs.")
-        full_inputs = {key: copy.deepcopy(value) for key, value in original_inputs.items()}
+            raise OptimizationFunctionError(
+                "Conditional likelihood requires prepared PEC inputs."
+            )
+        full_inputs = {
+            key: copy.deepcopy(value) for key, value in original_inputs.items()
+        }
         # depends_on masks have the full trial axis. Assign first, slice second.
         ocm.set_parameters_in_inputs(args, full_inputs)
         sequence = full_inputs[pec.model]
         if len(sequence) != len(observed):
-            raise ValueError("Conditional likelihood requires one input row per observed trial.")
+            raise ValueError(
+                "Conditional likelihood requires one input row per observed trial."
+            )
         original_trials = int(ocm.parameters.num_trials_per_estimate._get(context))
         self.reset_grid(context)
         particles = int(np.prod([s.num for s in self.search_space]))
-        seed = try_extract_0d_array_item(self._get_current_parameter_value("initial_seed", context))
+        seed = try_extract_0d_array_item(
+            self._get_current_parameter_value("initial_seed", context)
+        )
         # Use a separate stream for ancestry. Common candidate seeds reproduce
         # both simulation innovations and resampling; fresh candidates advance
         # their complete simulation seed grid once, after the sequence.
@@ -844,8 +880,9 @@ class PECOptimizationFunction(OptimizationFunction):
         try:
             ocm.parameters.num_trials_per_estimate.set(1, context=context)
             with ParticleExecution(pec, context, particles) as session:
+
                 def advance(trial):
-                    ocm._pec_input_values = {pec.model: sequence[trial:trial + 1]}
+                    ocm._pec_input_values = {pec.model: sequence[trial : trial + 1]}
                     features = ocm.parameters.state_feature_values._get(context)
                     inputs, count = pec._parse_run_inputs(features, context)
                     if count != 1:
@@ -853,8 +890,11 @@ class PECOptimizationFunction(OptimizationFunction):
                     return session.advance(inputs)[:, self.outcome_variable_indices]
 
                 score, diagnostics, simulations = particle_filter(
-                    advance, session.resample, observation_model,
-                    include_mask=pec.likelihood_include_mask, seed=resampling_seed,
+                    advance,
+                    session.resample,
+                    observation_model,
+                    include_mask=pec.likelihood_include_mask,
+                    seed=resampling_seed,
                     return_sim_data=return_sim_data,
                 )
             self.likelihood_diagnostics = diagnostics
@@ -862,8 +902,13 @@ class PECOptimizationFunction(OptimizationFunction):
         finally:
             ocm._pec_input_values = original_inputs
             ocm.parameters.num_trials_per_estimate.set(original_trials, context=context)
-            if not ocm.parameters.same_seed_for_all_allocations._get(context) and random_dimension is not None:
-                self.search_space[random_dimension] = SampleIterator(ocm.gen_new_seed_sequence(context))
+            if (
+                not ocm.parameters.same_seed_for_all_allocations._get(context)
+                and random_dimension is not None
+            ):
+                self.search_space[random_dimension] = SampleIterator(
+                    ocm.gen_new_seed_sequence(context)
+                )
 
     def _evaluate_objective_and_sim_data(self, *args, context=None):
         """
@@ -1593,9 +1638,13 @@ class PECOptimizationFunction(OptimizationFunction):
         context.execution_phase = ContextFlags.PROCESSING
         try:
             if self._uses_conditioned_likelihood():
-                ll, sim_data = self._conditioned_evaluation(*args, context=context, return_sim_data=return_sim_data)
+                ll, sim_data = self._conditioned_evaluation(
+                    *args, context=context, return_sim_data=return_sim_data
+                )
             else:
-                ll, sim_data = self._evaluate_objective_and_sim_data(*args, context=context)
+                ll, sim_data = self._evaluate_objective_and_sim_data(
+                    *args, context=context
+                )
         finally:
             context.execution_phase = execution_phase_at_entry
 

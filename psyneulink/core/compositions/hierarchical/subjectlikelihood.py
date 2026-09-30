@@ -357,9 +357,14 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
 
     def log_likelihood(self, theta, subject_index):
         """Log-likelihood of one participant's data at parameters `theta`, in the model's units."""
-        from psyneulink.core.components.functions.nonstateful.fitfunctions import _pec_candidate_log_likelihood
+        from psyneulink.core.components.functions.nonstateful.fitfunctions import (
+            _pec_candidate_log_likelihood,
+        )
+
         pec, inputs = self._build(subject_index)
-        return _pec_candidate_log_likelihood(pec, np.asarray(theta, dtype=float), inputs)
+        return _pec_candidate_log_likelihood(
+            pec, np.asarray(theta, dtype=float), inputs
+        )
 
     def close(self):
         """Drop the cached models."""

@@ -4,9 +4,13 @@ from dataclasses import dataclass
 
 import networkx as nx
 
-from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
+from psyneulink.core.components.functions.stateful.statefulfunction import (
+    StatefulFunction,
+)
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import (
+    ControlMechanism,
+)
 from psyneulink.core.scheduling.condition import Always, AtPass, All, Any
 
 
@@ -92,7 +96,9 @@ def analyze_likelihood_history(model, outcome_variables, *, parameter_controls=(
                 graph.add_edge(dependency, node)
         # A hidden stopping mechanism can affect how long observed mechanisms
         # integrate without having a projection to any observed output.
-        termination_dependencies.update(dependencies(composition.termination_processing))
+        termination_dependencies.update(
+            dependencies(composition.termination_processing)
+        )
         feedback.extend(composition.feedback_projections)
 
     visit(model)
@@ -108,8 +114,14 @@ def analyze_likelihood_history(model, outcome_variables, *, parameter_controls=(
             relevant.update(nx.ancestors(graph, node))
     reasons = []
     for node, condition in execution_conditions.items():
-        if node in relevant and node not in parameter_controls and not _resets_each_trial(condition):
-            reasons.append(f"{node.name}: conditional execution can retain an output from a previous trial")
+        if (
+            node in relevant
+            and node not in parameter_controls
+            and not _resets_each_trial(condition)
+        ):
+            reasons.append(
+                f"{node.name}: conditional execution can retain an output from a previous trial"
+            )
     for node in dict.fromkeys(mechanisms):
         if node not in relevant or node in parameter_controls:
             continue
@@ -118,16 +130,24 @@ def analyze_likelihood_history(model, outcome_variables, *, parameter_controls=(
         if getattr(node, "integrator_mode", False):
             functions.append(node.integrator_function)
         if not reset and any(isinstance(f, StatefulFunction) for f in functions):
-            reasons.append(f"{node.name}: stateful function is not unconditionally reset each trial")
+            reasons.append(
+                f"{node.name}: stateful function is not unconditionally reset each trial"
+            )
         if getattr(node, "recurrent_projection", None) is not None and not reset:
             reasons.append(f"{node.name}: recurrent output persists between trials")
         if isinstance(node, ControlMechanism):
-            reasons.append(f"{node.name}: control modulation can retain values sampled on a previous trial")
+            reasons.append(
+                f"{node.name}: control modulation can retain values sampled on a previous trial"
+            )
         if any(isinstance(f, UserDefinedFunction) for f in functions):
-            reasons.append(f"{node.name}: custom function's trial independence is not declared")
+            reasons.append(
+                f"{node.name}: custom function's trial independence is not declared"
+            )
         for port in (*node.input_ports, *node.output_ports, *node.parameter_ports):
             if isinstance(port.function, StatefulFunction):
-                reasons.append(f"{node.name}.{port.name}: stateful port is not covered by the mechanism reset")
+                reasons.append(
+                    f"{node.name}.{port.name}: stateful port is not covered by the mechanism reset"
+                )
     # Multi-node feedback can read last-trial outputs even when individual
     # mechanisms have stateless functions. Self-recurrence is checked above.
     for group in nx.strongly_connected_components(graph.subgraph(relevant)):
@@ -135,6 +155,11 @@ def analyze_likelihood_history(model, outcome_variables, *, parameter_controls=(
             names = ", ".join(sorted(n.name for n in group))
             reasons.append(f"feedback among {names} can carry outputs across trials")
     for projection in feedback:
-        if projection.receiver.owner in relevant and projection.sender.owner is not projection.receiver.owner:
-            reasons.append(f"{projection.name}: feedback can read an output from the preceding trial")
+        if (
+            projection.receiver.owner in relevant
+            and projection.sender.owner is not projection.receiver.owner
+        ):
+            reasons.append(
+                f"{projection.name}: feedback can read an output from the preceding trial"
+            )
     return LikelihoodHistory(tuple(dict.fromkeys(reasons)))

@@ -3095,7 +3095,20 @@ class Mechanism_Base(Mechanism):
 
         return ip_output, builder
 
-    def _gen_llvm_param_ports_for_obj(self, ctx, builder, mech_params, mech_state, mech_input, *, obj, params_in, params_out=None, recursive=False, use_cached=False):
+    def _gen_llvm_param_ports_for_obj(
+        self,
+        ctx,
+        builder,
+        mech_params,
+        mech_state,
+        mech_input,
+        *,
+        obj,
+        params_in,
+        params_out=None,
+        recursive=False,
+        use_cached=False,
+    ):
 
         # This should be faster than 'obj._get_compilation_params'
         compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
@@ -3128,16 +3141,18 @@ class Mechanism_Base(Mechanism):
             if p in mutable_parameters:
                 if recursive:
                     nested_obj = getattr(obj.parameters, p).get()
-                    nested_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
-                                                                                builder,
-                                                                                mech_params,
-                                                                                mech_state,
-                                                                                mech_input,
-                                                                                obj=nested_obj,
-                                                                                params_in=src,
-                                                                                params_out=dst,
-                                                                                recursive=True,
-                                                                                use_cached=use_cached)
+                    nested_params, builder = self._gen_llvm_param_ports_for_obj(
+                        ctx,
+                        builder,
+                        mech_params,
+                        mech_state,
+                        mech_input,
+                        obj=nested_obj,
+                        params_in=src,
+                        params_out=dst,
+                        recursive=True,
+                        use_cached=use_cached,
+                    )
                     assert nested_params is dst, "Nested components need to copy non-modulated parameters"
 
                 continue
@@ -3151,13 +3166,25 @@ class Mechanism_Base(Mechanism):
                     "Unexpected parameter ({}) {} source {}".format(p, parameter, self._parameter_ports[parameter].source)
 
                 if use_cached:
-                    _, ports_state = ctx.get_param_or_state_ptr(builder, self, "_parameter_ports",
-                                                               param_struct_ptr=mech_params,
-                                                               state_struct_ptr=mech_state, history=None)
+                    _, ports_state = ctx.get_param_or_state_ptr(
+                        builder,
+                        self,
+                        "_parameter_ports",
+                        param_struct_ptr=mech_params,
+                        state_struct_ptr=mech_state,
+                        history=None,
+                    )
                     port = self._parameter_ports[parameter]
-                    port_state = builder.gep(ports_state, [ctx.int32_ty(0),
-                                                          ctx.int32_ty(self._parameter_ports.index(port))])
-                    value_ptr = ctx.get_param_or_state_ptr(builder, port, VALUE, state_struct_ptr=port_state)
+                    port_state = builder.gep(
+                        ports_state,
+                        [
+                            ctx.int32_ty(0),
+                            ctx.int32_ty(self._parameter_ports.index(port)),
+                        ],
+                    )
+                    value_ptr = ctx.get_param_or_state_ptr(
+                        builder, port, VALUE, state_struct_ptr=port_state
+                    )
                     builder = pnlvm.helpers.memcpy(builder, dst, value_ptr)
                     continue
 
@@ -3458,14 +3485,16 @@ class Mechanism_Base(Mechanism):
         # previously sampled parameters, without executing ParameterPorts.
         # StatefulFunction.reset itself still reads current control allocations
         # for controlled initializers (e.g. DDM non_decision_time).
-        reinit_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
-                                                                    builder,
-                                                                    m_base_params,
-                                                                    m_state,
-                                                                    m_arg_in,
-                                                                    obj=self.function,
-                                                                    params_in=reinit_base_params,
-                                                                    use_cached="reset" not in func_tags)
+        reinit_params, builder = self._gen_llvm_param_ports_for_obj(
+            ctx,
+            builder,
+            m_base_params,
+            m_state,
+            m_arg_in,
+            obj=self.function,
+            params_in=reinit_base_params,
+            use_cached="reset" not in func_tags,
+        )
 
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
 

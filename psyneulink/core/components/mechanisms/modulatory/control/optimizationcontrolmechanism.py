@@ -1093,7 +1093,10 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component, ComponentError
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
-from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions, Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import (
+    CostFunctions,
+    Linear,
+)
 from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
@@ -1102,7 +1105,9 @@ from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec, _instantiate_port, Port
-from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.projections.modulatory.controlprojection import (
+    ControlProjection,
+)
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
@@ -1786,7 +1791,13 @@ class OptimizationControlMechanism(ControlMechanism):
         random_variables = ALL
         initial_seed = None
         same_seed_for_all_allocations = False
-        noise_stream_policy = Parameter('shared_seed', stateful=False, loggable=False, read_only=True, structural=True)
+        noise_stream_policy = Parameter(
+            "shared_seed",
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
         num_estimates = None
         num_trials_per_estimate = None
 
@@ -1802,7 +1813,7 @@ class OptimizationControlMechanism(ControlMechanism):
         saved_values = None
 
         def _validate_noise_stream_policy(self, value):
-            if value not in ('independent', 'shared_seed'):
+            if value not in ("independent", "shared_seed"):
                 return "must be 'independent' or 'shared_seed'"
 
         def _validate_state_feature_default_spec(self, state_feature_default):
@@ -1816,26 +1827,32 @@ class OptimizationControlMechanism(ControlMechanism):
     @handle_external_context()
     @check_user_specified
     @beartype
-    def __init__(self,
-                 agent_rep=None,
-                 state_features: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,
-                 # state_feature_default=None,
-                 state_feature_default: Optional[Union[str, Iterable, InputPort, OutputPort, Mechanism]] = SHADOW_INPUTS,
-                 state_feature_function: Optional[Union[dict, Callable]]=None,
-                 function=None,
-                 num_estimates=None,
-                 random_variables=None,
-                 initial_seed=None,
-                 same_seed_for_all_allocations=None,
-                 num_trials_per_estimate=None,
-                 search_function: Optional[Callable]=None,
-                 search_termination_function: Optional[Callable]=None,
-                 search_statefulness=None,
-                 return_results: bool = False,
-                 data=None,
-                 context=None,
-                 noise_stream_policy=None,
-                 **kwargs):
+    def __init__(
+        self,
+        agent_rep=None,
+        state_features: Optional[
+            Union[str, Iterable, InputPort, OutputPort, Mechanism]
+        ] = SHADOW_INPUTS,
+        # state_feature_default=None,
+        state_feature_default: Optional[
+            Union[str, Iterable, InputPort, OutputPort, Mechanism]
+        ] = SHADOW_INPUTS,
+        state_feature_function: Optional[Union[dict, Callable]] = None,
+        function=None,
+        num_estimates=None,
+        random_variables=None,
+        initial_seed=None,
+        same_seed_for_all_allocations=None,
+        num_trials_per_estimate=None,
+        search_function: Optional[Callable] = None,
+        search_termination_function: Optional[Callable] = None,
+        search_statefulness=None,
+        return_results: bool = False,
+        data=None,
+        context=None,
+        noise_stream_policy=None,
+        **kwargs,
+    ):
         """Implement OptimizationControlMechanism"""
 
         self.return_results = return_results
@@ -1916,7 +1933,7 @@ class OptimizationControlMechanism(ControlMechanism):
             state_feature_function=state_feature_function,
             function=function,
             num_estimates=num_estimates,
-            num_trials_per_estimate = num_trials_per_estimate,
+            num_trials_per_estimate=num_trials_per_estimate,
             random_variables=random_variables,
             initial_seed=initial_seed,
             same_seed_for_all_allocations=same_seed_for_all_allocations,
@@ -1924,7 +1941,7 @@ class OptimizationControlMechanism(ControlMechanism):
             search_statefulness=search_statefulness,
             search_function=search_function,
             search_termination_function=search_termination_function,
-            **kwargs
+            **kwargs,
         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -3021,22 +3038,28 @@ class OptimizationControlMechanism(ControlMechanism):
                 return
 
             randomization_seed_mod_values = self.gen_new_seed_sequence(context)
-            seed_ports = [variable.parameters.seed.port for variable in self.random_variables]
-            if self.parameters.noise_stream_policy._get(context) == 'independent':
+            seed_ports = [
+                variable.parameters.seed.port for variable in self.random_variables
+            ]
+            if self.parameters.noise_stream_policy._get(context) == "independent":
                 # Each estimate receives a block of seeds. Assign a fixed slot in
                 # that block to each random variable, without adding search dimensions.
-                seed_projections = [ControlProjection(receiver=port, function=Linear(intercept=index))
-                                    for index, port in enumerate(seed_ports)]
+                seed_projections = [
+                    ControlProjection(receiver=port, function=Linear(intercept=index))
+                    for index, port in enumerate(seed_ports)
+                ]
             else:
                 seed_projections = seed_ports
 
-            randomization_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
-                                                         modulates=seed_projections,
-                                                         allocation_samples=randomization_seed_mod_values,
-                                                         modulation=OVERRIDE,
-                                                         cost_options=CostFunctions.NONE,
-                                                         # FIXME: Hack that Jan found to prevent some LLVM runtime errors
-                                                         default_allocation=np.array([num_estimates]))
+            randomization_control_signal = ControlSignal(
+                name=RANDOMIZATION_CONTROL_SIGNAL,
+                modulates=seed_projections,
+                allocation_samples=randomization_seed_mod_values,
+                modulation=OVERRIDE,
+                cost_options=CostFunctions.NONE,
+                # FIXME: Hack that Jan found to prevent some LLVM runtime errors
+                default_allocation=np.array([num_estimates]),
+            )
             randomization_control_signal = self._instantiate_control_signal(randomization_control_signal, context)
             randomization_control_signal_index = len(self.output_ports)
             randomization_control_signal._variable_spec = (OWNER_VALUE, randomization_control_signal_index)
@@ -3406,7 +3429,9 @@ class OptimizationControlMechanism(ControlMechanism):
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate_range")
         llvm_func = builder.function
 
-        params, state, start, stop, arg_out, arg_in, data, num_inputs, *continuation = llvm_func.args
+        params, state, start, stop, arg_out, arg_in, data, num_inputs, *continuation = (
+            llvm_func.args
+        )
         for p in llvm_func.args:
             if isinstance(p.type, (pnlvm.ir.PointerType)):
                 p.attributes.add('nonnull')
@@ -3440,12 +3465,25 @@ class OptimizationControlMechanism(ControlMechanism):
             pnlvm.helpers.create_sample(b, allocation, search_space, idx)
 
             if "particle" in tags:
-                conditions, = continuation
-                b.call(evaluate_f, [params, b.gep(state, [idx]), allocation, func_out,
-                                    arg_in, b.gep(data, [idx]), num_inputs,
-                                    b.gep(conditions, [idx])])
+                (conditions,) = continuation
+                b.call(
+                    evaluate_f,
+                    [
+                        params,
+                        b.gep(state, [idx]),
+                        allocation,
+                        func_out,
+                        arg_in,
+                        b.gep(data, [idx]),
+                        num_inputs,
+                        b.gep(conditions, [idx]),
+                    ],
+                )
             else:
-                b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data, num_inputs])
+                b.call(
+                    evaluate_f,
+                    [params, state, allocation, func_out, arg_in, data, num_inputs],
+                )
 
         builder.ret_void()
         return llvm_func
@@ -3462,13 +3500,26 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if "particle" in tags:
             assert "evaluate_type_all_results" in tags
-            args.append(pnlvm.scheduler.ConditionGenerator(ctx, self.agent_rep).get_condition_struct_type().as_pointer())
+            args.append(
+                pnlvm.scheduler.ConditionGenerator(ctx, self.agent_rep)
+                .get_condition_struct_type()
+                .as_pointer()
+            )
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
         llvm_func = builder.function
         for p in llvm_func.args:
             p.attributes.add('nonnull')
 
-        comp_params, base_comp_state, allocation_sample, arg_out, comp_input, base_comp_data, num_inputs, *continuation = llvm_func.args
+        (
+            comp_params,
+            base_comp_state,
+            allocation_sample,
+            arg_out,
+            comp_input,
+            base_comp_data,
+            num_inputs,
+            *continuation,
+        ) = llvm_func.args
 
         if "const_params" in debug_env:
             comp_params = builder.alloca(comp_params.type.pointee, name="const_params_loc")
@@ -3580,7 +3631,19 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
-        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input, comp_output, num_trials, num_inputs, *continuation])
+        builder.call(
+            sim_f,
+            [
+                comp_state,
+                comp_params,
+                comp_data,
+                comp_input,
+                comp_output,
+                num_trials,
+                num_inputs,
+                *continuation,
+            ],
+        )
 
         if "particle" in tags:
             # objectsize cannot determine the size of caller-owned destinations.
@@ -3850,10 +3913,14 @@ class OptimizationControlMechanism(ControlMechanism):
         num_estimates = self.parameters.num_estimates._get(context)
         num_estimates = try_extract_0d_array_item(num_estimates)
 
-        if self.parameters.noise_stream_policy._get(context) == 'independent':
+        if self.parameters.noise_stream_policy._get(context) == "independent":
             # Seeds pass through floating-point ControlSignals before reaching the
             # RNG's uint32 seed. Keep every base AND component seed exactly representable.
-            seed_limit = 2**24 if pnlvm.LLVMBuilderContext.default_float_ty == pnlvm.ir.FloatType() else 2**32
+            seed_limit = (
+                2**24
+                if pnlvm.LLVMBuilderContext.default_float_ty == pnlvm.ir.FloatType()
+                else 2**32
+            )
             num_streams = len(self.random_variables)
             num_blocks = seed_limit // num_streams
             if num_estimates > num_blocks:
@@ -3862,7 +3929,9 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"at most {num_blocks} estimates have distinct seeds at the current execution precision."
                 )
             start = int(self._seed_counter) % num_blocks
-            seeds = [((start + i) % num_blocks) * num_streams for i in range(num_estimates)]
+            seeds = [
+                ((start + i) % num_blocks) * num_streams for i in range(num_estimates)
+            ]
             self._seed_counter = (start + num_estimates) % num_blocks
             return seeds
         seeds = [self._seed_counter + i for i in range(num_estimates)]
