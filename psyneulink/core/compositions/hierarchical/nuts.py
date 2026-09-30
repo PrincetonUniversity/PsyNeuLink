@@ -80,6 +80,12 @@ DUAL_AVERAGING_GAMMA = 0.05
 DUAL_AVERAGING_T0 = 10.0
 DUAL_AVERAGING_KAPPA = 0.75
 
+#: Standard deviations of the priors on the group means and on the logs of the group scales, in
+#: unconstrained units.  They are weak: the model's search range already bounds every parameter,
+#: and the transform folds it in.
+BETA_PRIOR_SD = 5.0
+LOG_SCALE_PRIOR_SD = 1.0
+
 
 class NUTSError(Exception):
     """Raised when a sampling run cannot be set up or cannot proceed."""
@@ -125,11 +131,6 @@ class NUTSConfig:
 
     seed : int
         Seeds both the starting points and the sampler's own randomness.
-
-    beta_prior_sd, scale_prior_sd : float
-        Standard deviations of the priors on the group means and on the log of the group scales,
-        in unconstrained units.  The defaults are weak: the parameter space is already bounded by
-        the model's search range, which the transform folds in.
     """
 
     draws: int = 1000
@@ -138,8 +139,6 @@ class NUTSConfig:
     target_accept: float = 0.8
     max_tree_depth: int = 10
     seed: int = 0
-    beta_prior_sd: float = 5.0
-    scale_prior_sd: float = 1.0
 
     def __post_init__(self):
         if self.draws < 1 or self.warmup < 1:
@@ -150,8 +149,6 @@ class NUTSConfig:
             raise ValueError("target_accept must lie strictly between 0 and 1")
         if self.max_tree_depth < 1:
             raise ValueError("max_tree_depth must be at least 1")
-        if self.beta_prior_sd <= 0 or self.scale_prior_sd <= 0:
-            raise ValueError("prior standard deviations must be positive")
 
 
 @dataclass
@@ -741,13 +738,9 @@ class HierarchicalNeuralPosterior:
 
     covariance : "diagonal" or "full"
         Whether the group covariance may express correlations between parameters.
-
-    config : NUTSConfig : default None
-        Read for the prior widths.
     """
 
-    def __init__(self, terms, lower, upper, design_matrix=None, covariance="diagonal",
-                 config=None):
+    def __init__(self, terms, lower, upper, design_matrix=None, covariance="diagonal"):
         _require_torch()
         if covariance not in Covariance:
             raise ValueError(
@@ -757,7 +750,6 @@ class HierarchicalNeuralPosterior:
         self.terms = list(terms)
         if not self.terms:
             raise NUTSError("sampling needs at least one participant")
-        self.config = config if config is not None else NUTSConfig()
         self.covariance = covariance
 
         self.lower = torch.as_tensor(np.asarray(lower, dtype=float), dtype=torch.float64)
@@ -840,8 +832,8 @@ class HierarchicalNeuralPosterior:
         # The prior on each participant is standard normal by construction: the spread the group
         # model gives them is carried by the factor multiplying it, not by this term.
         total = total - 0.5 * (raw ** 2).sum()
-        total = total - 0.5 * (beta / self.config.beta_prior_sd).pow(2).sum()
-        total = total - 0.5 * (log_scale / self.config.scale_prior_sd).pow(2).sum()
+        total = total - 0.5 * (beta / BETA_PRIOR_SD).pow(2).sum()
+        total = total - 0.5 * (log_scale / LOG_SCALE_PRIOR_SD).pow(2).sum()
         if off_diagonal is not None:
             total = total - 0.5 * (off_diagonal ** 2).sum()
         return total

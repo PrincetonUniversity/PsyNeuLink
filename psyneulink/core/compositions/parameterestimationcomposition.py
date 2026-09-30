@@ -1293,7 +1293,6 @@ class ParameterEstimationComposition(Composition):
             [provider.subject_terms(s) for s in range(provider.n_subjects)],
             *provider.bounds,
             covariance=options["covariance"],
-            config=config,
         )
         draws, diagnostics = run_nuts(
             posterior.log_prob_grad, posterior.initial_points(config.chains, config.seed), config

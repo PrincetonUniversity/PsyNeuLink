@@ -104,7 +104,6 @@ def test_sampler_checks_it_was_given_one_start_per_chain():
     ({"target_accept": 1.0}, "strictly between"),
     ({"target_accept": 0.0}, "strictly between"),
     ({"max_tree_depth": 0}, "at least 1"),
-    ({"beta_prior_sd": 0.0}, "must be positive"),
 ])
 def test_config_rejects_settings_that_cannot_be_run(kwargs, match):
     with pytest.raises(ValueError, match=match):
