@@ -1126,12 +1126,16 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
             ctx.get_output_struct_type(composition).as_pointer(),
             ctx.int32_ty.as_pointer(),
             ctx.int32_ty.as_pointer()]
+    cond_gen = scheduler.ConditionGenerator(ctx, composition)
+    resumable = "resume" in tags
+    if resumable:
+        args.append(cond_gen.get_condition_struct_type().as_pointer())
     builder = ctx.create_llvm_function(args, composition, name)
     llvm_func = builder.function
     for a in llvm_func.args:
         a.attributes.add('noalias')
 
-    state, params, data, data_in, data_out, trials_ptr, inputs_ptr = llvm_func.args
+    state, params, data, data_in, data_out, trials_ptr, inputs_ptr, *continuation = llvm_func.args
 
     nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
 
@@ -1162,14 +1166,19 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
         builder.store(data_in.type.pointee(input_init), data_in)
         builder.store(inputs_ptr.type.pointee(1), inputs_ptr)
 
-    _reset_composition_nodes_exec_counts(ctx, builder, composition, state, [TimeScale.RUN])
-
-    # Allocate and initialize condition structure
-    cond_gen = scheduler.ConditionGenerator(ctx, composition)
-    cond_type = cond_gen.get_condition_struct_type()
-    cond = builder.alloca(cond_type, name="scheduler_metadata")
-    cond_init = cond_type(cond_gen.get_condition_initializer())
-    builder.store(cond_init, cond)
+    if resumable:
+        # A new observation is a trial boundary, not a new run. The caller
+        # owns the complete scheduler tree, including nested clocks.
+        cond, = continuation
+        first_trial = builder.icmp_unsigned("==", cond_gen.get_global_trial(builder, cond), ctx.int32_ty(0))
+        with builder.if_then(first_trial):
+            _reset_composition_nodes_exec_counts(ctx, builder, composition, state, [TimeScale.RUN])
+    else:
+        _reset_composition_nodes_exec_counts(ctx, builder, composition, state, [TimeScale.RUN])
+        cond_type = cond_gen.get_condition_struct_type()
+        cond = builder.alloca(cond_type, name="scheduler_metadata")
+        cond_init = cond_type(cond_gen.get_condition_initializer())
+        builder.store(cond_init, cond)
 
     trials = builder.load(trials_ptr, "trials")
     iters_ptr = builder.alloca(trials.type, name="iterations")
@@ -1212,7 +1221,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     data_in_ptr = builder.gep(data_in, [input_idx])
 
     # Call execution
-    exec_tags = tags.difference({"run", "simulation_results"})
+    exec_tags = tags.difference({"run", "simulation_results", "resume"})
     exec_f = ctx.import_llvm_function(composition, tags=exec_tags)
     builder.call(exec_f, [state, params, data_in_ptr, data, cond])
 

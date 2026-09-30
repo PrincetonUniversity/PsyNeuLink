@@ -3374,7 +3374,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate_range")
         llvm_func = builder.function
 
-        params, state, start, stop, arg_out, arg_in, data, num_inputs = llvm_func.args
+        params, state, start, stop, arg_out, arg_in, data, num_inputs, *continuation = llvm_func.args
         for p in llvm_func.args:
             if isinstance(p.type, (pnlvm.ir.PointerType)):
                 p.attributes.add('nonnull')
@@ -3407,7 +3407,13 @@ class OptimizationControlMechanism(ControlMechanism):
             func_out = b.gep(arg_out, [out_idx])
             pnlvm.helpers.create_sample(b, allocation, search_space, idx)
 
-            b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data, num_inputs])
+            if "particle" in tags:
+                conditions, = continuation
+                b.call(evaluate_f, [params, b.gep(state, [idx]), allocation, func_out,
+                                    arg_in, b.gep(data, [idx]), num_inputs,
+                                    b.gep(conditions, [idx])])
+            else:
+                b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data, num_inputs])
 
         builder.ret_void()
         return llvm_func
@@ -3422,12 +3428,15 @@ class OptimizationControlMechanism(ControlMechanism):
                 ctx.get_data_struct_type(self.agent_rep).as_pointer(),
                 ctx.int32_ty.as_pointer()]
 
+        if "particle" in tags:
+            assert "evaluate_type_all_results" in tags
+            args.append(pnlvm.scheduler.ConditionGenerator(ctx, self.agent_rep).get_condition_struct_type().as_pointer())
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
         llvm_func = builder.function
         for p in llvm_func.args:
             p.attributes.add('nonnull')
 
-        comp_params, base_comp_state, allocation_sample, arg_out, comp_input, base_comp_data, num_inputs = llvm_func.args
+        comp_params, base_comp_state, allocation_sample, arg_out, comp_input, base_comp_data, num_inputs, *continuation = llvm_func.args
 
         if "const_params" in debug_env:
             comp_params = builder.alloca(comp_params.type.pointee, name="const_params_loc")
@@ -3493,6 +3502,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Get simulation function
         agent_tags = {"run", "simulation"}
+        if "particle" in tags:
+            agent_tags.add("resume")
         if "evaluate_type_all_results" in tags:
             agent_tags.add("simulation_results")
         sim_f = ctx.import_llvm_function(self.agent_rep, tags=frozenset(agent_tags))
@@ -3537,7 +3548,13 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
-        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input, comp_output, num_trials, num_inputs])
+        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input, comp_output, num_trials, num_inputs, *continuation])
+
+        if "particle" in tags:
+            # objectsize cannot determine the size of caller-owned destinations.
+            # Typed stores publish every field rather than a zero-byte memcpy.
+            builder.store(builder.load(comp_state), base_comp_state)
+            builder.store(builder.load(comp_data), base_comp_data)
 
         if "evaluate_type_objective" in tags:
             # Extract objective mechanism value
