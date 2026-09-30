@@ -100,6 +100,20 @@ def test_held_out_rows_come_from_draws_not_trained_on():
     assert len(held_out) == 100
 
 
+def test_one_seed_trains_one_estimator():
+    x, cond, categorical, categories, _ = _toy_training_data(1000)
+    caller_state = torch.get_rng_state()
+    trained = [
+        nlf._fit_estimator(x, cond, categorical, categories, True, n_params=2, epochs=1,
+                           batch_size=256, learning_rate=5e-4, validation_fraction=0.1, seed=3)
+        for _ in range(2)
+    ]
+    (first, first_nll), (second, second_nll) = trained
+    assert first_nll == second_nll
+    assert all(torch.equal(a, b) for a, b in zip(first.parameters(), second.parameters()))
+    # The caller's random state is left as it was.
+    assert torch.equal(torch.get_rng_state(), caller_state)
+
 
 # ---------------------------------------------------------------- metadata
 

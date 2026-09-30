@@ -404,8 +404,12 @@ def _fit_estimator(x, cond, categorical, categories, log_transform, *, n_params,
     generator = torch.Generator().manual_seed(seed)
     train_idx, val_idx = _held_out_draws(cond, n_params, validation_fraction, generator)
 
-    estimator = _build_estimator(x[train_idx], cond[train_idx], categorical, categories,
-                                 log_transform)
+    # The network's starting weights come from torch's global random state, seeded here without
+    # changing the caller's.
+    with torch.random.fork_rng():
+        torch.manual_seed(seed)
+        estimator = _build_estimator(x[train_idx], cond[train_idx], categorical, categories,
+                                     log_transform)
     optimizer = torch.optim.Adam(estimator.parameters(), lr=learning_rate)
     best, best_state = float("inf"), None
     for _ in range(epochs):
