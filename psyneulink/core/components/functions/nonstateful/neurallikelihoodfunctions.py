@@ -81,14 +81,15 @@ class NeuralLikelihoodMetadata:
     def check_matches(self, names, lower, upper, outcome_names, categorical):
         """Raise unless this estimator was trained for the model described.
 
-        Bounds must be contained by the trained box: evaluating outside it is
-        extrapolation, whose error is unbounded and silent.
+        Each range fitted must lie within the range trained on: outside it, the estimator
+        extrapolates, and its error there is unbounded and goes unreported.
         """
         if tuple(names) != self.fit_param_names:
             raise NeuralLikelihoodError(
                 f"This neural likelihood was trained for parameters "
                 f"{list(self.fit_param_names)}, but is being used to fit {list(names)}. "
-                f"Order matters: the conditioning vector is positional."
+                f"The estimator takes the parameters by position, so they have to be fitted in the "
+                f"order it was trained with."
             )
         if tuple(outcome_names) != self.outcome_names:
             raise NeuralLikelihoodError(
@@ -498,10 +499,10 @@ def train_neural_likelihood(
         **inputs**, each as many times as the model's ``num_estimates``.
 
     pec_factory : callable : default None
-        specifies a function ``pec_factory(data) -> (pec, inputs)`` that builds the model, as used for
-        :ref:`distributed fitting <DistributedFitting>`; it is called with a table of **n_trials_per_sample**
-        rows.  Required by **distributed_options**.  Exactly one of **pec** and **pec_factory** must be
-        specified.
+        specifies a function ``pec_factory(data) -> (pec, inputs)`` that builds the model, scored by
+        simulating it, as used for :ref:`distributed fitting <DistributedFitting>`; it is called with a table
+        of **n_trials_per_sample** rows.  Required by **distributed_options**.  Exactly one of **pec** and
+        **pec_factory** must be specified.
 
     n_parameter_samples : int : default 20000
         specifies the number of parameter values drawn uniformly from within **bounds** and simulated.
