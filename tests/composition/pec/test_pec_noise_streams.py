@@ -4,7 +4,6 @@ import pandas as pd
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import ParameterError
 
@@ -75,7 +74,7 @@ def test_component_noise_streams_and_candidate_replay(func_mode, policy, nested)
 
     # PNL's MT19937 initialization uses a one-element seed array. Comparing to
     # NumPy also catches offsets being applied twice at nested boundaries.
-    if func_mode == 'Python' or pnlvm.LLVMBuilderContext.default_float_ty == pnlvm.ir.DoubleType():
+    if func_mode == 'Python' or pytest.helpers.llvm_current_fp_precision() == 'fp64':
         expected = np.array([
             [np.random.RandomState([29 + j if policy == 'shared_seed' else 2 * (29 + j) + i]).normal(size=2)
              for i in range(2)] for j in range(8)
@@ -129,10 +128,9 @@ def test_independent_noise_statistics(ocm_mode, lca):
     np.testing.assert_allclose(draws.var(axis=0), 1., atol=.15)
 
 
-@pytest.mark.parametrize('float_type, seed_limit', [(pnlvm.ir.FloatType, 2**24), (pnlvm.ir.DoubleType, 2**32)])
 @pytest.mark.parametrize('streams', [3, 4, 5])
-def test_seed_blocks_wrap_without_collisions_or_rounding(monkeypatch, float_type, seed_limit, streams):
-    monkeypatch.setattr(pnlvm.LLVMBuilderContext, 'default_float_ty', float_type())
+def test_seed_blocks_wrap_without_collisions_or_rounding(streams):
+    seed_limit = 2**24
     pec, _, _ = _make_pec(streams=streams, seed=2**32 - 1)
     controller = pec.controller
     num_blocks = seed_limit // streams
@@ -147,11 +145,8 @@ def test_seed_blocks_wrap_without_collisions_or_rounding(monkeypatch, float_type
     assert seeds.min() >= 0
     assert seeds.max() < seed_limit
     assert len(np.unique(seeds)) == seeds.size
-    dtype = np.float32 if float_type is pnlvm.ir.FloatType else np.float64
+    dtype = np.float32 if pytest.helpers.llvm_current_fp_precision() == 'fp32' else np.float64
     np.testing.assert_array_equal(seeds.astype(dtype), seeds)
-    if float_type is pnlvm.ir.DoubleType:
-        # Float64 must retain seeds above the float32 ceiling for large models.
-        assert seeds[:2].min() > 2**24
     following = np.array(controller.gen_new_seed_sequence(context))[:, None] + np.arange(streams)
     assert not np.intersect1d(seeds, following).size
 
@@ -180,13 +175,13 @@ def test_policy_validation():
 
 
 @pytest.mark.parametrize('policy', [None, 'shared_seed'])
-def test_ocm_default_and_legacy_noise_streams(func_mode, policy):
+def test_ocm_default_and_legacy_noise_streams(func_mode, policy, monkeypatch):
     source = pnl.ProcessingMechanism()
     nodes = [pnl.ProcessingMechanism(function=pnl.NormalDist(seed=10)) for _ in range(2)]
     model = pnl.Composition(pathways=[[source, node] for node in nodes], retain_old_simulation_data=True)
     options = {} if policy is None else {'noise_stream_policy': policy}
     controller = pnl.OptimizationControlMechanism(
-        agent_rep=model, num_estimates=8, initial_seed=29,
+        agent_rep=model, num_estimates=8, num_trials_per_estimate=1, initial_seed=29,
         objective_mechanism=pnl.ObjectiveMechanism(monitor=[*nodes, source],
                                                   function=pnl.LinearCombination(operation=pnl.SUM)),
         same_seed_for_all_allocations=True,
@@ -197,13 +192,27 @@ def test_ocm_default_and_legacy_noise_streams(func_mode, policy):
     model.add_controller(controller)
     controller.parameters.comp_execution_mode.set(func_mode)
     controller.function.save_values = True
-    model.run(inputs={source: [[1.]]})
+    compiled_results = []
+    with monkeypatch.context() as patch:
+        if func_mode != 'Python':
+            grid_evaluate = controller.function._grid_evaluate
+
+            def capture_results(ocm, context, get_results):
+                outcomes, num_evals = grid_evaluate(ocm, context, get_results)
+                # OCM optimization requests objective values. Exercise the existing
+                # all-results path separately to inspect each component's draws.
+                results, result_count = grid_evaluate(ocm, context, get_results=True)
+                assert result_count == num_evals
+                compiled_results.append(results)
+                return outcomes, num_evals
+
+            patch.setattr(controller.function, '_grid_evaluate', capture_results)
+        model.run(inputs={source: [[1.]]})
     assert controller.noise_stream_policy == (policy or 'independent')
     expected = np.array([
         [np.random.RandomState([29 + j if policy == 'shared_seed' else 2 * (29 + j) + i]).normal()
          for i in range(2)] for j in range(8)
     ])
-    # Compiled OCM exposes objective values, rather than Python simulation_results.
     # The objective sums the noise components and source, then averages estimates.
     # Distinct candidate values also catch selection using the unaggregated grid.
     atol = 1e-6 if func_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32' else 1e-14
@@ -212,14 +221,19 @@ def test_ocm_default_and_legacy_noise_streams(func_mode, policy):
     np.testing.assert_array_equal(controller.optimal_control_allocation[0], [1.])
     if func_mode == 'Python':
         samples = np.asarray(model.simulation_results).reshape(2, 8, 2)
-        np.testing.assert_array_equal(samples[0], samples[1])
-        np.testing.assert_allclose(samples[0], expected, atol=1e-14)
+    else:
+        assert len(compiled_results) == 1
+        # Compiled outputs use a structured dtype, with one field per output.
+        dtype = np.float32 if pytest.helpers.llvm_current_fp_precision() == 'fp32' else np.float64
+        samples = np.asarray(compiled_results[0]).view(dtype).reshape(2, 8, 2)
+    np.testing.assert_array_equal(samples[0], samples[1])
+    np.testing.assert_allclose(samples[0], expected, atol=atol)
 
 
 @pytest.mark.parametrize('ocm_mode', [pytest.param('LLVM', marks=pytest.mark.llvm),
                                     pytest.helpers.cuda_param('PTX')])
 def test_single_stream_preserves_existing_sequence(ocm_mode):
-    # Preserve the legacy sequence for seeds below the precision's seed limit.
+    # Preserve the legacy sequence for seeds below the common seed limit.
     independent, inputs, actual = _make_pec(streams=1)
     independent.controller.parameters.comp_execution_mode.set(ocm_mode)
     independent.run(inputs=inputs)

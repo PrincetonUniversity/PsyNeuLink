@@ -1506,11 +1506,10 @@ class OptimizationControlMechanism(ControlMechanism):
         determines how the randomization ControlSignal seeds different Components. With 'independent', each estimate
         is assigned a block of consecutive seeds, with one slot per entry in `random_variables
         <OptimizationControlMechanism.random_variables>` (in that list's order). The sequence is deterministic for a
-        fixed initial seed, model ordering and configured execution precision, and does not depend on worker or
-        thread count. Seeds use the range [0, 2**32) with float64 precision and [0, 2**24) with float32 precision,
-        keeping every seed exactly representable. With S random Components, there are floor(seed_limit / S)
-        distinct blocks; the sequence wraps after that many estimates. The larger float64 range supports models
-        with several random Components and millions of estimates without imposing the float32 seed limit.
+        fixed initial seed and model ordering, and does not depend on worker or thread count. Seeds use the
+        range [0, 2**24), keeping every seed exactly representable in both float32 and float64 execution.
+        With S random Components, there are floor(2**24 / S) distinct blocks; the sequence wraps after
+        that many estimates.
         This limits distinct seed assignments, not the number of random draws from each seed. A single evaluation
         cannot request more estimates than there are distinct blocks. Reusing the same seeds
         across candidate allocations preserves each Component's own stream; it does not couple different Components.
@@ -3847,15 +3846,15 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.parameters.noise_stream_policy._get(context) == 'independent':
             # Seeds pass through floating-point ControlSignals before reaching the
             # RNG's uint32 seed. Keep every base AND component seed exactly representable.
-            # Float64 can carry the full uint32 range; retaining it matters for
-            # models with multiple random Components and millions of estimates.
-            seed_limit = 2**24 if pnlvm.LLVMBuilderContext.default_float_ty == pnlvm.ir.FloatType() else 2**32
+            # Seed allocation happens before compilation, so the eventual compiler
+            # context may use a different precision from its global default.
+            seed_limit = 2**24
             num_streams = len(self.random_variables)
             num_blocks = seed_limit // num_streams
             if num_estimates > num_blocks:
                 raise OptimizationControlMechanismError(
                     f"'{self.name}' requests {num_estimates} estimates with {num_streams} independent noise streams; "
-                    f"at most {num_blocks} estimates have distinct seeds at the current execution precision."
+                    f"at most {num_blocks} estimates have distinct seeds in the float32-safe seed range."
                 )
             start = int(self._seed_counter) % num_blocks
             seeds = [((start + i) % num_blocks) * num_streams for i in range(num_estimates)]
