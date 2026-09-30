@@ -345,7 +345,8 @@ def main(argv=None, *, recovery=False):
     parser.add_argument(
         "--validation-estimates",
         type=int,
-        help="Fresh-seed rescoring budget; default matches fitting. Pseudocount scales with this budget to preserve prior weight.",
+        default=1000000,
+        help="Fresh-seed rescoring budget (default: 1000000). Pseudocount scales with this budget to preserve prior weight.",
     )
     parser.add_argument(
         "--evaluations",
@@ -449,8 +450,8 @@ def main(argv=None, *, recovery=False):
         "--validation-seeds",
         type=int,
         nargs="+",
-        default=[91001, 91002, 91003],
-        help="Distinct seeds reserved for final rescoring (default: 91001 91002 91003)",
+        default=[91001, 91002, 91003, 91004, 91005],
+        help="Distinct seeds reserved for final rescoring (default: 91001 91002 91003 91004 91005)",
     )
     parser.add_argument("--predictive-estimates", type=int, default=4096)
     parser.add_argument(

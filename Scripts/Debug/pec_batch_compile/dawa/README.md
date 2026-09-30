@@ -56,7 +56,7 @@ export DAWA_RESULTS=/absolute/path/to/your/dawa-results
 An existing compatible environment can be used instead. The GPU check must
 succeed before fitting; use CUDA-enabled PyTorch compatible with the NVIDIA
 driver. On a cluster, run the check and fits inside a GPU allocation. The local
-checks use an RTX 2080 Ti; complete conditioned fits have also run on H100.
+checks use an RTX 2080 Ti; complete conditioned fits have also run on H100 and A100.
 
 ## First run: a self-contained execution check
 
@@ -68,7 +68,7 @@ data or a recovery benchmark. No private data is needed for this check:
 python "$DAWA_SCRIPTS/dawa_pec_fit.py" \
   --data "$DAWA_SCRIPTS/examples/smoke_subject.csv" --subject 1 \
   --estimates 128 --pseudocount 0.00128 --evaluations 21 \
-  --validation-seeds 91001 91002 --predictive-estimates 64 \
+  --validation-estimates 128 --validation-seeds 91001 91002 --predictive-estimates 64 \
   --output "$DAWA_RESULTS/fit-smoke"
 ```
 
@@ -132,35 +132,72 @@ guarantee of likelihood precision or optimizer convergence.
 | `--population` | CMA-ES population and candidate batch size; default 10 |
 | `--optimizer-storage` | `memory` by default; `journal` additionally saves optimizer internals but does not enable automatic resume |
 | `--max-steps` | Strict execution cap per trial; default 4,000, matching the conditioned pilot |
-| `--validation-estimates` | Fresh-seed rescoring budget; defaults to the fitting budget if omitted |
-| `--validation-seeds` | Distinct independent repetitions; defaults 91001, 91002, 91003 |
+| `--validation-estimates` | Fresh-seed rescoring budget; default 1,000,000 particles per candidate and repetition |
+| `--validation-seeds` | Five distinct independent repetitions by default: 91001, 91002, 91003, 91004, 91005 |
 | `--pseudocount` | Per-cell contamination weight at the fitting budget; default 1 |
 
 Defaults changed during handoff cleanup: fixed fits now use memory storage,
 the execution cap is 4,000, and validation seeds avoid those used in the earlier
-accuracy study. The manifest records resolved options. Explicit old options
+accuracy study. Both fixed and adaptive fits now validate with one million
+particles across five seeds by default; recovery and the Slurm launcher inherit
+these defaults. Override both validation settings for short execution checks.
+The manifest records resolved options. Explicit old options
 remain available for reproducing previous runs.
 
-The [conditioned H100 pilot](CONDITIONED_RECOVERY.md) took **34.5–35.9 minutes
-for 3,000 search proposals**, or 36.8–38.2 minutes including setup and final
-validation. These are measurements for one synthetic subject, not a runtime
-promise for the 5,000-proposal command above. Earlier 6–28 minute marginal-fit
-benchmarks evaluate a different objective.
+### Complete-subject timings, 2026-09-30
 
-The [latest matched compiler benchmark](CONDITIONED_LIKELIHOOD.md#h100-benchmark-and-profile-2026-09-29)
-measured **2.19 s per batch of four candidates** at 100k particles on one H100,
-versus 5.40 s on the local 2080 Ti. That projects to about **46 minutes for
-5,000 evaluations** for those proposals, before optimizer and validation
-overhead. This is a throughput measurement, separate from the complete recovery
-fits above.
+The [handoff benchmark](fitting_acceleration/conditioned_handoff_20260930.json)
+fit empirical subject 1 with **760 retained trials, 720 scored**, using
+`--fit-strategy adaptive` and all other fitting/validation defaults. Both runs
+used the same source snapshot, observations, initial parameters, and seeds.
+Each used one GPU and started with empty compilation caches.
 
-The experimental [staged conditioned pilot](CONDITIONED_STAGED_FITTING.md)
-reduced search to **13.0 minutes** and the complete run to **15.3 minutes** on
-one H100, with a slightly higher independently rescored likelihood than the
-earlier fixed fit on the same synthetic subject and start. It used 1,251
-proposals at 10k particles, then 600 at 100k, plus reference checks and final
-selection. This first pilot supports further use and testing; fixed-count
-fitting remains the default.
+| Device | Search, refinement, and selection | Complete driver run |
+| --- | ---: | ---: |
+| H100 NVL on `della-rse` | 593.0 s / **9.88 min** | 672.9 s / **11.22 min** |
+| A100 SXM4 80 GB through Slurm | 776.1 s / **12.94 min** | 880.9 s / **14.68 min** |
+
+The complete driver includes setup, first-use compilation, final validation at
+**1,000,000 particles × five independent seeds**, and 4,096 predictive
+simulations. Each validation seed scores both the fitted and initial parameter
+vectors. Driver timing excludes Python startup and queue wait. Including launch
+overhead, the H100 process took 11.39 minutes; A100 Slurm job `14755287` took
+15.17 minutes after a 7-second queue wait and exited successfully.
+
+Both searches switched to refinement after 2,001 proposals at 10k particles,
+then completed 600 proposals at 100k, plus reference checks and final selection.
+The 5,000-proposal option is a maximum budget for adaptive fitting; these runs
+used **2,601 optimizer proposals**. All proposal scores, selected parameters,
+and five final validation results matched exactly across GPUs. Neither run had
+an invalid/truncated search proposal. The mean independently rescored fitted
+log likelihood was **720.289**, with Monte Carlo standard error **0.057**;
+its improvement over the initial parameters was 159.446 ± 0.066 (one MC SE).
+Pseudocount scales from 1 during 100k refinement to 10 during 1M validation,
+preserving the observation model's contamination fraction.
+
+The H100 was **1.31× faster** for this complete workload. These are single-run,
+single-subject measurements, not an optimizer convergence result or an
+across-subject runtime guarantee. Monte Carlo precision does not measure bias
+from the binned, smoothed observation model. Fixed-count fitting remains the
+default; explicitly select the adaptive strategy to reproduce this workload:
+
+```bash
+python "$DAWA_SCRIPTS/dawa_pec_fit.py" \
+  --data "$DAWA_DATA" --subject 1 --fit-strategy adaptive \
+  --output "$DAWA_RESULTS/subject1-adaptive"
+```
+
+For Slurm, add `--fit-strategy adaptive` to the submission example below. The
+timed A100 run overrode the launcher's time limit with `sbatch --time=01:00:00`.
+Source/data hashes, work counts, exact settings, and remote artifact locations
+are recorded in the benchmark JSON; raw observations are not tracked here.
+
+Historical comparisons remain in the [fixed conditioned recovery pilot](CONDITIONED_RECOVERY.md),
+the [adaptive conditioned pilot](CONDITIONED_STAGED_FITTING.md), and the
+[matched compiler throughput benchmark](CONDITIONED_LIKELIHOOD.md#h100-benchmark-and-profile-2026-09-29).
+They used different workloads and cannot establish the speedup of adaptive
+fitting on this empirical subject. Earlier marginal-fit benchmarks also
+evaluate a different objective.
 
 ## Read the results and diagnose failures
 
@@ -211,7 +248,7 @@ self-contained check is:
 python "$DAWA_SCRIPTS/dawa_pec_recovery.py" \
   --data "$DAWA_SCRIPTS/examples/smoke_subject.csv" --subject 1 \
   --estimates 128 --pseudocount 0.00128 --evaluations 21 \
-  --validation-seeds 91001 91002 --predictive-estimates 64 \
+  --validation-estimates 128 --validation-seeds 91001 91002 --predictive-estimates 64 \
   --output "$DAWA_RESULTS/recovery-smoke"
 ```
 
@@ -259,9 +296,9 @@ For subject arrays, add `--array=1,2,3%2` before the script path and omit
 and output directory. The `%2` limits concurrency. Default caches live under
 `DAWA_RESULTS/.work`, overridable with `DAWA_WORK_ROOT`. If needed, export
 `DAWA_CUDA_MODULE` for your environment; leave `CUDA_VISIBLE_DEVICES` to Slurm.
-The launcher inherits the driver's conditioned-likelihood and memory-storage
-defaults. Historical A100 Slurm measurements used the marginal objective;
-conditioned H100 measurements are documented in the recovery pilot.
+The launcher inherits the driver's conditioned-likelihood, memory-storage,
+and final-validation defaults. It also retains `--fit-strategy fixed` unless
+overridden; the complete-subject timings above explicitly used `adaptive`.
 
 For current daytime experiments on the shared `della-rse` host, use at most
 one H100 and leave the second available to other users.

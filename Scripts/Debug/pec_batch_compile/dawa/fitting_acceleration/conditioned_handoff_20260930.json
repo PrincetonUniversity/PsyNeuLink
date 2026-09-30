@@ -1,0 +1,246 @@
+{
+  "date": "2026-09-30",
+  "scope": "One full empirical subject, one adaptive fit per GPU. End-to-end timings include first-use compilation; no optimizer convergence or across-subject runtime guarantee.",
+  "raw_artifacts": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/conditioned-handoff-20260930",
+  "base_revision": "4ce9318222365a8dbfc2a0dabdb84bf75251fdf7",
+  "patch_sha256": "47b7186aa7757b18f400bf3d4a370fb9aee48c31a062f2ff01806c0b4e174270",
+  "snapshot_manifest_sha256": "c6f99e35d7c78ea81b96f13e6dc1efd981a446c5e6a75bbdf404246c8e4cfea4",
+  "verified_source_files": 384,
+  "cases": {
+    "h100": {
+      "gpu": "NVIDIA H100 NVL",
+      "host": "della-rse.princeton.edu",
+      "python": "3.13.13",
+      "torch": "2.13.0+cu130",
+      "trials": 760,
+      "scored_trials": 720,
+      "setup_seconds": 7.749154414981604,
+      "fit_seconds": 592.9915896737948,
+      "driver_total_seconds": 672.9335757719819,
+      "non_fit_seconds": 79.94198609818704,
+      "evaluations": 2601,
+      "phase_counts": {
+        "staged_search": 2001,
+        "refinement": 600
+      },
+      "sampling_work": {
+        "filter_batch_calls": 273,
+        "candidate_filter_runs": 2657,
+        "candidate_particles": 85610000
+      },
+      "invalid_proposals": 0,
+      "best_training_log_likelihood": 720.179443359375,
+      "validation_summary": {
+        "replicates": 5,
+        "statistics": {
+          "fitted": {
+            "mean": 720.28916015625,
+            "sd": 0.12842845221252067,
+            "mc_standard_error": 0.05743494987845589
+          },
+          "fitted_minus_initial": {
+            "mean": 159.44627685546874,
+            "sd": 0.1474480743355707,
+            "mc_standard_error": 0.06594078347315564
+          },
+          "initial": {
+            "mean": 560.8428833007813,
+            "sd": 0.048296926693995094,
+            "mc_standard_error": 0.021599042238419443
+          }
+        },
+        "note": "Complete-run log scores; differences pair the same seed. Monte Carlo uncertainty only."
+      },
+      "optimizer_stop_reason": "Reference-check plateau triggered refinement; convergence not asserted; Precision-stage proposal budget completed; convergence not asserted",
+      "phase_scoring_seconds_including_compile": {
+        "staged_search": 179.1637952579197,
+        "refinement": 292.34950045775565
+      },
+      "artifacts": {
+        "manifest.json": "85a2b630fdb8993a978d1c12e723c79ed2a7d4f85dd9f6ec5b350b61adda08d1",
+        "fit.json": "98a93221bb6cc204a4544a91e092fb6945399df6255774375bbe2e657e56ecbf",
+        "validation.json": "35a663a504ea0155247818c72a8d4c5b6107994c2dc9e484c9d19687ffa6026a",
+        "evaluations.jsonl": "749e72dd676f5f793c7f363eca860040d99b567385e7eb4151b9ec5b4bd33790",
+        "adaptive.json": "193e101d8a0cd95a360ef0e964ba99cf23df20bb906f083240bf44c00ce4eefd"
+      },
+      "gpu_uuid": "GPU-65d9564f-5239-e1ea-0474-891cf375acee",
+      "process_exit_code": 0,
+      "process_start": "2026-09-30T09:35:53-04:00",
+      "process_end": "2026-09-30T09:47:16-04:00",
+      "process_wall_seconds": 683.23
+    },
+    "a100": {
+      "gpu": "NVIDIA A100-SXM4-80GB",
+      "host": "della-l08g6",
+      "python": "3.13.13",
+      "torch": "2.13.0+cu130",
+      "trials": 760,
+      "scored_trials": 720,
+      "setup_seconds": 12.42007611785084,
+      "fit_seconds": 776.1327963396907,
+      "driver_total_seconds": 880.8705499800853,
+      "non_fit_seconds": 104.73775364039466,
+      "evaluations": 2601,
+      "phase_counts": {
+        "staged_search": 2001,
+        "refinement": 600
+      },
+      "sampling_work": {
+        "filter_batch_calls": 273,
+        "candidate_filter_runs": 2657,
+        "candidate_particles": 85610000
+      },
+      "invalid_proposals": 0,
+      "best_training_log_likelihood": 720.179443359375,
+      "validation_summary": {
+        "replicates": 5,
+        "statistics": {
+          "fitted": {
+            "mean": 720.28916015625,
+            "sd": 0.12842845221252067,
+            "mc_standard_error": 0.05743494987845589
+          },
+          "fitted_minus_initial": {
+            "mean": 159.44627685546874,
+            "sd": 0.1474480743355707,
+            "mc_standard_error": 0.06594078347315564
+          },
+          "initial": {
+            "mean": 560.8428833007813,
+            "sd": 0.048296926693995094,
+            "mc_standard_error": 0.021599042238419443
+          }
+        },
+        "note": "Complete-run log scores; differences pair the same seed. Monte Carlo uncertainty only."
+      },
+      "optimizer_stop_reason": "Reference-check plateau triggered refinement; convergence not asserted; Precision-stage proposal budget completed; convergence not asserted",
+      "phase_scoring_seconds_including_compile": {
+        "staged_search": 229.53342355089273,
+        "refinement": 420.85802470007775
+      },
+      "artifacts": {
+        "manifest.json": "5ef96fbb92ce942539c85a6a8d168fd40666fee2326be96242dd3860f61b59ef",
+        "fit.json": "36db6b360385c0664c70fe8829ca35ab2ebfbdaa6b8070a94aac2178d9e33d3f",
+        "validation.json": "35a663a504ea0155247818c72a8d4c5b6107994c2dc9e484c9d19687ffa6026a",
+        "evaluations.jsonl": "9706912547ec87c2c449f64fd6cdee489d8054ef770f8682d628aa8513951eec",
+        "adaptive.json": "53c34c2385d525e0a1c3df7dc62c3f38a11871fe72413b4aade650d845c2cca5"
+      },
+      "slurm_job_id": "14755287",
+      "slurm": {
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "job_wall_seconds": 910,
+        "queue_wait_seconds": 7,
+        "submitted": "2026-09-30T09:34:43",
+        "start": "2026-09-30T09:34:50",
+        "end": "2026-09-30T09:50:00",
+        "timezone": "America/New_York",
+        "allocated_resources": "billing=64,cpu=8,gres/gpu=1,mem=24G,node=1",
+        "batch_max_rss": "1659140K",
+        "partition": "gputest",
+        "requested_time_limit_seconds": 3600
+      }
+    }
+  },
+  "protocol": {
+    "subject": 1,
+    "fit_strategy": "adaptive",
+    "likelihood": "conditioned",
+    "estimates": 100000,
+    "adaptive_min_estimates": 10000,
+    "validation_estimates": 1000000,
+    "validation_seeds": [
+      91001,
+      91002,
+      91003,
+      91004,
+      91005
+    ],
+    "evaluations": 5000,
+    "adaptive_refine_evaluations": 600,
+    "population": 10,
+    "start": 0,
+    "optimizer_seed": 101,
+    "simulation_seed": 29,
+    "model_seed": 29,
+    "predictive_estimates": 4096,
+    "predictive_seed": 21260925,
+    "pseudocount": 1.0,
+    "max_steps": 4000,
+    "optimizer_storage": "memory"
+  },
+  "observation_law": {
+    "kind": "observation_conditioned_particle_histogram",
+    "bins": 100,
+    "rt_range": [
+      0.0,
+      3.0
+    ],
+    "smoothing_sigma": 0.5,
+    "pseudocount": 1.0,
+    "observation_conditioned_history": true,
+    "masked_observations_condition_history": true,
+    "resampling": "systematic",
+    "observation_model": "binned_smoothed_uniform_contamination",
+    "smoothing_normalization": "source_bin",
+    "contamination_fraction": 0.001996007984031936
+  },
+  "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+  "observations_sha256": "237430e5d5101a81b6a3e1afd46196249f8eee9932e49bb740124313fb5b63a9",
+  "noise": {
+    "c_noise": 0.1,
+    "s_noise": 0.1,
+    "d_noise": 0.1,
+    "r_noise": 0.1
+  },
+  "time_steps": {
+    "Control Units\n[Color, Location].time_step_size": 0.01,
+    "Stimulus Units\n[Red, Blue, Left, Right].time_step_size": 0.01,
+    "Decision Units\n[Left, Right].time_step_size": 0.01,
+    "LC.time_step_size": 0.02,
+    "Response Units\n[Left, Right].time_step_size": 0.01
+  },
+  "comparison": {
+    "identical_proposal_sequences_and_scores": true,
+    "identical_selected_parameters": true,
+    "identical_final_validation_scores": true,
+    "first_differing_evaluation": null,
+    "a100_over_h100_fit_seconds": 1.3088428400251715,
+    "a100_over_h100_total_seconds": 1.3090007419670813,
+    "note": "Identical optimizer work and final scores; timings compare complete host/GPU systems with first-use compilation, not isolated GPU kernel throughput."
+  },
+  "timing_definitions": {
+    "fit_seconds": "Optimizer search, checkpoint rescoring, refinement, and final candidate selection; includes first-use compilation.",
+    "driver_total_seconds": "Driver work from model setup through final validation and predictive simulation; excludes Python imports, process launch, and queue wait.",
+    "non_fit_seconds": "Driver total minus fit; includes setup, final validation, predictive simulation, and report overhead.",
+    "phase_scoring_seconds_including_compile": "Sum of candidate batch scoring time in each optimizer phase, counting each batch once; excludes policy checkpoint/selection scoring and optimizer overhead."
+  },
+  "environment": {
+    "cuda_module": "cudatoolkit/13.0",
+    "python_environment": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/specialization-20260924/venv",
+    "omp_threads": 8,
+    "gpu_count_per_run": 1,
+    "initial_compilation_caches": "Empty, separate directories for each GPU run",
+    "h100_placement": "GPU 1 on shared della-rse; GPU 0 was occupied by another user and left untouched"
+  },
+  "validation_note": "Each seed evaluates the fitted and initial parameter vectors with 1000000 particles each. Pseudocount scales from 1 at 100000 particles to 10 at 1000000. Monte Carlo standard errors do not measure observation-model approximation bias or optimizer convergence.",
+  "lc_internal_steps_per_pass": 10,
+  "reproduction": {
+    "fit_arguments": "--data \"$DAWA_DATA\" --subject 1 --fit-strategy adaptive --output \"$DAWA_RESULTS/subject1-adaptive\"",
+    "other_arguments": "Driver defaults, plus the source-revision provenance tag; exact budgets and seeds recorded in protocol",
+    "snapshot_directory": "source",
+    "source_archive": "source.tar.gz",
+    "source_manifest": "source/source_manifest.json",
+    "patch": "source/changes.patch",
+    "launch_scripts": [
+      "run-h100.sh",
+      "submit-a100.sh"
+    ],
+    "result_directories": [
+      "results/h100",
+      "results/a100"
+    ],
+    "verification_script": "collect.py",
+    "path_base": "/scratch/gpfs/CSES/dmturner/dawa-benchmarks/conditioned-handoff-20260930"
+  }
+}

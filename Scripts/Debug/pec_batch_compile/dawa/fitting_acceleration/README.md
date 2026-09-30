@@ -1,6 +1,10 @@
 # Local fitting acceleration study
 
-These are historical experiments with the nonlinear, noisy PEC sampler's
+For current conditioned full-subject timings on H100 and A100, see the
+[handoff guide](../README.md#complete-subject-timings-2026-09-30) and
+[matched run summary](conditioned_handoff_20260930.json).
+
+The experiments described below used the nonlinear, noisy PEC sampler's
 **trial-marginal objective**. They did not condition carried state on observed
 responses. The [ordinary fitting guide](../README.md) remains the handoff entry
 point and now defaults to observation-conditioned particle filtering. The

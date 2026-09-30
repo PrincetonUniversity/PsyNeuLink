@@ -469,7 +469,9 @@ def test_gpu_cli_fits_empirical_or_generated_observations(tmp_path, design, reco
             ]
         )
     else:
-        command.extend(["--optimizer-storage", "journal"])
+        command.extend(
+            ["--optimizer-storage", "journal", "--validation-estimates", "64"]
+        )
     # Source provenance must refer to this checkout even when launched elsewhere.
     result = subprocess.run(
         command, capture_output=True, text=True, timeout=180, cwd=tmp_path
@@ -575,6 +577,8 @@ def test_gpu_late_failure_preserves_search_and_completed_validation(
                 "1",
                 "--predictive-estimates",
                 "4",
+                "--validation-estimates",
+                "16",
                 "--validation-seeds",
                 "91001",
                 "--output",
@@ -840,6 +844,11 @@ def test_adaptive_cli_resolves_policy_defaults_and_shared_controls(
             "500",
             "--adaptive-selection-repeats",
             "2",
+            "--validation-estimates",
+            "400000",
+            "--validation-seeds",
+            "92001",
+            "92002",
         ]
         if override
         else []
@@ -865,6 +874,10 @@ def test_adaptive_cli_resolves_policy_defaults_and_shared_controls(
     )
     assert args.fit_strategy == "adaptive"
     assert args.adaptive_min_estimates == expected_count
+    assert args.validation_estimates == (400000 if override else 1000000)
+    assert args.validation_seeds == (
+        [92001, 92002] if override else [91001, 91002, 91003, 91004, 91005]
+    )
     assert config.refine_evaluations == (500 if override else 600)
     if likelihood == "conditioned":
         assert args.fit_policy == "staged" and isinstance(config, driver.StagedConfig)
