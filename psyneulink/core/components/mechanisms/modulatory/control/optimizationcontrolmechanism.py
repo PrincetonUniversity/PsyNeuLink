@@ -3503,7 +3503,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Get simulation function
         agent_tags = {"run", "simulation"}
         if "particle" in tags:
-            agent_tags.add("resume")
+            agent_tags.update({"resume", "particle"})
         if "evaluate_type_all_results" in tags:
             agent_tags.add("simulation_results")
         sim_f = ctx.import_llvm_function(self.agent_rep, tags=frozenset(agent_tags))

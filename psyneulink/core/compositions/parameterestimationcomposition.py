@@ -244,6 +244,65 @@ Using an existing Optuna study::
 The resulting ``optimizer`` can be supplied as the **optimization_function** argument to
 ``ParameterEstimationComposition``.
 
+Conditional likelihood for state across trials
+---------------------------------------------
+
+By default, data fitting inspects the model for state that can carry information
+between observed trials. When trial independence cannot be established, PEC
+uses an LLVM particle filter: simulate one trial, weight particles by the
+observation, resample their complete histories, and continue to the next trial.
+This estimates predictive probabilities conditional on earlier observations.
+Simulating entire unconditioned histories and multiplying their trial marginals
+does not generally give the sequence likelihood for these models.
+
+``pec.likelihood_history.requires_conditioning`` and
+``pec.likelihood_history.reasons`` expose this conservative structural analysis.
+It includes nested stateful functions, recurrence, feedback, controls, stateful
+ports, and explicit scheduling/termination dependencies. A trial-resetting DDM
+continues to use the existing independent-trial KDE. Deterministic persistent
+state and custom functions may conservatively select filtering even when a
+more detailed model-specific analysis could prove independence.
+
+Use ``conditioned_likelihood=True`` to force the filter or ``False`` to select
+the legacy trial-marginal KDE explicitly. For example::
+
+    optimization_function = pnl.PECOptimizationFunction(
+        method="differential_evolution",
+        conditioned_likelihood="auto",
+        likelihood_options={"bandwidth": 0.03},
+    )
+
+Here ``bandwidth`` is in the units of each continuous outcome. Gaussian kernels
+are the default; fixed normalized histogram kernels are also available through
+``likelihood_options={"kernel": "histogram", "bins": 100,
+"bin_range": [(0., 3.)], "smoothing_sigma": .5}``. Continuous kernels define an
+observation approximation. Configure their widths/domains for the data and
+check sensitivity to both those settings and ``num_estimates``. Filtering
+corrects history conditioning, not the observation approximation or finite
+particle error. No probability floor or contamination is introduced silently.
+
+All finite observed rows update history, including those excluded from the
+score by ``likelihood_include_mask``. One call is one contiguous subject
+sequence; separate subjects require separate PECs or the hierarchical wrapper.
+``depends_on`` still assigns condition-specific parameters to their original
+trial rows. Fitting and ``log_likelihood()`` use the same scorer and obey
+``same_seed_for_all_parameter_combinations``. Conditional scoring currently
+requires the controller's ``comp_execution_mode`` to be ``'LLVM'``.
+
+After successful scoring, ``pec.controller.function.likelihood_diagnostics``
+contains ``per_trial_log_densities``, ``effective_sample_size``, and
+``contamination_responsibility``. Zero particle support raises
+``pnl.ParticleSupportError`` from ``log_likelihood()``. Optimizers receive a
+negative infinite log likelihood and a ``BadLikelihoodWarning`` for such a
+candidate. Increase the population/kernel width or explicitly specify an
+observation-contamination model when appropriate.
+
+With ``return_sim_data=True``, conditional scoring returns predictive particle
+clouds with axes ``[trial, estimate, outcome]``. Because ancestry changes after
+each observation, a fixed estimate index across trials is not an uninterrupted
+simulated trajectory. Custom scalar ``objective_function`` fitting retains
+its existing behavior.
+
 Structure
 ---------
 
@@ -1456,6 +1515,13 @@ class ParameterEstimationComposition(Composition):
             self.optimal_value = self.controller.optimal_net_outcome
 
         return results
+
+    @property
+    def likelihood_history(self):
+        """Structural evidence used to select a conditional likelihood automatically."""
+        if self.controller is None:
+            raise ParameterEstimationCompositionError("Likelihood history is defined on each subject's model PEC.")
+        return self.controller.function.likelihood_history
 
     @handle_external_context()
     def log_likelihood(self, *args, inputs=None, return_sim_data=False, context=None) -> Union[float, tuple]:

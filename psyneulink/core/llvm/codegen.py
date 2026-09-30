@@ -645,10 +645,13 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 def gen_node_assembly(ctx, composition, node, *, tags:frozenset):
     assert "node_assembly" in tags
     func_tags = tags.difference({"node_assembly"})
-
-    node_function = ctx.import_llvm_function(node, tags=func_tags)
     # FIXME: This is a hack
     is_mech = hasattr(node, 'function')
+    if not is_mech and "particle" in func_tags:
+        # Suppress only the evaluating PEC controller. Controllers inside its
+        # model are part of the generative process and must still execute.
+        func_tags = func_tags.difference({"simulation"})
+    node_function = ctx.import_llvm_function(node, tags=func_tags)
     zero = ctx.int32_ty(0)
 
     data_struct_ptr = ctx.get_data_struct_type(composition).as_pointer()

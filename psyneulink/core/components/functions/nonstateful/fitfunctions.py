@@ -15,6 +15,7 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
 )
 from psyneulink.core.globals.parameters import SharedParameter, check_user_specified
 from psyneulink.core.globals.utilities import try_extract_0d_array_item
+from .particlefilter import ParticleSupportError
 
 from psyneulink._typing import (
     Dict,
@@ -45,7 +46,7 @@ from rich.markup import escape
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["PECOptimizationFunction", "BadLikelihoodWarning", "PECObjectiveFuncWarning"]
+__all__ = ["PECOptimizationFunction", "BadLikelihoodWarning", "PECObjectiveFuncWarning", "ParticleSupportError"]
 
 
 def get_param_str(params):
@@ -505,6 +506,45 @@ class PECOptimizationFunction(OptimizationFunction):
         Whether to maximize or minimize the objective function. If 'maximize', the objective function is maximized. If
         'minimize', the objective function is minimized.
 
+    conditioned_likelihood : "auto", True, or False : default "auto"
+        Select the observed-history particle likelihood for LLVM simulations.
+        ``"auto"`` inspects paths to the fitted outcomes, including nested
+        compositions and scheduling dependencies. Persistent integrators,
+        recurrence, feedback, held controls, and unclassified custom functions
+        select filtering conservatively. Functions reset unconditionally each
+        trial do not by themselves require it. RNG state alone is not history.
+        ``True`` forces filtering; ``False`` explicitly selects the legacy
+        trial-marginal KDE. Custom scalar objectives are unaffected. The
+        ``likelihood_history`` property reports the structural reasons.
+
+    likelihood_options : Mapping or None : default None
+        Observation-model options used by the conditional likelihood:
+        ``kernel`` (``"gaussian"`` or ``"histogram"``), ``bandwidth`` (positive
+        scalar or one value per continuous outcome), ``bins`` (default 100),
+        ``bin_range`` (one low/high pair per continuous outcome),
+        ``smoothing_sigma`` (histogram bin units, default 0.5),
+        ``contamination_probability`` (default 0), and ``categorical_values``
+        (one list of possible numeric values per categorical outcome).
+        The default product Gaussian kernel uses fixed observed-data bandwidths
+        ``1.06 * std * num_trials**(-1/5)``; constant columns use unit scale.
+        Bandwidths and histogram domains are fixed across parameter candidates
+        and particle counts. Histogram domains default to observed extrema with
+        a 2 percent margin (unit padding for constant columns).
+        Contamination is an explicit uniform mixture over that domain and the
+        declared categories. Declare absent possible categories when using it.
+        No density floor or contamination is added automatically.
+
+        All observations, including rows excluded from the score, condition
+        subsequent state. Missing/nonfinite observations are rejected. Each call
+        represents one contiguous subject sequence and starts fresh particles.
+        ``likelihood_diagnostics`` contains per-trial log densities, effective
+        sample sizes, and contamination responsibilities from the last
+        successful conditional evaluation; it is cleared before a new filter.
+        Zero support raises ``ParticleSupportError`` in public scoring; fitting
+        reports ``BadLikelihoodWarning`` and a log likelihood of negative
+        infinity for that candidate. The kernels define a smoothed observation
+        likelihood, not an exact continuous-data likelihood.
+
     distributed :
         If True, evaluate candidate parameterizations in parallel across a Dask cluster instead of serially. Each
         candidate's likelihood/objective is computed on a worker; the optimizer (an optuna sampler or
@@ -556,12 +596,17 @@ class PECOptimizationFunction(OptimizationFunction):
         direction: Literal["maximize", "minimize"] = "maximize",
         distributed: bool = False,
         distributed_options: Optional[Mapping] = None,
+        conditioned_likelihood: Union[bool, Literal["auto"]] = "auto",
+        likelihood_options: Optional[Mapping] = None,
         **kwargs,
     ):
         self.method = method
         self._optuna_kwargs = {} if optuna_kwargs is None else {**optuna_kwargs}
 
         self.direction = direction
+        self.conditioned_likelihood = conditioned_likelihood
+        self.likelihood_options = dict(likelihood_options or {})
+        self.likelihood_diagnostics = None
 
         # Distributed fitting is off by default, so serial paths are unchanged.
         self.distributed = distributed
@@ -718,11 +763,98 @@ class PECOptimizationFunction(OptimizationFunction):
         (self) has been assigned to an OptimizationControlMechanism.
         """
 
+        if self._uses_conditioned_likelihood():
+            def conditioned_objective(*args):
+                try:
+                    return self._conditioned_evaluation(*args, context=context)[0]
+                except ParticleSupportError as error:
+                    warnings.warn(BadLikelihoodWarning(str(error)))
+                    return -np.inf
+            return conditioned_objective
+
         def objfunc(*args):
             obj_val, _ = self._evaluate_objective_and_sim_data(*args, context=context)
             return obj_val
 
         return objfunc
+
+    @property
+    def likelihood_history(self):
+        """Reasons for selecting the observed-history likelihood in auto mode."""
+        from psyneulink.core.compositions.likelihoodhistory import analyze_likelihood_history
+        if self.owner is None:
+            raise OptimizationFunctionError("Likelihood history requires a PEC owner.")
+        pec = self.owner.composition
+        return analyze_likelihood_history(pec.model, pec.outcome_variables,
+                                          parameter_controls=pec.pec_control_mechs.values())
+
+    def _uses_conditioned_likelihood(self):
+        if self.conditioned_likelihood != "auto" and not isinstance(self.conditioned_likelihood, bool):
+            raise ValueError("conditioned_likelihood must be 'auto', True, or False.")
+        if not self.data_fitting_mode:
+            return False
+        if self.conditioned_likelihood == "auto":
+            return self.likelihood_history.requires_conditioning
+        return self.conditioned_likelihood
+
+    def _conditioned_evaluation(self, *args, context=None, return_sim_data=False):
+        """Evaluate a fresh bootstrap filter using resumable LLVM trial lanes."""
+        from psyneulink.core.llvm.particle import ParticleExecution
+        from .particlefilter import ParticleObservationModel, particle_filter
+
+        ocm = self.owner
+        pec = ocm.composition
+        self.likelihood_diagnostics = None
+        if ocm.parameters.comp_execution_mode._get(context) != "LLVM":
+            raise OptimizationFunctionError("Conditional likelihood requires LLVM execution. "
+                                            "Set the PEC controller's comp_execution_mode to 'LLVM'.")
+        if len(args) != len(self.fit_param_names):
+            raise ValueError(f"Expected {len(self.fit_param_names)} arguments, got {len(args)}")
+        observed = np.asarray(pec._data_numpy, dtype=float)
+        observation_model = ParticleObservationModel(observed, pec.data_categorical_dims, **self.likelihood_options)
+        original_inputs = ocm._pec_input_values
+        if not original_inputs or pec.model not in original_inputs:
+            raise OptimizationFunctionError("Conditional likelihood requires prepared PEC inputs.")
+        full_inputs = {key: copy.deepcopy(value) for key, value in original_inputs.items()}
+        # depends_on masks have the full trial axis. Assign first, slice second.
+        ocm.set_parameters_in_inputs(args, full_inputs)
+        sequence = full_inputs[pec.model]
+        if len(sequence) != len(observed):
+            raise ValueError("Conditional likelihood requires one input row per observed trial.")
+        original_trials = int(ocm.parameters.num_trials_per_estimate._get(context))
+        self.reset_grid(context)
+        particles = int(np.prod([s.num for s in self.search_space]))
+        seed = try_extract_0d_array_item(self._get_current_parameter_value("initial_seed", context))
+        # Use a separate stream for ancestry. Common candidate seeds reproduce
+        # both simulation innovations and resampling; fresh candidates advance
+        # their complete simulation seed grid once, after the sequence.
+        random_dimension = self.parameters.randomization_dimension._get(context)
+        if random_dimension is not None:
+            seed = next(iter(copy.deepcopy(self.search_space[random_dimension])))
+        resampling_seed = (0 if seed is None else int(seed)) ^ 0x5EED5EED
+        try:
+            ocm.parameters.num_trials_per_estimate.set(1, context=context)
+            with ParticleExecution(pec, context, particles) as session:
+                def advance(trial):
+                    ocm._pec_input_values = {pec.model: sequence[trial:trial + 1]}
+                    features = ocm.parameters.state_feature_values._get(context)
+                    inputs, count = pec._parse_run_inputs(features, context)
+                    if count != 1:
+                        raise ValueError("Expected one prepared input trial.")
+                    return session.advance(inputs)[:, self.outcome_variable_indices]
+
+                score, diagnostics, simulations = particle_filter(
+                    advance, session.resample, observation_model,
+                    include_mask=pec.likelihood_include_mask, seed=resampling_seed,
+                    return_sim_data=return_sim_data,
+                )
+            self.likelihood_diagnostics = diagnostics
+            return score, simulations
+        finally:
+            ocm._pec_input_values = original_inputs
+            ocm.parameters.num_trials_per_estimate.set(original_trials, context=context)
+            if not ocm.parameters.same_seed_for_all_allocations._get(context) and random_dimension is not None:
+                self.search_space[random_dimension] = SampleIterator(ocm.gen_new_seed_sequence(context))
 
     def _evaluate_objective_and_sim_data(self, *args, context=None):
         """
@@ -1451,7 +1583,10 @@ class PECOptimizationFunction(OptimizationFunction):
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PROCESSING
         try:
-            ll, sim_data = self._evaluate_objective_and_sim_data(*args, context=context)
+            if self._uses_conditioned_likelihood():
+                ll, sim_data = self._conditioned_evaluation(*args, context=context, return_sim_data=return_sim_data)
+            else:
+                ll, sim_data = self._evaluate_objective_and_sim_data(*args, context=context)
         finally:
             context.execution_phase = execution_phase_at_entry
 
