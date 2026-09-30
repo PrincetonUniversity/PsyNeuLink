@@ -1008,6 +1008,13 @@ class ParameterEstimationComposition(Composition):
         self._run_called = False
 
         if self._likelihood_estimator == "neural":
+            # Asked for here or on the optimization function, which is where either request ends up.
+            if ocm.function.distributed:
+                raise ParameterEstimationCompositionError(
+                    'distributed=True cannot be combined with likelihood_estimator="neural": each worker '
+                    "scores the model pec_factory builds, not this one's estimator. Fit without "
+                    "distributed=True, since scoring with an estimator is a single network call."
+                )
             self._load_neural_likelihood()
 
     #: The solver settings `hierarchical_options` carries, each a `Parameter` that holds its own
@@ -1063,12 +1070,6 @@ class ParameterEstimationComposition(Composition):
             raise ParameterEstimationCompositionError(
                 'likelihood_estimator="neural" scores observed data, so data must be '
                 "specified."
-            )
-        if self._pec_distributed:
-            raise ParameterEstimationCompositionError(
-                'distributed=True cannot be combined with likelihood_estimator="neural": each worker '
-                "scores the model pec_factory builds, not this one's estimator. Fit without "
-                "distributed=True, since scoring with an estimator is a single network call."
             )
 
     @classmethod

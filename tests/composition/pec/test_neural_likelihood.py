@@ -514,14 +514,22 @@ def test_a_fit_scores_with_the_estimator(ddm_data, toy_likelihood):
 
 
 @pytest.mark.composition
-def test_a_distributed_fit_is_refused_with_a_neural_likelihood(ddm_data, toy_likelihood):
+@pytest.mark.parametrize("on_optimization_function", [False, True],
+                         ids=["on-composition", "on-optimization-function"])
+def test_a_distributed_fit_is_refused_with_a_neural_likelihood(
+    ddm_data, toy_likelihood, on_optimization_function
+):
     """Workers score the models the factory builds, so the estimator would go unused."""
     likelihood, _ = toy_likelihood
+    distributed = dict(distributed=True, distributed_options={"pec_factory": _ddm_training_pec})
+    if on_optimization_function:
+        settings = dict(optimization_function=pnl.PECOptimizationFunction(
+            method="differential_evolution", **distributed))
+    else:
+        settings = dict(optimization_function="differential_evolution", **distributed)
     with pytest.raises(pnl.ParameterEstimationCompositionError, match="cannot be combined"):
         _ddm_pec(ddm_data, likelihood_estimator="neural",
-                 likelihood_estimator_kwargs={"artifact": likelihood},
-                 optimization_function="differential_evolution",
-                 distributed=True, distributed_options={"pec_factory": _ddm_training_pec})
+                 likelihood_estimator_kwargs={"artifact": likelihood}, **settings)
 
 
 def _record_trial_features(likelihood, monkeypatch):
