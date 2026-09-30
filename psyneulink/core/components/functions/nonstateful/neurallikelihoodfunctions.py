@@ -15,7 +15,6 @@ the likelihood of its data.  See :ref:`Neural Likelihoods <NeuralLikelihood>`.
 from __future__ import annotations
 
 import copy
-import json
 import uuid
 import warnings
 from collections.abc import Callable, Mapping, Sequence
@@ -79,15 +78,6 @@ class NeuralLikelihoodMetadata:
     @property
     def n_trial_features(self) -> int:
         return len(self.trial_feature_columns)
-
-    def to_json(self) -> str:
-        return json.dumps(asdict(self))
-
-    @classmethod
-    def from_json(cls, text: str) -> NeuralLikelihoodMetadata:
-        raw = json.loads(text)
-        raw["categories"] = [tuple(c) for c in raw["categories"]]
-        return cls(**{k: tuple(v) if isinstance(v, list) else v for k, v in raw.items()})
 
     def check_matches(self, names, lower, upper, outcome_names, categorical):
         """Raise unless this estimator was trained for the model described.
@@ -229,7 +219,7 @@ class NeuralLikelihood:
         torch.save(
             {
                 "state_dict": self._estimator.state_dict(),
-                "metadata": self.metadata.to_json(),
+                "metadata": asdict(self.metadata),
                 "probe_x": self._shape_probe[0],
                 "probe_cond": self._shape_probe[1],
             },
@@ -241,7 +231,7 @@ class NeuralLikelihood:
         """Read back an estimator written by `save`."""
         _require_sbi()
         blob = torch.load(path, weights_only=True)
-        metadata = NeuralLikelihoodMetadata.from_json(blob["metadata"])
+        metadata = NeuralLikelihoodMetadata(**blob["metadata"])
         estimator = _build_estimator(
             blob["probe_x"],
             blob["probe_cond"],
@@ -664,11 +654,12 @@ def train_neural_likelihood(
             "after any epoch. Check that the simulated outcomes are finite, or lower learning_rate."
         )
 
+    # Plain Python values throughout, which is all `load` reads back.
     metadata = NeuralLikelihoodMetadata(
-        fit_param_names=names,
+        fit_param_names=tuple(str(n) for n in names),
         lower=tuple(lower.tolist()),
         upper=tuple(upper.tolist()),
-        outcome_names=tuple(outcome_names),
+        outcome_names=tuple(str(n) for n in outcome_names),
         categorical=flags,
         categories=categories,
         log_transform=log_transform,
