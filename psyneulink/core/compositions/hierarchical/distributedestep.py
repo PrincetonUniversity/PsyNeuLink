@@ -117,7 +117,7 @@ def _dask_subject_estep(
 
         def neg_log_post(z):
             theta = transform.to_natural(z)
-            return -float(pec.log_likelihood(*theta, inputs=inputs)) - log_gauss_diag(z, mu_s, sigma)
+            return -_fitfunctions._pec_candidate_log_likelihood(pec, theta, inputs) - log_gauss_diag(z, mu_s, sigma)
 
         try:
             post = subject_map_estep(neg_log_post, z0=z0, prior_variance=sigma, config=config)

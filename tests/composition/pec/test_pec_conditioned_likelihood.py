@@ -175,6 +175,65 @@ def test_model_controller_is_executed_inside_particle_simulations(control_mode, 
     np.testing.assert_allclose(samples[:, 0, 0], expected)
 
 
+def _conditioned_worker_factory(data, subject_index=None):
+    pec, source = make_pec(data=data["value"], estimates=8)
+    return pec, {source: np.ones((len(data), 1))}
+
+
+def test_worker_and_subject_factory_scoring_replay_conditional_likelihood():
+    from psyneulink.core.components.functions.nonstateful.fitfunctions import _dask_evaluate_loglik, _PEC_FALLBACK_CACHE
+    from psyneulink.core.compositions.hierarchical.subjectlikelihood import PECFactorySubjectLikelihood
+    frame = pd.DataFrame({"value": [.8, 1.4, 2.8]})
+    pec, inputs = _conditioned_worker_factory(frame)
+    reference = pec.log_likelihood(1., inputs=inputs)
+    fit_id = object()
+    provider = PECFactorySubjectLikelihood(_conditioned_worker_factory, [frame, frame.copy()])
+    try:
+        for _ in range(2):
+            assert _dask_evaluate_loglik(_conditioned_worker_factory, [1.], frame, 1, fit_id) == reference
+        for subject in [0, 1, 0]:
+            assert provider.log_likelihood([1.], subject) == reference
+    finally:
+        provider.close()
+        _PEC_FALLBACK_CACHE.clear()
+
+
+def test_worker_zero_support_has_same_invalid_candidate_result_as_local_fit(monkeypatch):
+    from psyneulink.core.components.functions.nonstateful.fitfunctions import _dask_evaluate_loglik, _PEC_FALLBACK_CACHE
+    from psyneulink.core.compositions.hierarchical import distributedestep
+    from psyneulink.core.compositions.hierarchical.subjectlikelihood import PECFactorySubjectLikelihood
+
+    def factory(data, subject_index=None):
+        pec, source = make_pec(data=(99., 99., 99.), estimates=4,
+                              options={"kernel": "histogram", "bin_range": [(0., 100.)],
+                                       "bins": 1000, "smoothing_sigma": 0.})
+        return pec, {source: np.ones((3, 1))}
+
+    with pytest.warns(pnl.BadLikelihoodWarning, match="Zero particle"):
+        assert _dask_evaluate_loglik(factory, [1.], None, 1, object()) == -np.inf
+    provider = PECFactorySubjectLikelihood(factory, [None])
+    with pytest.warns(pnl.BadLikelihoodWarning, match="Zero particle"):
+        assert provider.log_likelihood([1.], 0) == -np.inf
+
+    def evaluate_candidate(neg_log_post, **kwargs):
+        assert neg_log_post(np.zeros(1)) == np.inf
+        return "invalid candidate"
+
+    monkeypatch.setattr(distributedestep, "subject_map_estep", evaluate_candidate)
+    fit_id = object()
+    try:
+        with pytest.warns(pnl.BadLikelihoodWarning, match="Zero particle"):
+            _, result, _ = distributedestep._dask_subject_estep(
+                factory, 0, None, np.zeros(1), np.ones(1), provider.schema,
+                np.zeros(1), 1, fit_id, None,
+            )
+        assert result == "invalid candidate"
+    finally:
+        distributedestep._release_fit_models(fit_id)
+        provider.close()
+        _PEC_FALLBACK_CACHE.clear()
+
+
 @pytest.mark.parametrize("mode,expected", [("auto", True), (False, False), (True, True)])
 def test_pec_auto_and_explicit_selection(mode, expected):
     node = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist()))
@@ -196,3 +255,22 @@ def test_custom_objective_does_not_select_particle_likelihood():
         optimization_function=pnl.PECOptimizationFunction(method=None),
     )
     assert not pec.controller.function._uses_conditioned_likelihood()
+
+
+def test_llvm_conditional_likelihood_matches_kalman_sequence_oracle():
+    from scipy.stats import norm
+
+    observed = np.array([.6, 1.6, 3.1, 5.])
+    pec, source = make_pec(data=observed, estimates=8192, options={"bandwidth": .7})
+    score = pec.log_likelihood(1., inputs={source: np.ones((4, 1))})
+    mean, variance, expected = 0., 0., []
+    for value in observed:
+        mean += 1.
+        variance += .4 ** 2
+        expected.append(norm.logpdf(value, mean, np.sqrt(variance + .7 ** 2)))
+        gain = variance / (variance + .7 ** 2)
+        mean += gain * (value - mean)
+        variance *= 1 - gain
+    diagnostics = pec.controller.function.likelihood_diagnostics
+    np.testing.assert_allclose(diagnostics["per_trial_log_densities"], expected, atol=.04, rtol=0)
+    assert score == pytest.approx(sum(expected), abs=.08)

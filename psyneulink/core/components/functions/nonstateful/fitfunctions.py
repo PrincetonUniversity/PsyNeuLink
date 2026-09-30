@@ -390,6 +390,15 @@ def _dask_client(options):
     return client, _close
 
 
+def _pec_candidate_log_likelihood(pec, param_values, inputs):
+    """Adapt public scoring to an optimizer's invalid-candidate convention."""
+    try:
+        return float(pec.log_likelihood(*param_values, inputs=inputs))
+    except ParticleSupportError as error:
+        warnings.warn(BadLikelihoodWarning(str(error)))
+        return -np.inf
+
+
 def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id):
     """One candidate -> one scalar log-likelihood, on a Dask worker.
 
@@ -417,7 +426,7 @@ def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id)
                 _PEC_FALLBACK_CACHE["pec"] = cache
 
         _, pec, inputs = cache
-        return float(pec.log_likelihood(*param_values, inputs=inputs))
+        return _pec_candidate_log_likelihood(pec, param_values, inputs)
 
 
 def _dask_evaluate_loglik_de(pec_factory, worker_cores, data, direction, fit_id, param_values):
