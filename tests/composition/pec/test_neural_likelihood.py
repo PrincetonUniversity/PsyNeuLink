@@ -179,6 +179,32 @@ def test_save_and_load_round_trip_scores_identically(tmp_path):
     )
 
 
+def test_an_estimator_for_continuous_outcomes_alone_scores_after_reloading(tmp_path):
+    """With no categorical outcome, the estimator is a plain flow rather than the mixed one."""
+    rng = np.random.default_rng(0)
+    theta = rng.uniform(-0.5, 0.5, size=(2000, 2))
+    raw = theta + 0.3 * rng.normal(size=theta.shape)
+    categorical, categories, names = (False, False), ((), ()), ("first", "second")
+    x = nlf._encode_outcomes(raw, categorical, categories, names)
+    cond = torch.as_tensor(theta, dtype=torch.float32)
+    estimator, val_nll = nlf._fit_estimator(
+        x, cond, categorical, categories, False, n_params=2, epochs=1, batch_size=512,
+        learning_rate=5e-4, validation_fraction=0.1, seed=0,
+    )
+    metadata = nlf.NeuralLikelihoodMetadata(
+        fit_param_names=("rate", "threshold"), lower=(-0.5, -0.5), upper=(0.5, 0.5),
+        outcome_names=names, categorical=categorical, categories=categories, log_transform=False,
+        trial_feature_columns=(), constant_inputs=(), val_nll=val_nll,
+    )
+    likelihood = nlf.NeuralLikelihood(estimator, metadata, (x[:256].clone(), cond[:256].clone()))
+    likelihood.save(tmp_path / "continuous.pt")
+    reloaded = nlf.NeuralLikelihood.load(tmp_path / "continuous.pt")
+
+    score = likelihood.log_likelihood([0.1, -0.1], raw[:64])
+    assert np.isfinite(score)
+    assert reloaded.log_likelihood([0.1, -0.1], raw[:64]) == score
+
+
 # ------------------------------------------------------------- trial features
 
 

@@ -261,7 +261,7 @@ def _build_estimator(x, cond, categorical, categories, log_transform):
 
     # Continuous outcomes alone are modelled in their own units: sbi's plain flows take no
     # log transform, and `train_neural_likelihood` requests none for them.
-    return likelihood_nn(model="nsf")(batch_x=x, batch_y=cond)
+    return likelihood_nn(model="nsf")(batch_theta=cond, batch_x=x)
 
 
 def _infer_categorical(outcomes: np.ndarray) -> tuple[bool, ...]:
