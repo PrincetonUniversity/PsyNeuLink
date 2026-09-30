@@ -347,6 +347,7 @@ reference used to check the GPU implementation. See the
 ## Validation and remaining engineering work
 
 - [Compiler notes](COMPILER_NOTES.md): supported components, reset and schedule tests.
+- [Source-model audit](SOURCE_PARITY.md): noisy trajectory agreement with native Python and checks against LLVM before/after its separate reset fix.
 - [Conditioned accuracy](CONDITIONED_ACCURACY.md): exact-reference checks and particle-budget uncertainty.
 - [Conditioned performance](CONDITIONED_LIKELIHOOD.md#conditioned-loop-optimization-2026-09-29): preserved baseline, compiler optimizations, and current GPU measurements.
 - [Conditioned recovery](CONDITIONED_RECOVERY.md): full fits, independent rescoring, and measured H100 runtimes.
@@ -359,8 +360,9 @@ batches remain dominated by simulation; smaller budgets benefit more from the
 reduced launch overhead.
 
 Remaining work includes simulation-kernel optimization and further launch reduction,
-broader validation of staged particle budgets, the LLVM reset fix, automatic fit resume,
-and observation-kernel sensitivity on recorded data. Missing outcomes and
+broader validation of staged particle budgets, integration of the separate LLVM
+reset fix, automatic fit resume, and observation-kernel sensitivity on recorded data.
+Missing outcomes and
 multiple disjoint subject sequences in one filter call are not supported.
 Parameter-identifiability and direct-likelihood research are separate from this
 handoff. Fixed budgets remain the default; adaptive fitting is opt-in. Both fit

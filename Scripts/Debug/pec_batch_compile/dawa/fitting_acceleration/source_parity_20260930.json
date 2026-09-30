@@ -1,0 +1,531 @@
+{
+  "date": "2026-09-30",
+  "branch_revision": "0fdfaa52be0259d26e02b77c555bed6071bd52c8",
+  "reference_reset_fix_revision": "926e2a9b46",
+  "reference_reset_fix_branch": "fix/llvm-reset-sampled-modulation",
+  "scope": "Forward simulation parity, with separate particle-filter reference tests. LLVM likelihood scores are not a conditioned-likelihood reference.",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "source_model_sha256": "96e8f28611717370e3665c350e87be3db99c75b609c8550671f17e2dfa6ab298",
+  "data_sha256": "936979ee8c13a1aaa896aec8b4029e9d577267364ffaab40fe99a00f88617195",
+  "new_test_sha256": "e6144876c97ae0de97d7ff69b1a22f39bc6699163a15aa001d85aea036f95294",
+  "raw_audit_directory": "/tmp/dawa-output-audit-20260930",
+  "deterministic": {
+    "trials": 4,
+    "python_choices_rt": [
+      [
+        1.0,
+        0.96
+      ],
+      [
+        0.0,
+        1.26
+      ],
+      [
+        1.0,
+        0.8900000000000001
+      ],
+      [
+        1.0,
+        1.25
+      ]
+    ],
+    "gpu_choices_rt": [
+      [
+        1.0,
+        0.9599999785423279
+      ],
+      [
+        0.0,
+        1.2599999904632568
+      ],
+      [
+        1.0,
+        0.8899999856948853
+      ],
+      [
+        1.0,
+        1.25
+      ]
+    ],
+    "current_llvm_choices_rt": [
+      [
+        1.0,
+        0.97
+      ],
+      [
+        0.0,
+        1.26
+      ],
+      [
+        1.0,
+        0.8900000000000001
+      ],
+      [
+        1.0,
+        1.25
+      ]
+    ],
+    "fixed_llvm_choices_rt": [
+      [
+        1.0,
+        0.96
+      ],
+      [
+        0.0,
+        1.26
+      ],
+      [
+        1.0,
+        0.8900000000000001
+      ],
+      [
+        1.0,
+        1.25
+      ]
+    ],
+    "max_python_gpu_activity_error": 2.083530293850444e-07,
+    "note": "Same first four retained subject-1 inputs, all noises zero, threshold .3 and NDT .2. Only the separate reference checkout includes the LLVM reset fix."
+  },
+  "noisy_common_draws": {
+    "replicates": [
+      {
+        "seed": 17,
+        "trials": 6,
+        "max_output_error": 1.9073486301479647e-07,
+        "max_activity_error": 2.399680383291525e-07,
+        "python_response_executions": [
+          86,
+          79,
+          365,
+          87,
+          75,
+          203
+        ],
+        "gpu_choices_rt": [
+          [
+            1.0,
+            1.059999942779541
+          ],
+          [
+            1.0,
+            0.8899999856948853
+          ],
+          [
+            1.0,
+            3.9499998092651367
+          ],
+          [
+            0.0,
+            1.0199999809265137
+          ],
+          [
+            0.0,
+            1.0
+          ],
+          [
+            1.0,
+            2.1499998569488525
+          ]
+        ],
+        "python_choices_rt": [
+          [
+            1.0,
+            1.06
+          ],
+          [
+            1.0,
+            0.89
+          ],
+          [
+            1.0,
+            3.9499999999999997
+          ],
+          [
+            0.0,
+            1.02
+          ],
+          [
+            0.0,
+            1.0
+          ],
+          [
+            1.0,
+            2.1500000000000004
+          ]
+        ]
+      },
+      {
+        "seed": 29,
+        "trials": 6,
+        "max_output_error": 2.0027160640978536e-07,
+        "max_activity_error": 4.0543507484613883e-07,
+        "python_response_executions": [
+          69,
+          159,
+          341,
+          116,
+          78,
+          154
+        ],
+        "gpu_choices_rt": [
+          [
+            1.0,
+            0.8899999856948853
+          ],
+          [
+            0.0,
+            1.6899999380111694
+          ],
+          [
+            1.0,
+            3.7099997997283936
+          ],
+          [
+            0.0,
+            1.309999942779541
+          ],
+          [
+            0.0,
+            1.0299999713897705
+          ],
+          [
+            1.0,
+            1.659999966621399
+          ]
+        ],
+        "python_choices_rt": [
+          [
+            1.0,
+            0.8900000000000001
+          ],
+          [
+            0.0,
+            1.6900000000000002
+          ],
+          [
+            1.0,
+            3.71
+          ],
+          [
+            0.0,
+            1.3099999999999998
+          ],
+          [
+            0.0,
+            1.03
+          ],
+          [
+            1.0,
+            1.6600000000000001
+          ]
+        ]
+      }
+    ],
+    "construction_seed": 29,
+    "noise_sd_each_layer": 0.1,
+    "varying_parameters": [
+      "LC mode",
+      "bias",
+      "w1",
+      "w2",
+      "nondecision time",
+      "control gain",
+      "response threshold"
+    ],
+    "tasks": "Alternating color/location; generated conflict stimuli",
+    "launch": {
+      "block_size": 32,
+      "num_warps": 1,
+      "normal_rng": "philox4x_fast_v1",
+      "trial_schedule": "independent",
+      "specialized": true
+    },
+    "checks": "Choices and stopping executions exact; RT within two FP32 ULPs; LCA activity and LC gain atol=2e-6, rtol=2e-6; every native Gaussian draw counted against mechanism executions.",
+    "note": "Replay substitutes Gaussian draws only; native PNL executes the source graph, equations, resets, controllers and stopping. RNG law is checked separately."
+  },
+  "current_llvm_noisy_10k": {
+    "rt": {
+      "llvm_mean_by_trial": [
+        0.9417389999999981,
+        1.1325510000000016,
+        0.8468939999999955,
+        1.1221620000000039,
+        0.8441119999999999,
+        1.1227160000000012,
+        0.8422339999999995,
+        0.8410569999999971
+      ],
+      "gpu_mean_by_trial": [
+        0.9303889870643616,
+        1.125715970993042,
+        0.8411109447479248,
+        1.124690055847168,
+        0.841867983341217,
+        1.1236679553985596,
+        0.8388530015945435,
+        0.8420810699462891
+      ],
+      "llvm_minus_gpu": [
+        0.011350012935636533,
+        0.0068350290069596475,
+        0.005783055252070679,
+        -0.00252805584716409,
+        0.0022440166587828214,
+        -0.0009519553985584128,
+        0.003380998405456026,
+        -0.0010240699462920055
+      ],
+      "combined_standard_errors": [
+        0.0026099198675249894,
+        0.0050275724260630305,
+        0.002707419794078842,
+        0.0050309402198273805,
+        0.0027131233392918798,
+        0.005051985712328887,
+        0.002698965792647293,
+        0.0026944926749097975
+      ],
+      "standardized_differences": [
+        4.348797477219043,
+        1.3595088101618842,
+        2.1360024273732083,
+        -0.5025016670245451,
+        0.8270971784749401,
+        -0.18843192613060186,
+        1.252701466119642,
+        -0.3800603934936613
+      ],
+      "sequence_mean_difference": 0.003136069278717013,
+      "sequence_mean_combined_se": 0.0013244826831604452
+    },
+    "decision": {
+      "llvm_mean_by_trial": [
+        0.9961,
+        0.0428,
+        0.9884,
+        0.9557,
+        0.01,
+        0.0456,
+        0.9888,
+        0.012
+      ],
+      "gpu_mean_by_trial": [
+        0.996399998664856,
+        0.046300001442432404,
+        0.9891999959945679,
+        0.9552000164985657,
+        0.011900000274181366,
+        0.04500000178813934,
+        0.9894000291824341,
+        0.00860000029206276
+      ],
+      "llvm_minus_gpu": [
+        -0.0002999986648559716,
+        -0.003500001442432406,
+        -0.0007999959945679258,
+        0.0004999835014343201,
+        -0.0019000002741813658,
+        0.0005999982118606584,
+        -0.0006000291824340698,
+        0.003399999707937241
+      ],
+      "combined_standard_errors": [
+        0.0008644406983552117,
+        0.0029177556904747613,
+        0.0014883216695699443,
+        0.002917858523957429,
+        0.0014717525568988244,
+        0.0029411611786946006,
+        0.0014684807431163476,
+        0.001427728220596823
+      ],
+      "standardized_differences": [
+        -0.3470436612098261,
+        -1.199552606086394,
+        -0.5375155189395902,
+        0.17135289368183734,
+        -1.290978069156486,
+        0.20400045268071995,
+        -0.4086054143009824,
+        2.3814054095785564
+      ],
+      "sequence_mean_difference": -0.00032497711181644906,
+      "sequence_mean_combined_se": 0.0007423767818179462
+    }
+  },
+  "fixed_llvm_noisy_100k": {
+    "rt": {
+      "llvm_mean_by_trial": [
+        0.9325268000000059,
+        1.1341714999999946,
+        0.8433399000000056,
+        1.123027900000012,
+        0.8432211999999983,
+        1.1226982000000065,
+        0.8429121999999972,
+        0.8434865999999913
+      ],
+      "gpu_mean_by_trial": [
+        0.9317798614501953,
+        1.1323554515838623,
+        0.842925488948822,
+        1.1230498552322388,
+        0.8424878120422363,
+        1.1215051412582397,
+        0.8413692712783813,
+        0.8436288833618164
+      ],
+      "llvm_minus_gpu": [
+        0.0007469385498105607,
+        0.0018160484161322543,
+        0.0004144110511835608,
+        -2.195523222670026e-05,
+        0.0007333879577620106,
+        0.0011930587417667837,
+        0.0015429287216158771,
+        -0.00014228336182509072
+      ],
+      "combined_standard_errors": [
+        0.0008265639626535541,
+        0.001600364992223216,
+        0.0008530607437444953,
+        0.0015991179275520666,
+        0.0008527459829863603,
+        0.001601861483259587,
+        0.0008533195996426799,
+        0.0008516594665789432
+      ],
+      "standardized_differences": [
+        0.9036669677838743,
+        1.1347713958735202,
+        0.48579313281315784,
+        -0.013729589199409064,
+        0.8600309733429037,
+        0.7447951987328261,
+        1.8081486962938214,
+        -0.16706602510582438
+      ],
+      "sequence_mean_difference": 0.000785294503784284,
+      "sequence_mean_combined_se": 0.00042047083559854304
+    },
+    "decision": {
+      "llvm_mean_by_trial": [
+        0.9968,
+        0.04512,
+        0.98907,
+        0.95549,
+        0.0108,
+        0.04537,
+        0.9886,
+        0.01099
+      ],
+      "gpu_mean_by_trial": [
+        0.9963600039482117,
+        0.043949998915195465,
+        0.9885600209236145,
+        0.9550999999046326,
+        0.011049999855458736,
+        0.04493999853730202,
+        0.9892600178718567,
+        0.01083999965339899
+      ],
+      "llvm_minus_gpu": [
+        0.00043999605178834944,
+        0.0011700010848045353,
+        0.0005099790763855028,
+        0.0003900000953673821,
+        -0.00024999985545873585,
+        0.0004300014626979834,
+        -0.0006600178718566552,
+        0.00015000034660100914
+      ],
+      "combined_standard_errors": [
+        0.00026108577298166456,
+        0.0009225152202038027,
+        0.000470317794317521,
+        0.000924195347154012,
+        0.0004648814380339621,
+        0.0009286162653116797,
+        0.00046791997634879854,
+        0.00046467115702492176
+      ],
+      "standardized_differences": [
+        1.6852547986950226,
+        1.2682729338016319,
+        1.084328687000955,
+        0.421988810664712,
+        -0.5377712143466394,
+        0.46305613929092465,
+        -1.4105357864966688,
+        0.3228096780557528
+      ],
+      "sequence_mean_difference": 0.0002724945831298342,
+      "sequence_mean_combined_se": 0.00023457225019536348
+    }
+  },
+  "noisy_protocol": {
+    "trials": 8,
+    "seed": 29,
+    "construction_seed": 29,
+    "all_four_noise_sd": 0.1,
+    "source_parameters": {
+      "Response Units\n[Left, Right].termination_threshold": 0.3,
+      "RT_GATE.intercept": 0.2,
+      "Bias Mechanism.intercept": -0.45,
+      "Control Units\n[Color, Location].gain": 10.0,
+      "LC.mode": 0.9,
+      "LC.slope": 1.0,
+      "LC.intercept": 5.0
+    },
+    "lca_dt": 0.01,
+    "lc_dt": 0.02,
+    "lc_steps_per_pass": 10,
+    "llvm_seed_policy": "Independent component offsets via benchmark --independent-noise-streams",
+    "native_likelihood": "Used only to return native simulation samples; objective set to a dummy zero; no likelihood-score comparison",
+    "gpu_rng": "philox4x_fast_v1",
+    "fixed_llvm_harness": "Separate clean worktree. Only unused batch-compiler imports removed from benchmark/driver to allow import on devel-based reference checkout; no model or LLVM method replacement.",
+    "statistical_scope": "Independent RNG streams across backends. Pointwise mean/choice comparisons and broad RT quantiles; not an exhaustive distributional equivalence proof.",
+    "fixed_llvm_rt_quantiles": [
+      0.63,
+      0.9199999999999999,
+      1.35,
+      1.89,
+      3.47
+    ],
+    "gpu_rt_quantiles": [
+      0.6299999952316284,
+      0.9199999570846558,
+      1.350000023841858,
+      1.8899999856948853,
+      3.7200000286102295
+    ],
+    "quantile_probabilities": [
+      0.1,
+      0.5,
+      0.9,
+      0.99,
+      1.0
+    ]
+  },
+  "tests": {
+    "component_network_rng_trial_schedule_and_numpy_reference": {
+      "passed": 52,
+      "skipped": 27
+    },
+    "conditioned_transport_and_normal_generator": {
+      "passed": 36,
+      "skipped": 1,
+      "deselected": 18
+    },
+    "exact_hmm_filter_reference": {
+      "passed": 4,
+      "skipped": 1
+    },
+    "new_native_noisy_source_parity": {
+      "passed": 4,
+      "skipped": 0
+    },
+    "note": "Pytest totals include configured style checks; interpreter cases were skipped/deselected in the CUDA session. Initial RT tolerance failure was replaced by exact stopping-count and FP32-ULP checks; final rerun passed."
+  },
+  "remaining": "LLVM reset and independent-seed fixes exist on separate branches, not this checkout. Native LLVM likelihood still lacks observed-history conditioning. No production implementation changed during this audit."
+}

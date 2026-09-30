@@ -97,6 +97,10 @@ fixed-count fitting remains the default.
 
 ## Simulation checks
 
+The [source-model audit](SOURCE_PARITY.md) compares noisy GPU trajectories with
+native Python using identical Gaussian draws, checks changing trial parameters,
+and distinguishes current LLVM behavior from the separate LLVM reset-fix branch.
+
 Run from the repository root in the configured Python environment:
 
 ```bash
