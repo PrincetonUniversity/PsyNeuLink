@@ -33,8 +33,8 @@ the inputs used to run it::
 
 The keys of **bounds** must name the fitted parameters in the order in which the model lists them, and
 **outcome_names** must be the column names of the **data** that the estimator will be used to fit, which
-are in the order of the model's ``outcome_variables``. The number of trials simulated for each set of
-parameter values is the number of trials in **inputs**.
+are in the order of the model's ``outcome_variables``. Each set of parameter values is simulated on the
+trials in **inputs**, each as many times as the model's ``num_estimates``.
 
 To distribute the simulations over a `Dask <https://www.dask.org>`_ cluster, specify a **pec_factory**
 in place of **pec**, together with **distributed_options** (see :ref:`Distributed Fitting

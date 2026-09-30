@@ -321,8 +321,8 @@ def _simulate(pec, inputs, thetas, names, seed=0, first_draw=0):
     """Simulate every draw through ``pec``; ``first_draw`` is the place of the first among all draws.
 
     Returns the conditioning rows, the simulated outcomes, and the layout of the inputs: which of
-    their columns were used, and the values of the rest.  Each draw simulates
-    as many trials as ``inputs`` has, whatever the model's data.
+    their columns were used, and the values of the rest.  Each draw simulates the trials in
+    ``inputs``, whatever the model's data, each as many times as the model's ``num_estimates``.
     """
     _check_model(pec, names)
     n_trials = None
@@ -490,8 +490,8 @@ def train_neural_likelihood(
         specifies a model to simulate in this process.  Requires **inputs**.
 
     inputs : Mapping : default None
-        specifies the inputs with which **pec** is run; the number of trials simulated for each parameter
-        draw is the number of trials in **inputs**.
+        specifies the inputs with which **pec** is run; each parameter draw simulates the trials in
+        **inputs**, each as many times as the model's ``num_estimates``.
 
     pec_factory : callable : default None
         specifies a function ``pec_factory(data) -> (pec, inputs)`` that builds the model, as used for
@@ -503,8 +503,8 @@ def train_neural_likelihood(
         specifies the number of parameter values drawn uniformly from within **bounds** and simulated.
 
     n_trials_per_sample : int : default None
-        specifies the number of trials simulated for each parameter draw when **pec_factory** is used; 100
-        if not specified.
+        specifies the number of trials in the table **pec_factory** is called with, which sets the trials
+        each parameter draw simulates as **inputs** does for **pec**; 100 if not specified.
 
     categorical : Sequence[bool] : default None
         specifies which outcome variables are categorical; if not specified, this is inferred from the
