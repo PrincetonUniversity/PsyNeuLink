@@ -166,15 +166,6 @@ class NeuralLikelihood:
         # Example rows, from which `load` rebuilds the network before restoring its weights.
         self._shape_probe = shape_probe
 
-    def _encode_outcomes(self, outcomes: np.ndarray) -> torch.Tensor:
-        """Reorder to sbi's layout and map categorical values onto codes 0..K-1."""
-        return _encode_outcomes(
-            outcomes,
-            self.metadata.categorical,
-            self.metadata.categories,
-            self.metadata.outcome_names,
-        )
-
     def _conditioning(self, theta: torch.Tensor, trial_features, n_trials) -> torch.Tensor:
         """Give each trial its parameters, one vector for all or a row each, then its features."""
         cond = theta.reshape(-1, theta.shape[-1]).expand(n_trials, -1)
@@ -205,7 +196,8 @@ class NeuralLikelihood:
             if isinstance(theta, torch.Tensor)
             else torch.as_tensor(np.asarray(theta, dtype=float), dtype=torch.float32)
         )
-        x = self._encode_outcomes(outcomes)
+        m = self.metadata
+        x = _encode_outcomes(outcomes, m.categorical, m.categories, m.outcome_names)
         cond = self._conditioning(theta_t.to(torch.float32), trial_features, x.shape[0])
         return self._estimator.log_prob(x, condition=cond).reshape(-1)
 
