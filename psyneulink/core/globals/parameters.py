@@ -1611,7 +1611,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             "Codegen should use only source parameters: {}".format(self.name)
 
         self._used_in_codegen = True
-        return self.get(self._owner._owner.most_recent_context)
+        return self._get(self._owner._owner.most_recent_context)
 
     @handle_external_context()
     def get(self, context=None, *, fallback_value=ParameterNoValueError, **kwargs):
