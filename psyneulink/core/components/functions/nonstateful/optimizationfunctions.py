@@ -2095,10 +2095,13 @@ class GridSearch(OptimizationFunction):
                 params=params,
             )
 
-            # Compiled version
+            # Compiled reduction expects one value per unaggregated search-space
+            # sample. Aggregation returns a 2D array and a reduced all_samples
+            # matrix; select from those explicit samples using the Python path.
             ocm = self._get_optimized_controller()
-            # if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
-            if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
+            if (ocm is not None
+                    and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}
+                    and np.ndim(all_values) == 1):
 
                 # Reduce array of values to min/max
                 # select_min params are:
