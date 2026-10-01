@@ -395,15 +395,6 @@ def _dask_client(options):
     return client, _close
 
 
-def _pec_candidate_log_likelihood(pec, param_values, inputs):
-    """Adapt public scoring to an optimizer's invalid-candidate convention."""
-    try:
-        return float(pec.log_likelihood(*param_values, inputs=inputs))
-    except ParticleSupportError as error:
-        warnings.warn(BadLikelihoodWarning(str(error)))
-        return -np.inf
-
-
 def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id):
     """One candidate -> one scalar log-likelihood, on a Dask worker.
 
@@ -431,7 +422,9 @@ def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id)
                 _PEC_FALLBACK_CACHE["pec"] = cache
 
         _, pec, inputs = cache
-        return _pec_candidate_log_likelihood(pec, param_values, inputs)
+        return float(
+            pec.log_likelihood(*param_values, inputs=inputs, on_zero_support="neg_inf")
+        )
 
 
 def _dask_evaluate_loglik_de(pec_factory, worker_cores, data, direction, fit_id, param_values):
@@ -554,10 +547,11 @@ class PECOptimizationFunction(OptimizationFunction):
         ``likelihood_diagnostics`` contains per-trial log densities, effective
         sample sizes, and contamination responsibilities from the last
         successful conditional evaluation; it is cleared before a new filter.
-        Zero support raises ``ParticleSupportError`` in public scoring; fitting
-        reports ``BadLikelihoodWarning`` and a log likelihood of negative
-        infinity for that candidate. The kernels define a smoothed observation
-        likelihood, not an exact continuous-data likelihood.
+        Zero support raises ``ParticleSupportError`` in public scoring by
+        default. ``log_likelihood(on_zero_support="neg_inf")`` reports
+        ``BadLikelihoodWarning`` and returns negative infinity; fitting uses
+        this policy. The kernels define a smoothed observation likelihood,
+        not an exact continuous-data likelihood.
 
     distributed :
         If True, evaluate candidate parameterizations in parallel across a Dask cluster instead of serially. Each
@@ -785,15 +779,9 @@ class PECOptimizationFunction(OptimizationFunction):
         """
 
         if self._uses_conditioned_likelihood():
-
-            def conditioned_objective(*args):
-                try:
-                    return self._conditioned_evaluation(*args, context=context)[0]
-                except ParticleSupportError as error:
-                    warnings.warn(BadLikelihoodWarning(str(error)))
-                    return -np.inf
-
-            return conditioned_objective
+            return functools.partial(
+                self.log_likelihood, context=context, on_zero_support="neg_inf"
+            )
 
         def objfunc(*args):
             obj_val, _ = self._evaluate_objective_and_sim_data(*args, context=context)
@@ -1603,7 +1591,9 @@ class PECOptimizationFunction(OptimizationFunction):
             return None
 
     @handle_external_context(fallback_most_recent=True)
-    def log_likelihood(self, *args, return_sim_data=False, context=None):
+    def log_likelihood(
+        self, *args, return_sim_data=False, on_zero_support="raise", context=None
+    ):
         """
         Compute the log-likelihood of the data given the specified parameters of the model. This function will raise
         aa exception if the function has not been assigned as the function of and OptimizationControlMechanism. An
@@ -1621,11 +1611,22 @@ class PECOptimizationFunction(OptimizationFunction):
         return_sim_data : bool
             If True, return a tuple containing the log-likelihood and the simulated data used to compute it.
 
+        on_zero_support : "raise" or "neg_inf" : default "raise"
+            Policy when an observation has zero support under the conditional particle
+            population. "raise" propagates `ParticleSupportError`; "neg_inf" emits
+            `BadLikelihoodWarning` and returns negative infinity. With `return_sim_data=True`,
+            the latter returns ``(-np.inf, None)`` because the filter did not finish.
+            Other errors propagate under either policy. This does not change the
+            legacy independent-trial KDE's support handling.
+
         Returns
         -------
         The sum of the log-likelihoods of the data given the specified parameters of the model, or
         `(log_likelihood, sim_data)` when `return_sim_data` is True.
         """
+
+        if on_zero_support not in ("raise", "neg_inf"):
+            raise ValueError("on_zero_support must be 'raise' or 'neg_inf'.")
 
         if self.owner is None:
             raise ValueError(
@@ -1645,6 +1646,11 @@ class PECOptimizationFunction(OptimizationFunction):
                 ll, sim_data = self._evaluate_objective_and_sim_data(
                     *args, context=context
                 )
+        except ParticleSupportError as error:
+            if on_zero_support == "raise":
+                raise
+            warnings.warn(BadLikelihoodWarning(str(error)), stacklevel=2)
+            ll, sim_data = -np.inf, None
         finally:
             context.execution_phase = execution_phase_at_entry
 

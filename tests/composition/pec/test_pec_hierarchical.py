@@ -546,7 +546,8 @@ class _StubPEC:
         self._value = value
         self.calls = []
 
-    def log_likelihood(self, *theta, inputs=None):
+    def log_likelihood(self, *theta, inputs=None, on_zero_support="raise"):
+        assert on_zero_support == "neg_inf"
         self.calls.append(np.asarray(theta, dtype=float))
         return self._value
 

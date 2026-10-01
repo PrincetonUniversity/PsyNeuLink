@@ -9,6 +9,7 @@ import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.particlefilter import (
     ParticleSupportError,
 )
+from psyneulink.core.globals.context import Context
 
 pytestmark = [
     pytest.mark.composition,
@@ -116,7 +117,8 @@ def test_masked_history_changes_later_prediction_without_changing_initial_simula
     assert first != second
 
 
-def test_support_error_restores_controller_and_following_call_replays():
+@pytest.mark.parametrize("policy", [{}, {"on_zero_support": "raise"}])
+def test_support_error_restores_controller_and_following_call_replays(policy):
     pec, source = make_pec(
         options={
             "kernel": "histogram",
@@ -127,12 +129,79 @@ def test_support_error_restores_controller_and_following_call_replays():
     )
     pec._data_numpy[:] = 99.0
     with pytest.raises(ParticleSupportError, match="trial 0"):
-        pec.log_likelihood(1.0, inputs={source: np.ones((3, 1))})
+        pec.log_likelihood(1.0, inputs={source: np.ones((3, 1))}, **policy)
     assert pec.controller.parameters.num_trials_per_estimate.get() == 3
     assert len(pec.controller._pec_input_values[pec.model]) == 3
     assert pec.controller.function.likelihood_diagnostics is None
     pec.controller.function.likelihood_options = {"bandwidth": 1.0}
     assert np.isfinite(pec.log_likelihood(1.0, inputs={source: np.ones((3, 1))}))
+
+
+@pytest.mark.parametrize("return_sim_data", [False, True])
+def test_zero_support_policy_for_public_scoring_and_local_fitting(return_sim_data):
+    pec, source = make_pec(
+        data=(99.0, 99.0, 99.0),
+        estimates=4,
+        options={
+            "kernel": "histogram",
+            "bin_range": [(0.0, 100.0)],
+            "bins": 1000,
+            "smoothing_sigma": 0.0,
+        },
+    )
+    context = Context(execution_id=None, composition=pec)
+    original_phase = context.execution_phase
+    inputs = {source: np.ones((3, 1))}
+    with pytest.warns(pnl.BadLikelihoodWarning, match="Zero particle"):
+        score = pec.log_likelihood(
+            1.0,
+            inputs=inputs,
+            on_zero_support="neg_inf",
+            return_sim_data=return_sim_data,
+            context=context,
+        )
+    assert score == ((-np.inf, None) if return_sim_data else -np.inf)
+    assert context.execution_phase == original_phase
+    assert pec.controller.parameters.num_trials_per_estimate.get(context) == 3
+    assert len(pec.controller._pec_input_values[pec.model]) == 3
+    assert pec.controller.function.likelihood_diagnostics is None
+
+    objective = pec.controller.function._make_objective_func(context=context)
+    with pytest.warns(pnl.BadLikelihoodWarning, match="Zero particle"):
+        assert objective(1.0) == -np.inf
+    assert context.execution_phase == original_phase
+
+    pec.controller.function.likelihood_options = {"bandwidth": 1.0}
+    assert np.isfinite(pec.log_likelihood(1.0, inputs=inputs, context=context))
+
+
+@pytest.mark.parametrize("mode", ["auto", False])
+def test_invalid_zero_support_policy_is_rejected_before_simulation(mode, monkeypatch):
+    pec, source = make_pec(estimates=1, mode=mode)
+
+    def unexpected_evaluation(*args, **kwargs):
+        pytest.fail("Invalid policy reached the simulator")
+
+    monkeypatch.setattr(
+        pec.controller.function, "_conditioned_evaluation", unexpected_evaluation
+    )
+    monkeypatch.setattr(
+        pec.controller.function,
+        "_evaluate_objective_and_sim_data",
+        unexpected_evaluation,
+    )
+    with pytest.raises(ValueError, match="on_zero_support"):
+        pec.log_likelihood(
+            1.0, inputs={source: np.ones((3, 1))}, on_zero_support="ignore"
+        )
+
+
+def test_negative_infinity_policy_does_not_hide_invalid_observation_options():
+    pec, source = make_pec(estimates=1, options={"bandwidth": -1.0})
+    with pytest.raises(ValueError, match="bandwidth"):
+        pec.log_likelihood(
+            1.0, inputs={source: np.ones((3, 1))}, on_zero_support="neg_inf"
+        )
 
 
 def test_optimizer_uses_the_same_conditional_scorer():

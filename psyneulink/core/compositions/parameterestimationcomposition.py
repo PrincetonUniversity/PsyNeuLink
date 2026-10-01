@@ -292,10 +292,12 @@ requires the controller's ``comp_execution_mode`` to be ``'LLVM'``.
 After successful scoring, ``pec.controller.function.likelihood_diagnostics``
 contains ``per_trial_log_densities``, ``effective_sample_size``, and
 ``contamination_responsibility``. Zero particle support raises
-``pnl.ParticleSupportError`` from ``log_likelihood()``. Optimizers receive a
-negative infinite log likelihood and a ``BadLikelihoodWarning`` for such a
-candidate. Increase the population/kernel width or explicitly specify an
-observation-contamination model when appropriate.
+``pnl.ParticleSupportError`` from ``log_likelihood()`` by default. Pass
+``on_zero_support="neg_inf"`` to receive a negative infinite log likelihood and
+a ``BadLikelihoodWarning`` instead; optimizers use this policy. If the filter
+fails with ``return_sim_data=True``, this policy returns ``(-np.inf, None)``.
+Other errors still propagate. Increase the population/kernel width or explicitly
+specify an observation-contamination model when appropriate.
 
 With ``return_sim_data=True``, conditional scoring returns predictive particle
 clouds with axes ``[trial, estimate, outcome]``. Because ancestry changes after
@@ -1546,7 +1548,14 @@ class ParameterEstimationComposition(Composition):
         return self.controller.function.likelihood_history
 
     @handle_external_context()
-    def log_likelihood(self, *args, inputs=None, return_sim_data=False, context=None) -> Union[float, tuple]:
+    def log_likelihood(
+        self,
+        *args,
+        inputs=None,
+        return_sim_data=False,
+        on_zero_support="raise",
+        context=None,
+    ) -> Union[float, tuple]:
         """
         Compute the log-likelihood of the data given the specified parameters of the model.
 
@@ -1558,6 +1567,14 @@ class ParameterEstimationComposition(Composition):
 
         return_sim_data : bool
             If True, return a tuple containing the log-likelihood and the simulated data used to compute it.
+
+        on_zero_support : "raise" or "neg_inf" : default "raise"
+            Policy when an observation has zero support under the conditional particle
+            population. "raise" propagates `ParticleSupportError`; "neg_inf" emits
+            `BadLikelihoodWarning` and returns negative infinity. With `return_sim_data=True`,
+            the latter returns ``(-np.inf, None)`` because the filter did not finish.
+            Other errors propagate under either policy. This does not change the
+            legacy independent-trial KDE's support handling.
 
         Returns
         -------
@@ -1630,7 +1647,8 @@ class ParameterEstimationComposition(Composition):
         return self.controller.function.log_likelihood(
             *args,
             return_sim_data=return_sim_data,
-            context=context
+            on_zero_support=on_zero_support,
+            context=context,
         )
 
     def _prepare_pec_inputs_for_simulation(self, inputs, context):

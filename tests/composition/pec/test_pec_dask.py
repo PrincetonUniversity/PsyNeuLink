@@ -207,7 +207,8 @@ def test_dask_evaluate_loglik_builds_once_and_caches():
     calls = {"n": 0}
 
     class _FakePEC:
-        def log_likelihood(self, *params, inputs=None):
+        def log_likelihood(self, *params, inputs=None, on_zero_support="raise"):
+            assert on_zero_support == "neg_inf"
             return float(sum(params))
 
     def factory(data):
@@ -246,7 +247,8 @@ def test_dask_evaluate_loglik_holds_evaluation_lock(monkeypatch):
     monkeypatch.setattr(fitfunctions, "_PEC_EVALUATION_LOCK", lock)
 
     class _FakePEC:
-        def log_likelihood(self, *params, inputs=None):
+        def log_likelihood(self, *params, inputs=None, on_zero_support="raise"):
+            assert on_zero_support == "neg_inf"
             assert lock.inside
             assert inputs == {"inputs": "x"}
             return float(sum(params))
@@ -270,7 +272,8 @@ def test_dask_evaluate_loglik_rebuilds_on_new_fit_id():
         def __init__(self, data):
             self.data = data
 
-        def log_likelihood(self, *params, inputs=None):
+        def log_likelihood(self, *params, inputs=None, on_zero_support="raise"):
+            assert on_zero_support == "neg_inf"
             return float(sum(params))
 
     def make_factory(tag):
@@ -290,7 +293,8 @@ def test_dask_evaluate_loglik_rebuilds_on_new_fit_id():
 @pytest.mark.usefixtures("clear_fallback_cache")
 def test_dask_evaluate_loglik_de_sign():
     class _FakePEC:
-        def log_likelihood(self, *params, inputs=None):
+        def log_likelihood(self, *params, inputs=None, on_zero_support="raise"):
+            assert on_zero_support == "neg_inf"
             return 5.0
 
     def factory(data):

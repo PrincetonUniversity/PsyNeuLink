@@ -357,13 +357,13 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
 
     def log_likelihood(self, theta, subject_index):
         """Log-likelihood of one participant's data at parameters `theta`, in the model's units."""
-        from psyneulink.core.components.functions.nonstateful.fitfunctions import (
-            _pec_candidate_log_likelihood,
-        )
-
         pec, inputs = self._build(subject_index)
-        return _pec_candidate_log_likelihood(
-            pec, np.asarray(theta, dtype=float), inputs
+        return float(
+            pec.log_likelihood(
+                *np.asarray(theta, dtype=float),
+                inputs=inputs,
+                on_zero_support="neg_inf",
+            )
         )
 
     def close(self):

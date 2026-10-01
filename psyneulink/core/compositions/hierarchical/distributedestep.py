@@ -117,8 +117,8 @@ def _dask_subject_estep(
 
         def neg_log_post(z):
             theta = transform.to_natural(z)
-            return -_fitfunctions._pec_candidate_log_likelihood(
-                pec, theta, inputs
+            return -float(
+                pec.log_likelihood(*theta, inputs=inputs, on_zero_support="neg_inf")
             ) - log_gauss_diag(z, mu_s, sigma)
 
         try:
