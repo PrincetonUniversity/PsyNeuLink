@@ -2960,7 +2960,7 @@ class Mechanism_Base(Mechanism):
         return (port_state_init, *mech_state_init)
 
     def _get_output_struct_type(self, ctx):
-        output_type_list = (ctx.get_output_struct_type(port) for port in self.parameters.output_ports.get_value_for_codegen())
+        output_type_list = (ctx.get_output_struct_type(port) for port in self.parameters.output_ports._get_value_for_codegen())
         return pnlvm.ir.LiteralStructType(output_type_list)
 
     def _get_input_struct_type(self, ctx):
@@ -2969,7 +2969,7 @@ class Mechanism_Base(Mechanism):
             struct_ty = ctx.get_input_struct_type(p)
             return struct_ty.elements[0] if len(p.mod_afferents) > 0 else struct_ty
 
-        input_type_list = [_get_data_part_of_input_struct(port) for port in self.parameters.input_ports.get_value_for_codegen()]
+        input_type_list = [_get_data_part_of_input_struct(port) for port in self.parameters.input_ports._get_value_for_codegen()]
 
 
         # Get modulatory inputs
@@ -2989,7 +2989,7 @@ class Mechanism_Base(Mechanism):
             group_ports = self._parameter_ports
 
         else:
-            group_ports = getattr(self.parameters, group).get_value_for_codegen()
+            group_ports = getattr(self.parameters, group)._get_value_for_codegen()
 
         ports_param, ports_state = ctx.get_param_or_state_ptr(builder,
                                                               self,
@@ -3036,7 +3036,7 @@ class Mechanism_Base(Mechanism):
                                                p_function.args[2].type,
                                                "input",
                                                self._parameter_ports,
-                                               self.parameters.output_ports.get_value_for_codegen())
+                                               self.parameters.output_ports._get_value_for_codegen())
 
             else:
                 # Port input structure is: (data, [modulations]),
@@ -3052,7 +3052,7 @@ class Mechanism_Base(Mechanism):
                 for idx, p_mod in enumerate(port.mod_afferents):
                     mech_mod_afferent_idx = mod_afferents.index(p_mod)
                     mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
-                                                          ctx.int32_ty(len(self.parameters.input_ports.get_value_for_codegen())),
+                                                          ctx.int32_ty(len(self.parameters.input_ports._get_value_for_codegen())),
                                                           ctx.int32_ty(mech_mod_afferent_idx)])
                     mod_out_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
                     afferent_val = builder.load(mod_in_ptr)
@@ -3065,7 +3065,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_input_ports(self, ctx, builder, mech_params, mech_state, mech_input):
         # We rely on the fact that series of InputPort results should match the main function input.
         ip_output_list = []
-        input_ports = self.parameters.input_ports.get_value_for_codegen()
+        input_ports = self.parameters.input_ports._get_value_for_codegen()
 
         for port in input_ports:
             ip_function = ctx.import_llvm_function(port)
@@ -3132,7 +3132,7 @@ class Mechanism_Base(Mechanism):
             # subcomponent, or a list of subcomponents
             if p in mutable_parameters:
                 if recursive:
-                    nested_component = getattr(obj.parameters, p).get_value_for_codegen()
+                    nested_component = getattr(obj.parameters, p)._get_value_for_codegen()
                     nested_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
                                                                                 builder,
                                                                                 mech_params,
@@ -3194,9 +3194,9 @@ class Mechanism_Base(Mechanism):
         for spec in canonical_port_spec:
             param_name, indices = spec
 
-            function = self.parameters.function.get_value_for_codegen()
+            function = self.parameters.function._get_value_for_codegen()
             if "integrator_function" in self.llvm_param_ids:
-                integrator_function = self.parameters.integrator_function.get_value_for_codegen()
+                integrator_function = self.parameters.integrator_function._get_value_for_codegen()
 
             # "value" is not always stored in mechanism parameters,
             # use the location of the freshly calculated result instead
@@ -3277,7 +3277,7 @@ class Mechanism_Base(Mechanism):
 
 
     def _gen_llvm_output_ports(self, ctx, builder, value, mech_params, mech_state, mech_in, mech_out):
-        output_ports = self.parameters.output_ports.get_value_for_codegen()
+        output_ports = self.parameters.output_ports._get_value_for_codegen()
 
         def _get_output_port_value_ptr(b, i):
             ptr = b.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -3343,11 +3343,11 @@ class Mechanism_Base(Mechanism):
                                                                m_base_params,
                                                                m_state,
                                                                m_in,
-                                                               obj=self.parameters.function.get_value_for_codegen(),
+                                                               obj=self.parameters.function._get_value_for_codegen(),
                                                                params_in=f_base_params,
                                                                recursive=True)
 
-        func = self.parameters.function.get_value_for_codegen()
+        func = self.parameters.function._get_value_for_codegen()
         return self._gen_llvm_invoke_function(ctx, builder, func, f_params, f_state, ip_output, m_val, tags=tags)
 
     def _gen_llvm_function_internal(self, ctx, builder, m_params, m_state, arg_in, arg_out, m_base_params, *, tags:frozenset):
@@ -3424,8 +3424,8 @@ class Mechanism_Base(Mechanism):
         with builder.if_then(not_initializers):
             builder.ret_void()
 
-        if "integrator_function" in self.parameters and self.parameters.integrator_mode.get_value_for_codegen():
-            reinit_int_func = ctx.import_llvm_function(self.parameters.integrator_function.get_value_for_codegen(), tags=tags)
+        if "integrator_function" in self.parameters and self.parameters.integrator_mode._get_value_for_codegen():
+            reinit_int_func = ctx.import_llvm_function(self.parameters.integrator_function._get_value_for_codegen(), tags=tags)
             reinit_int_in = builder.alloca(reinit_int_func.args[2].type.pointee, name="integrator_reinit_in")
             reinit_int_out = builder.alloca(reinit_int_func.args[3].type.pointee, name="integrator_reinit_out")
 
@@ -3439,7 +3439,7 @@ class Mechanism_Base(Mechanism):
                                                                             m_base_params,
                                                                             m_state,
                                                                             m_arg_in,
-                                                                            obj=self.parameters.integrator_function.get_value_for_codegen(),
+                                                                            obj=self.parameters.integrator_function._get_value_for_codegen(),
                                                                             params_in=reinit_int_base_params)
 
             builder.call(reinit_int_func, [reinit_int_params, reinit_int_state, reinit_int_in, reinit_int_out])
@@ -3454,7 +3454,7 @@ class Mechanism_Base(Mechanism):
             reinit_in = None
 
 
-        reinit_func = ctx.import_llvm_function(self.parameters.function.get_value_for_codegen(), tags=func_tags)
+        reinit_func = ctx.import_llvm_function(self.parameters.function._get_value_for_codegen(), tags=func_tags)
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in") if reinit_in is None else reinit_in
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
 
@@ -3468,7 +3468,7 @@ class Mechanism_Base(Mechanism):
                                                                     m_base_params,
                                                                     m_state,
                                                                     m_arg_in,
-                                                                    obj=self.parameters.function.get_value_for_codegen(),
+                                                                    obj=self.parameters.function._get_value_for_codegen(),
                                                                     params_in=reinit_base_params)
 
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])

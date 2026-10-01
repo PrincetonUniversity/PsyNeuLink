@@ -1750,7 +1750,7 @@ class GridSearch(OptimizationFunction):
         # compiled version should never return 'all values' or 'all samples'
         # They might be enabled in parallel execution, so don't assert here.
         val = self.defaults.value
-        search_space = self.parameters.search_space.get_value_for_codegen()
+        search_space = self.parameters.search_space._get_value_for_codegen()
 
         # TODO: Shape mismatch workaround
         if len(val[0]) != len(search_space):
@@ -1772,7 +1772,7 @@ class GridSearch(OptimizationFunction):
             value_t = ocm._get_evaluate_output_struct_type(ctx, tags=tags)
 
         else:
-            obj_func = ctx.import_llvm_function(self.parameters.objective_function.get_value_for_codegen())
+            obj_func = ctx.import_llvm_function(self.parameters.objective_function._get_value_for_codegen())
             sample_t = obj_func.args[2].type.pointee
             value_t = obj_func.args[3].type.pointee
 
@@ -1804,7 +1804,7 @@ class GridSearch(OptimizationFunction):
         rand_out_ptr = builder.alloca(ctx.float_ty)
 
         # TODO: Convert 'direction' to runtime parameter by using StrEnum
-        direction = "<" if self.parameters.direction.get_value_for_codegen() == MINIMIZE else ">"
+        direction = "<" if self.parameters.direction._get_value_for_codegen() == MINIMIZE else ">"
         replace_ptr = builder.alloca(ctx.bool_ty)
 
         min_idx_ptr = builder.alloca(stop.type)
@@ -1907,7 +1907,7 @@ class GridSearch(OptimizationFunction):
             extra_args = [comp_input, comp_args[2], num_inputs]
 
         else:
-            obj_func = ctx.import_llvm_function(self.parameters.objective_function.get_value_for_codegen())
+            obj_func = ctx.import_llvm_function(self.parameters.objective_function._get_value_for_codegen())
             obj_param_ptr, obj_state_ptr = ctx.get_param_or_state_ptr(builder,
                                                                       self,
                                                                       self.parameters.objective_function,

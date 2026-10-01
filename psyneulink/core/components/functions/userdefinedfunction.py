@@ -673,7 +673,7 @@ class UserDefinedFunction(Function_Base):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
 
-        custom_function = self.parameters.custom_function.get_value_for_codegen()
+        custom_function = self.parameters.custom_function._get_value_for_codegen()
         srcfile = getsourcefile(custom_function)
         first_line = getsourcelines(custom_function)[1]
 

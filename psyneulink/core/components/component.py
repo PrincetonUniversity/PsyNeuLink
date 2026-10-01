@@ -1503,13 +1503,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # ?TransferMechanism:
             # * drop combination function if not used
             if hasattr(self.parameters, 'combination_function'):
-                if not self.parameters.has_recurrent_input_port.get_value_for_codegen():
+                if not self.parameters.has_recurrent_input_port._get_value_for_codegen():
                     blacklist.add('combination_function')
 
             # ?TransferMechanism
             # * drop integrator function if not used
             if hasattr(self.parameters, 'integrator_function'):
-                if not self.parameters.integrator_mode.get_value_for_codegen():
+                if not self.parameters.integrator_mode._get_value_for_codegen():
                     blacklist.add('integrator_function')
 
         elif self.componentCategory == kw.FUNCTION_COMPONENT_CATEGORY:
@@ -1517,12 +1517,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # * runtime abs_val and indicator are only used in deterministic mode.
             # * random_state and seed are only used in RANDOM tie resolution.
             if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
-                mode = self.parameters.mode.get_value_for_codegen()
+                mode = self.parameters.mode._get_value_for_codegen()
                 if mode != kw.DETERMINISTIC:
                     if mode not in {kw.PROB, kw.PROB_INDICATOR}:
                         whitelist.remove('random_state')
 
-                elif self.parameters.tie.get_value_for_codegen() != kw.RANDOM:
+                elif self.parameters.tie._get_value_for_codegen() != kw.RANDOM:
                     whitelist.remove('random_state')
 
             # Dropout:
@@ -1538,7 +1538,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # TransferWithCosts:
             # * drop unused cost functions
             elif componentName == kw.TRANSFER_WITH_COSTS_FUNCTION:
-                enabled_cost_functions = self.parameters.enabled_cost_functions.get_value_for_codegen()
+                enabled_cost_functions = self.parameters.enabled_cost_functions._get_value_for_codegen()
                 if enabled_cost_functions.INTENSITY not in enabled_cost_functions:
                     blacklist.add('intensity_cost_fct')
 
@@ -1697,13 +1697,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # ?TransferMechanism:
             # * drop combination function if not used
             if hasattr(self.parameters, 'combination_function'):
-                if not self.parameters.has_recurrent_input_port.get_value_for_codegen():
+                if not self.parameters.has_recurrent_input_port._get_value_for_codegen():
                     blacklist.add('combination_function')
 
             # ?TransferMechanism
             # * drop integrator function if not used
             if hasattr(self.parameters, 'integrator_function'):
-                if not self.parameters.integrator_mode.get_value_for_codegen():
+                if not self.parameters.integrator_mode._get_value_for_codegen():
                     blacklist.add('integrator_function')
 
 
@@ -1718,13 +1718,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # * runtime abs_val and indicator are only used in deterministic mode.
             # * random_state and seed are only used in RANDOM tie resolution.
             if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
-                mode = self.parameters.mode.get_value_for_codegen()
+                mode = self.parameters.mode._get_value_for_codegen()
                 if mode != kw.DETERMINISTIC:
                     blacklist.update(['abs_val', 'indicator'])
                     if mode not in {kw.PROB, kw.PROB_INDICATOR}:
                         blacklist.add('seed')
 
-                elif self.parameters.tie.get_value_for_codegen() != kw.RANDOM:
+                elif self.parameters.tie._get_value_for_codegen() != kw.RANDOM:
                     blacklist.add('seed')
 
             # Dropout:
@@ -1735,7 +1735,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # TransferWithCosts:
             # * drop unused cost functions
             elif componentName == kw.TRANSFER_WITH_COSTS_FUNCTION:
-                enabled_cost_functions = self.parameters.enabled_cost_functions.get_value_for_codegen()
+                enabled_cost_functions = self.parameters.enabled_cost_functions._get_value_for_codegen()
                 if enabled_cost_functions.INTENSITY not in enabled_cost_functions:
                     blacklist.add('intensity_cost_fct')
 

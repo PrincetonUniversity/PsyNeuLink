@@ -424,7 +424,7 @@ class OneHot(SelectionFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # TODO: Convert 'mode' to runtime parameter by using StrEnum
-        mode = self.parameters.mode.get_value_for_codegen()
+        mode = self.parameters.mode._get_value_for_codegen()
         if mode in {PROB, PROB_INDICATOR}:
 
             sum_ptr = builder.alloca(ctx.float_ty)
@@ -478,8 +478,8 @@ class OneHot(SelectionFunction):
 
         elif mode == DETERMINISTIC:
             # TODO: Convert 'direction' and 'tie' to runtime param(s) using StrEnum(s)
-            direction = self.parameters.direction.get_value_for_codegen()
-            tie = self.parameters.tie.get_value_for_codegen()
+            direction = self.parameters.direction._get_value_for_codegen()
+            tie = self.parameters.tie._get_value_for_codegen()
             abs_val_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.abs_val, param_struct_ptr=params)
             indicator_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.indicator, param_struct_ptr=params)
 

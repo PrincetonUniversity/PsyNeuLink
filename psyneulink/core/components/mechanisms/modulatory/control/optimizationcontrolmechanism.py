@@ -3283,7 +3283,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _get_evaluate_output_struct_type(self, ctx, tags):
         if "evaluate_type_all_results" in tags:
-            return ctx.get_output_struct_type(self.parameters.agent_rep.get_value_for_codegen())
+            return ctx.get_output_struct_type(self.parameters.agent_rep._get_value_for_codegen())
 
         assert "evaluate_type_objective" in tags, "Unknown evaluate type: {}".format(tags)
 
@@ -3291,7 +3291,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return ctx.float_ty
 
     def _get_evaluate_alloc_struct_type(self, ctx):
-        return pnlvm.ir.ArrayType(ctx.float_ty, len(self.parameters.control_signals.get_value_for_codegen()))
+        return pnlvm.ir.ArrayType(ctx.float_ty, len(self.parameters.control_signals._get_value_for_codegen()))
 
     def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
         assert "net_outcome" in tags
@@ -3313,7 +3313,7 @@ class OptimizationControlMechanism(ControlMechanism):
         total_cost_ptr = builder.alloca(ctx.float_ty, name="total_cost")
         builder.store(total_cost_ptr.type.pointee(-0.0), total_cost_ptr)
 
-        for i, op in enumerate(self.parameters.output_ports.get_value_for_codegen()):
+        for i, op in enumerate(self.parameters.output_ports._get_value_for_codegen()):
             # FIXME Issue #2712: Use port total cost here
             port_cost_ptr = builder.alloca(ctx.float_ty, name="port_{}_total_cost".format(i))
             builder.store(port_cost_ptr.type.pointee(-0.0), port_cost_ptr)
@@ -3333,8 +3333,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 # TODO: This should only read the total cost of ports after they
                 # ran their own combination functions
-                op_function = op.parameters.function.get_value_for_codegen()
-                if flag in op_function.parameters.enabled_cost_functions.get_value_for_codegen():
+                op_function = op.parameters.function._get_value_for_codegen()
+                if flag in op_function.parameters.enabled_cost_functions._get_value_for_codegen():
                     cost_ptr = pnlvm.helpers.get_state_ptr(builder, op_func, op_func_state, param.name)
                     cost = pnlvm.helpers.load_extract_scalar_array_one(builder, cost_ptr)
                     port_cost = builder.load(port_cost_ptr)
@@ -3351,7 +3351,7 @@ class OptimizationControlMechanism(ControlMechanism):
             port_cost = builder.select(ltz, port_cost.type(0), port_cost)
 
             # combine is not a PNL function
-            assert self.parameters.combine_costs.get_value_for_codegen() is np.sum
+            assert self.parameters.combine_costs._get_value_for_codegen() is np.sum
 
             total_cost = builder.load(total_cost_ptr)
             total_cost = builder.fadd(total_cost, port_cost)
@@ -3391,8 +3391,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                  param_struct_ptr=controller_params)
         func_params = pnlvm.helpers.get_param_ptr(builder, self, controller_params, "function")
         search_space = ctx.get_param_or_state_ptr(builder,
-                                                  self.parameters.function.get_value_for_codegen(),
-                                                  self.parameters.function.get_value_for_codegen().parameters.search_space,
+                                                  self.parameters.function._get_value_for_codegen(),
+                                                  self.parameters.function._get_value_for_codegen().parameters.search_space,
                                                   param_struct_ptr=func_params)
 
         allocation = builder.alloca(evaluate_f.args[2].type.pointee, name="allocation")
@@ -3418,7 +3418,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _gen_llvm_evaluate_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags=frozenset()):
         assert "evaluate" in tags
-        agent_rep = self.parameters.agent_rep.get_value_for_codegen()
+        agent_rep = self.parameters.agent_rep._get_value_for_codegen()
 
         args = [ctx.get_param_struct_type(agent_rep).as_pointer(),
                 ctx.get_state_struct_type(agent_rep).as_pointer(),
@@ -3469,14 +3469,14 @@ class OptimizationControlMechanism(ControlMechanism):
         controller_params = builder.gep(nodes_params, [ctx.int32_ty(0), ctx.int32_ty(controller_idx)])
 
         # Apply allocation sample to simulation data
-        assert len(self.parameters.output_ports.get_value_for_codegen()) == len(allocation_sample.type.pointee)
+        assert len(self.parameters.output_ports._get_value_for_codegen()) == len(allocation_sample.type.pointee)
         controller_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(controller_idx)])
         all_op_params, all_op_states = ctx.get_param_or_state_ptr(builder,
                                                                   self,
                                                                   self.parameters.output_ports,
                                                                   param_struct_ptr=controller_params,
                                                                   state_struct_ptr=controller_state)
-        for i, op in enumerate(self.parameters.output_ports.get_value_for_codegen()):
+        for i, op in enumerate(self.parameters.output_ports._get_value_for_codegen()):
             op_idx = ctx.int32_ty(i)
 
             op_f = ctx.import_llvm_function(op, tags=frozenset({"simulation"}))
@@ -3546,7 +3546,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if "evaluate_type_objective" in tags:
             # Extract objective mechanism value
-            objective_mechanism = self.parameters.objective_mechanism.get_value_for_codegen()
+            objective_mechanism = self.parameters.objective_mechanism._get_value_for_codegen()
 
             assert objective_mechanism is not None, \
                 "objective_mechanism on OptimizationControlMechanism cannot be None in 'evaluate_type_objective'"
@@ -3584,7 +3584,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if "evaluate" in tags:
             return self._gen_llvm_evaluate_function(ctx=ctx, tags=tags)
 
-        agent_rep = self.parameters.agent_rep.get_value_for_codegen()
+        agent_rep = self.parameters.agent_rep._get_value_for_codegen()
         is_comp = not isinstance(agent_rep, Function)
         if is_comp:
             extra_args = [ctx.get_param_struct_type(agent_rep).as_pointer(),

@@ -1262,11 +1262,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                        param_struct_ptr=params,
                                                                        state_struct_ptr=state)
 
-        recurrent_projection = self.parameters.recurrent_projection.get_value_for_codegen()
+        recurrent_projection = self.parameters.recurrent_projection._get_value_for_codegen()
         recurrent_f = ctx.import_llvm_function(recurrent_projection)
 
-        input_ports = self.parameters.input_ports.get_value_for_codegen()
-        output_ports = self.parameters.output_ports.get_value_for_codegen()
+        input_ports = self.parameters.input_ports._get_value_for_codegen()
+        output_ports = self.parameters.output_ports._get_value_for_codegen()
 
         # Extract the correct output port value
         old_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=state)
@@ -1288,7 +1288,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             # input
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
 
-        assert not self.parameters.has_recurrent_input_port.get_value_for_codegen(), \
+        assert not self.parameters.has_recurrent_input_port._get_value_for_codegen(), \
             "Configuration using combination function is not supported!"
 
         return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)

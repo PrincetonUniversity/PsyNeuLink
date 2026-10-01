@@ -2325,7 +2325,7 @@ class Port_Base(Port):
     def _get_input_struct_type(self, ctx):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
-        function = self.parameters.function.get_value_for_codegen()
+        function = self.parameters.function._get_value_for_codegen()
         func_input_type = ctx.get_input_struct_type(function)
 
         # Not all ports have path_afferents property.
@@ -2351,7 +2351,7 @@ class Port_Base(Port):
         return pnlvm.ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        function = self.parameters.function.get_value_for_codegen()
+        function = self.parameters.function._get_value_for_codegen()
         port_f = ctx.import_llvm_function(function)
 
         base_params, f_state = ctx.get_param_or_state_ptr(builder,

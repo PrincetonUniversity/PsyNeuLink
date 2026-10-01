@@ -1626,7 +1626,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             assert len(threshold_ptr.type.pointee) == 0
             only_check_flag = True
 
-        elif not self.parameters.integrator_mode.get_value_for_codegen():
+        elif not self.parameters.integrator_mode._get_value_for_codegen():
             only_check_flag = True
 
         else:
@@ -1651,7 +1651,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if not is_in_params and not is_in_state:
             # This can be any builtin function, but currently only max() is supported
             assert measure_ptrs is None
-            assert self.parameters.termination_measure.get_value_for_codegen() is max
+            assert self.parameters.termination_measure._get_value_for_codegen() is max
             assert self._termination_measure_num_items_expected == 1
 
             # Get inside of the structure
@@ -1671,7 +1671,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         elif is_in_params and is_in_state:
             # Components are present in both, so this is a termination measure function
-            func = ctx.import_llvm_function(self.parameters.termination_measure.get_value_for_codegen())
+            func = ctx.import_llvm_function(self.parameters.termination_measure._get_value_for_codegen())
             func_params, func_state = measure_ptrs
             func_in = builder.alloca(func.args[2].type.pointee, name="termination_func_in")
 
@@ -1696,10 +1696,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             builder.store(elem_val, cmp_val_ptr)
 
         else:
-            assert False, "Not Supported: {}".format(self.parameters.termination_measure.get_value_for_codegen())
+            assert False, "Not Supported: {}".format(self.parameters.termination_measure._get_value_for_codegen())
 
         # Parameter values for comparison_op ('<', ...) can be used directly
-        cmp_str = self.parameters.termination_comparison_op.get_value_for_codegen()
+        cmp_str = self.parameters.termination_comparison_op._get_value_for_codegen()
         cmp_val = builder.load(cmp_val_ptr)
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
@@ -1715,8 +1715,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                       *,
                                       tags:frozenset):
 
-        if self.parameters.integrator_mode.get_value_for_codegen():
-            integrator_function = self.parameters.integrator_function.get_value_for_codegen()
+        if self.parameters.integrator_mode._get_value_for_codegen():
+            integrator_function = self.parameters.integrator_function._get_value_for_codegen()
             if_base_params, if_state = ctx.get_param_or_state_ptr(builder,
                                                                   self,
                                                                   self.parameters.integrator_function,
@@ -1742,7 +1742,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             mf_in = ip_out
 
-        main_function = self.parameters.function.get_value_for_codegen()
+        main_function = self.parameters.function._get_value_for_codegen()
         mf_base_params, mf_state = ctx.get_param_or_state_ptr(builder,
                                                               self,
                                                               self.parameters.function,

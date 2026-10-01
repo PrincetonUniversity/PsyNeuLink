@@ -1121,7 +1121,7 @@ class DDM(ProcessingMechanism):
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, m_val, *, tags:frozenset):
 
-        function = self.parameters.function.get_value_for_codegen()
+        function = self.parameters.function._get_value_for_codegen()
         if isinstance(function, IntegratorFunction):
             # Integrator based DDM works like other mechanisms
             return super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, m_val, tags=tags)
@@ -1152,7 +1152,7 @@ class DDM(ProcessingMechanism):
             # Store threshold as decision variable output
             # this will be used by the mechanism to return the right decision
             threshold_ptr = ctx.get_param_or_state_ptr(builder,
-                                                       self.parameters.function.get_value_for_codegen(),
+                                                       self.parameters.function._get_value_for_codegen(),
                                                        THRESHOLD,
                                                        param_struct_ptr=params)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
@@ -1177,7 +1177,7 @@ class DDM(ProcessingMechanism):
                                                                 tags=tags)
         assert mf_out is m_val
 
-        if isinstance(self.parameters.function.get_value_for_codegen(), DriftDiffusionAnalytical):
+        if isinstance(self.parameters.function._get_value_for_codegen(), DriftDiffusionAnalytical):
             random_state = ctx.get_random_state_ptr(builder, self, m_state, m_params)
             random_f = ctx.get_uniform_dist_function_by_state(random_state)
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee, name="random_out")
@@ -1256,7 +1256,7 @@ class DDM(ProcessingMechanism):
         # Find the single numeric entry in previous_value.
         # This exists only if the 'function' is 'integrator' (and therefore has
         # "previous_value" parameter.
-        function = self.parameters.function.get_value_for_codegen()
+        function = self.parameters.function._get_value_for_codegen()
         prev_val_ptr = ctx.get_param_or_state_ptr(builder, function, "previous_value", state_struct_ptr=f_state)
         if prev_val_ptr is None:
             return ctx.bool_ty(1)

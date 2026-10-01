@@ -397,7 +397,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         param_p = ctx.get_param_or_state_ptr(builder, self, param, param_struct_ptr=params, state_struct_ptr=state)
         if param == NOISE and isinstance(param_p, tuple):
             # This is a noise function so call it to get value
-            noise_f = ctx.import_llvm_function(self.parameters.noise.get_value_for_codegen())
+            noise_f = ctx.import_llvm_function(self.parameters.noise._get_value_for_codegen())
             noise_in = builder.alloca(noise_f.args[2].type.pointee)
             noise_out = builder.alloca(noise_f.args[3].type.pointee)
             builder.call(noise_f, [param_p[0], param_p[1], noise_in, noise_out])
@@ -5021,7 +5021,7 @@ class FitzHughNagumoIntegrator(
                       "previous_time_ptr": prev['previous_time']}
 
         # TODO: Convert 'method' to runtime param by using StrEnum
-        method = self.parameters.integration_method.get_value_for_codegen()
+        method = self.parameters.integration_method._get_value_for_codegen()
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
             if method == "RK4":

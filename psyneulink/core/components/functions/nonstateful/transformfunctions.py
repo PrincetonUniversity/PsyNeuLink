@@ -990,7 +990,7 @@ class Reduce(TransformFunction):  # --------------------------------------------
         offset = self._gen_llvm_load_param(ctx, builder, params, OFFSET, index, -0.0)
 
         # TODO: Convert 'operation' to runtime param by using StrEnum
-        operation = self.parameters.operation.get_value_for_codegen()
+        operation = self.parameters.operation._get_value_for_codegen()
         if operation == SUM:
             val = ctx.float_ty(-0.0)
             comb_op = "fadd"
@@ -1655,7 +1655,7 @@ class LinearCombination(
 
     def _gen_llvm_combine(self, builder, ctx, vi, vo, params):
         # TODO: Convert 'operation' to runtime param by using StrEnum
-        operation = self.parameters.operation.get_value_for_codegen()
+        operation = self.parameters.operation._get_value_for_codegen()
 
         if operation == SUM:
             val = ctx.float_ty(-0.0)

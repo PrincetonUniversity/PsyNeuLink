@@ -417,13 +417,13 @@ class Stability(ObjectiveFunction):
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
 
         # Prepare metric function
-        metric_fun = ctx.import_llvm_function(self.parameters.metric_fct.get_value_for_codegen())
+        metric_fun = ctx.import_llvm_function(self.parameters.metric_fct._get_value_for_codegen())
         metric_in = builder.alloca(metric_fun.args[2].type.pointee)
         metric_in_variable = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         metric_in_transformed = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
         # Transfer Function if configured
-        if self.parameters.transfer_fct.get_value_for_codegen() is not None:
+        if self.parameters.transfer_fct._get_value_for_codegen() is not None:
             #FIXME: implement this
             assert False, "Support for transfer functions is not implemented"
 
@@ -1014,7 +1014,7 @@ class Distance(ObjectiveFunction):
                          "acc": acc_ptr}
 
         # TODO: Convert to 'metric' runtime parameter by using StrEnum
-        metric = self.parameters.metric.get_value_for_codegen()
+        metric = self.parameters.metric._get_value_for_codegen()
 
         if metric == DIFFERENCE or metric == NORMED_L0_SIMILARITY:
             inner = self.__gen_llvm_sum_difference
@@ -1562,7 +1562,7 @@ class LossFunction(ObjectiveFunction):
         builder.store(counter_ptr.type.pointee(0), counter_ptr)
 
         # TODO: Convert 'loss' to runtime parameter
-        loss = self.parameters.loss.get_value_for_codegen()
+        loss = self.parameters.loss._get_value_for_codegen()
         if loss in {Loss.L0, Loss.L1, Loss.SSE, Loss.MSE, Loss.POISSON_NLL}:
             with pnlvm.helpers.recursive_iterate_arrays(ctx, builder, sample_ptr, target_ptr) as (b, sample_element, target_element):
                 sample = b.load(sample_element)

@@ -2342,7 +2342,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
     def _get_state_struct_type(self, ctx):
         # Construct a ring buffer
-        max_entries = self.parameters.max_entries.get_value_for_codegen()
+        max_entries = self.parameters.max_entries._get_value_for_codegen()
 
         key_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0])
         keys_struct = pnlvm.ir.ArrayType(key_type, max_entries)
@@ -2404,7 +2404,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         retr = builder.load(retr_ptr)
         with builder.if_then(retr, likely=True):
             # Determine distances
-            distance_f = ctx.import_llvm_function(self.parameters.distance_function.get_value_for_codegen())
+            distance_f = ctx.import_llvm_function(self.parameters.distance_function._get_value_for_codegen())
             distance_params, distance_state = ctx.get_param_or_state_ptr(builder,
                                                                          self,
                                                                          self.parameters.distance_function,
@@ -2419,7 +2419,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 distance_arg_out = b.gep(selection_arg_in, [ctx.int32_ty(0), idx])
                 b.call(distance_f, [distance_params, distance_state, distance_arg_in, distance_arg_out])
 
-            selection_f = ctx.import_llvm_function(self.parameters.selection_function.get_value_for_codegen())
+            selection_f = ctx.import_llvm_function(self.parameters.selection_function._get_value_for_codegen())
             selection_params, selection_state = ctx.get_param_or_state_ptr(builder,
                                                                            self,
                                                                            self.parameters.selection_function,
