@@ -1897,7 +1897,7 @@ class Normalize(DeterministicTransferFunction):
         the denominator of the normalization is clamped to this value to prevent division by zero.
 
     per_item : boolean : default True
-        for 2d variables, determines whether Normalize is applied to the entire variable
+        for >=2d variables, determines whether Normalize is applied to the entire variable
         (*per_item* = False), or applied to each item in the variable separately
         (*per_item* = True).
 
@@ -1926,7 +1926,7 @@ class Normalize(DeterministicTransferFunction):
         the denominator of the normalization is clamped to this value to prevent division by zero.
 
     per_item : boolean : default True
-        for 2d variables, determines whether Normalize is applied to the entire variable
+        for >=2d variables, determines whether Normalize is applied to the entire variable
         (*per_item* = False), or applied to each item in the variable separately
         (*per_item* = True).
 
@@ -3311,7 +3311,7 @@ class SoftMax(TransferFunction):
        Python path, including *ARG_MAX*, *ARG_MAX_INDICATOR*, *MAX_VAL*, *MAX_INDICATOR*, and *PROB*/*PROB_INDICATOR*.
 
     per_item : boolean : default True
-        for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
+        for >=2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
 
     params : Dict[param keyword: param value] : default None
@@ -3373,7 +3373,7 @@ class SoftMax(TransferFunction):
               0 for all others.
 
     per_item : boolean : default True
-        for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
+        for >=2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
 
     range : None if `output <SoftMax.output>` in {ARG_MAX, MAX_VAL}, else (0, 1) : default (0, 1)
@@ -3682,7 +3682,7 @@ class SoftMax(TransferFunction):
 
         Returns
         -------
-        derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
+        derivative of values returned by SoftMax :  np.ndarray (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
         if output is None:

@@ -83,8 +83,8 @@ class UserDefinedFunction(Function_Base):
     * If providing a Python function, method, or lambda function, it must have **at least one argument** (that can be a positional or a keyword argument);  this will be treated
       as the `variable <UserDefinedFunction.variable>` attribute of the UDF's `function <UserDefinedFunction.function>`.
       When the UDF calls the function or method that it wraps, an initial attempt is made to do so with **variable**
-      as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as a
-      2d np.array, that may contain one or more items (elements in axis 0), depending upon the Component to which the
+      as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as an
+      np.ndarray, that may contain one or more items (elements in axis 0), depending upon the Component to which the
       UDF is assigned.  It is the user's responsibility to insure that the number of items expected in the first
       argument of the function or method is compatible with the circumstances in which it will be called.
       If providing a string expression, **variable** is optional. However, if **variable** is not included in
@@ -147,7 +147,7 @@ class UserDefinedFunction(Function_Base):
         >>> my_mech.execute(input = [1, 2, 3])
         array([[6]])
 
-    Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
+    Note that the function treats its argument, x, as at least a 2d array, and accesses its first item for the calculation.
     This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the **input_shapes** argument of
     its constructor as having a single item (a 1d array of length 3;  (see `input_shapes <Component.input_shapes>`).  In the
     following example, a function is defined for a Mechanism in which the variable has two items, that are summed by
@@ -192,7 +192,7 @@ class UserDefinedFunction(Function_Base):
     with two elements (i.e. [0,0]), it is specified in the example as a 2d array with two items to make it clear that
     it matches the format of the **default_variable** for the ProcessingMechanism to which it will be assigned,
     which requires it be formatted this way (since the `variable <Component.variable>` of all Components are converted
-    to a 2d array).
+    to an array of two or more dimensions).
 
     ``my_sinusoidal_fct`` also has two other arguments, ``phase`` and ``amplitude``.   When it is assigned to
     ``my_wave_mech``, those parameters are assigned to `ParameterPorts <ParameterPort>` of ``my_wave_mech``, which

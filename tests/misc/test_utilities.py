@@ -1,17 +1,22 @@
 import sys
+import warnings
 from collections.abc import Iterable
 from contextlib import nullcontext
 
 import numpy as np
+import packaging
 import pytest
 
 from psyneulink.core.globals.utilities import (
     PNLStrEnum,
     convert_all_elements_to_np_array,
     extended_array_equal,
+    full,
     is_numeric,
     prune_unused_args,
+    shape as pnl_shape,
     update_array_in_place,
+    zeros,
 )
 
 
@@ -236,3 +241,53 @@ class TestPNLStrEnum:
 
         with raises_context:
             assert value not in self.NewPNLStrEnum
+
+
+shape_parametrization = [
+    (np.array([0, 0, 0]), (3,)),
+    (np.array([[[0, 0, 0], [0, 0, 0]]]), (1, 2, 3)),
+    (np.array([[[0, 0, 0], [0, 0, 0]]], dtype=object), (1, 2, 3)),
+    (np.array([[0], [0, 0]], dtype=object), ((1,), (2,))),
+    (np.array([[0], [0, 0], [[[[0]]]], 0], dtype=object), ((1,), (2, ), (1, 1, 1, 1), tuple())),
+    (None, tuple()),
+    (100, tuple()),
+    ('abcd', tuple()),
+]
+
+
+# ragged arrays throw ValueError in numpy 1.24+
+if packaging.version.parse(np.version.version) < packaging.version.parse('1.24'):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", np.VisibleDeprecationWarning)
+        shape_parametrization.extend([
+            (np.array([[0], [0, 0]]), ((1,), (2,))),
+            (np.array([[0], [0, 0], [[[[0]]]], 0]), ((1,), (2, ), (1, 1, 1, 1), tuple())),
+        ])
+
+
+@pytest.mark.parametrize('arr, expected_shape', shape_parametrization)
+def test_shape(arr, expected_shape):
+    assert pnl_shape(arr) == expected_shape
+
+
+@pytest.mark.parametrize('arr, shape', shape_parametrization)
+def test_ragged_methods_shape_invertibility(arr, shape):
+    try:
+        dtype = arr.dtype
+    except AttributeError:
+        dtype = None
+    assert shape == pnl_shape(zeros(shape, dtype=dtype))
+
+
+# test assumes arrays in shape_parametrization are filled with
+# zeros and non-array items are 0-dim-like
+@pytest.mark.parametrize('arr', [x[0] for x in shape_parametrization])
+def test_ragged_methods_array_invertibility(arr):
+    try:
+        dtype = arr.dtype
+    except AttributeError:
+        new_arr = full(pnl_shape(arr), arr)
+    else:
+        new_arr = zeros(pnl_shape(arr), dtype=dtype)
+
+    assert extended_array_equal(arr, new_arr)

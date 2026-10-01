@@ -35,6 +35,7 @@ import numpy as np
 from beartype import beartype
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.component import NDimUnsupportedStatus
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 )
@@ -1053,6 +1054,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     componentName = ContentAddressableMemory_FUNCTION
 
+    _ndim_unsupported = NDimUnsupportedStatus.ALL
+    _ndim_container_parameters = MemoryFunction._ndim_container_parameters.union({'initializer'})
+
     class Parameters(StatefulFunction.Parameters):
         """
             Attributes
@@ -2018,7 +2022,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
     Arguments
     ---------
 
-    default_variable : list or 2d array : default class_defaults.variable
+    default_variable : list or np.ndarray : default class_defaults.variable
         specifies a template for the key and value entries of the dictionary;  list must have two entries, each
         of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
@@ -2080,7 +2084,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
     Attributes
     ----------
 
-    variable : 2d array
+    variable : np.ndarray
         1st item (variable[0] is the key used to retrieve an enrtry from `memory <DictionaryMemory.memory>`,
         and 2nd item (variable[1]) is the value of the entry, paired with key and added to the `memory
         <DictionaryMemory.memory>`.
@@ -2161,7 +2165,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
     Returns
     -------
 
-    value and key of entry that best matches first item of `variable <DictionaryMemory.variable>`  : 2d array
+    value and key of entry that best matches first item of `variable <DictionaryMemory.variable>`  : np.ndarray
         if no retrieval occures, an appropriately shaped zero-valued array is returned.
 
     """
@@ -2676,7 +2680,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         Arguments
         ---------
 
-        variable : list or 2d array : default class_defaults.variable
+        variable : list or np.ndarray : default class_defaults.variable
            first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
            with key, is added to `memory <DictionaryMemory.memory>`.
 
@@ -2772,7 +2776,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         Returns
         -------
-        value and key for item retrieved : 2d array as list
+        value and key for item retrieved : np.ndarray as list
             if no retrieval occurs, returns appropriately shaped zero-valued array.
 
         """
@@ -2827,7 +2831,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         Arguments
         ---------
-        memory : list or 2d array
+        memory : list or np.ndarray
             must be two items, a key and a vaue, each of which must a list of numbers or 1d array;
             the key must be the same length as key(s) of any existing entries in `dict <DictionaryMemory.dict>`.
         """

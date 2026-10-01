@@ -383,9 +383,9 @@ it as its output.  That is then used as the ControlSignal's `control_allocation 
 which in turn is assigned as the allocation for all of the ControlMechanism's `control_signals
 <ControlMechanism.control_signals>`. That is, by default, the ControlMechanism's input is distributed as the
 allocation to each of its `control_signals <ControlMechanism.control_signals>`. This same behavior also occurs for
-any custom function assigned to a ControlMechanism that returns a 2d array with a single item in its outer dimension
-(axis 0).  If a function is assigned that returns a 2d array with more than one item, and the number of those items
-(i.e., the length of the 2d array) is the same as the number of `control_signals <ControlMechanism.control_signals>`,
+any custom function assigned to a ControlMechanism that returns a >=2d array with a single item in its outer dimension
+(axis 0).  If a function is assigned that returns a >=2d array with more than one item, and the number of those items
+(i.e., the length of the >=2d array) is the same as the number of `control_signals <ControlMechanism.control_signals>`,
 then each item is assigned to a corresponding `ControlSignal` (in the order in which they are specified in the
 **control_signals** argument of the ControlMechanism's constructor).  However, these default behaviors can be modified
 by specifying that individual ControlSignals reference different items in the ControlMechanism's `value
@@ -848,12 +848,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     compute_reconfiguration_cost : Function, function or method : default None
         specifies function used to compute the ControlMechanism's `reconfiguration_cost
-        <ControlMechanism.reconfiguration_cost>`; must take a list or 2d array containing two lists or 1d arrays,
+        <ControlMechanism.reconfiguration_cost>`; must take a list or >=2d array containing two lists or 1d ([N-1]d) arrays,
         both with the same shape as the ControlMechanism's control_allocation attribute, and return a scalar value.
 
     compute_net_outcome : Function, function or method : default lambda outcome, cost: outcome-cost
         function used to combine the values of its `outcome <ControlMechanism.outcome>` and `costs
-        <ControlMechanism.costs>` attributes;  must take two 1d arrays (outcome and cost) with scalar values as its
+        <ControlMechanism.costs>` attributes;  must take two ([N-1]d) arrays (outcome and cost) with scalar values as its
         arguments and return an array with a single scalar value.
 
     Attributes
@@ -933,7 +933,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         then the ControlSignal's parameters.allocation.default_value is used. See documentation for
         **default_allocation** argument of ControlSignal constructor for additional details.
 
-    control_allocation : 2d array
+    control_allocation : np.ndarray
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
         ControlSignal listed in the `control_signals <ControlMechanism.control_signals>` attribute (that is,
         it is a list of the values of the `variable <OutputPort.variable>` attributes of the ControlMechanism's

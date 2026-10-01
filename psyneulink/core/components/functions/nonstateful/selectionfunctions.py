@@ -184,7 +184,7 @@ class OneHot(SelectionFunction):
     Arguments
     ---------
 
-    variable : 2d np.array : default class_defaults.variable
+    variable : np.ndarray : default class_defaults.variable
         First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
         *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
 
@@ -385,11 +385,14 @@ class OneHot(SelectionFunction):
             self._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
 
     def _validate_params(self, request_set, target_set=None, context=None):
-
-        if request_set[MODE] in {PROB, PROB_INDICATOR}:
-            if not self.defaults.variable.ndim == 2:
-                raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
-                                    format(MODE, self.__class__.__name__, Function.__name__, PROB))
+        prob_modes = {PROB, PROB_INDICATOR}
+        if request_set[MODE] in prob_modes:
+            if self.defaults.variable.ndim < 2:
+                raise FunctionError(
+                    'If {} for {} {} is one of {}, variable must be an array of at least two dimensions'.format(
+                        MODE, self.__class__.__name__, Function.__name__, prob_modes
+                    )
+                )
             values = self.defaults.variable[0]
             prob_dist = self.defaults.variable[1]
             if len(values)!=len(prob_dist):
@@ -701,7 +704,7 @@ class OneHot(SelectionFunction):
         Arguments
         ---------
 
-        variable : 2d np.array : default class_defaults.variable
+        variable : np.ndarray : default class_defaults.variable
            1st item is an array to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item must be an array of
            probabilities (i.e., elements between 0 and 1) of equal length as the 1st item.
 
@@ -727,10 +730,12 @@ class OneHot(SelectionFunction):
 
         if mode in {PROB, PROB_INDICATOR}:
             # 1st item of variable should be data, and 2nd a probability distribution for choosing
-            if np.array(variable).ndim != 2:
-                raise FunctionError(f"If {MODE} for {self.__class__.__name__} {Function.__name__} is set to "
-                                    f"'PROB' or 'PROB_INDICATOR', variable must be a 2d array with the first item "
-                                    f"being the data and the second being a probability distribution.")
+            if variable.ndim < 2:
+                raise FunctionError(
+                    f'If {MODE} for {self.__class__.__name__} {Function.__name__} is set to '
+                    f"'PROB' or 'PROB_INDICATOR', variable must be an array of two or more dimensions with the first item "
+                    f'being the data and the second being a probability distribution.'
+                )
             v = variable[0]
             prob_dist = variable[1]
             # if not prob_dist.any() and INITIALIZING in context:

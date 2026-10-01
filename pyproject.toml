@@ -115,6 +115,8 @@ markers = [
     "mimo: Tests using multiple inputs and outputs",
     "model: Tests based on existing models",
     "pytorch: Tests using Torch",
+    "dask: Tests using the optional Dask distributed backend",
+    "higher_dims: Tests using arrays with more than two dimensions",
 ]
 
 # These are needed for test fixtures or default parameters
@@ -131,6 +133,7 @@ filterwarnings = [
     "error:A builtin ctypes object gave a PEP3118:RuntimeWarning",
     "error:Pickle, copy, and deepcopy support will be removed from itertools:DeprecationWarning",
     "error:Benchmark fixture was not used at all in this test!",
+    "error:Passing a non-Collection iterable to parametrize is deprecated.",
     "ignore:.*is not an MDF standard function, this is likely to produce an incompatible model.:UserWarning",
 ]
 

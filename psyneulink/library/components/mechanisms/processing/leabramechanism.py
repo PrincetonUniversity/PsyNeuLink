@@ -103,7 +103,7 @@ import numbers
 
 import numpy as np
 
-from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.component import ComponentError, NDimUnsupportedStatus
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.keywords import LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, PREFERENCE_SET_NAME
@@ -192,6 +192,8 @@ class LeabraFunction(Function_Base):
         PREFERENCE_SET_NAME: 'LeabraFunctionClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
+
+    _ndim_unsupported = NDimUnsupportedStatus.ALL
 
     class Parameters(Function_Base.Parameters):
         """
@@ -413,6 +415,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
         PREFERENCE_SET_NAME: 'TransferCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
+
+    _ndim_unsupported = NDimUnsupportedStatus.ALL
 
     # LeabraMechanism parameter and control signal assignments):
 

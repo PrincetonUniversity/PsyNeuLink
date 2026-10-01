@@ -992,7 +992,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         # Calculate execution set before running the mechanisms
         for idx, node in enumerate(composition.nodes):
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)], name="run_cond_ptr_" + node.name)
-            node_consideration_index, node_condition = composition._get_processing_condition_set(node)
+            node_consideration_index, node_condition = composition._get_processing_basic_condition(node)
 
             is_consideration_turn = builder.icmp_unsigned("==", consideration_index, consideration_index.type(node_consideration_index))
             node_cond = cond_gen.generate_sched_condition(builder, node_condition, cond, node, is_finished_callbacks, nodes_states)
@@ -1153,7 +1153,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
 
     if not simulation and "const_input" in debug_env:
         if not debug_env["const_input"]:
-            input_init = [[os.defaults.variable.tolist()] for os in composition.input_CIM.input_ports]
+            input_init = [os.defaults.variable.tolist() for os in composition.input_CIM.input_ports]
             print("Setting default input: ", input_init)
         else:
             input_init = ast.literal_eval(debug_env["const_input"])

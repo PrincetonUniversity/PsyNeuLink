@@ -178,7 +178,7 @@ class GatingProjection(ModulatoryProjection_Base):
     receiver : InputPort or OutputPort of a Mechanism
         `InputPort` or `OutputPort` to which the GatingProjection projects.
 
-    variable : 2d np.array
+    variable : np.ndarray
         same as `gating_signal <GatingProjection.gating_signal>`.
 
     gating_signal : 1d np.array

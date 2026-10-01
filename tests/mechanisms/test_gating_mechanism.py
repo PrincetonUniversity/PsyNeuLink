@@ -55,9 +55,11 @@ def test_gating_with_composition():
 
     comp.learn(num_trials=3, inputs=stim_list)
 
-    expected_results = [[[0.81493513, 0.85129046, 0.88154205]],
-                        [[0.81331773, 0.85008207, 0.88157851]],
-                        [[0.81168332, 0.84886047, 0.88161468]]]
+    expected_results = [
+        [[0.81493513, 0.85129046, 0.88154205]],
+        [[0.78933061, 0.82552148, 0.85756749]],
+        [[0.77494003, 0.81080666, 0.84407169]],
+    ]
 
     np.testing.assert_allclose(comp.results, expected_results)
 
@@ -68,7 +70,7 @@ def test_gating_with_composition():
 
     stim_list[Gating_Mechanism]=[2.0]
     results = comp.learn(num_trials=1, inputs=stim_list)
-    expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
+    expected_results = [[0.94464869, 0.96532951, 0.97997149]]
     np.testing.assert_allclose(results, expected_results)
 
 def test_gating_with_UDF_with_composition():

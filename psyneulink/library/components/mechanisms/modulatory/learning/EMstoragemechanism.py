@@ -36,7 +36,7 @@ entry in its `memory <EMComposition_Proj.memory>` attribute each time it execute
 # FIX: NEEDS EDITING:
 
 * **Memory** -- the `memory <EMComposition_Proj.memory>` attribute of an `EMComposition_Proj` is a list of entries, each of
-    which is a 2d np.array with a shape that corresponds to the `memory_matrix <EMStorageMechanism.memory_matrix>`
+    which is a np.ndarray with a shape that corresponds to the `memory_matrix <EMStorageMechanism.memory_matrix>`
     attribute of the EMStorageMechanism that stores it.  Each entry is stored in the `memory <EMComposition_Proj.memory>`
     attribute of the EMComposition_Proj as a row or column of the `matrix <MappingProjection.matrix>` parameter of the
     `MappingProjections <MappingProjection>` to which the `LearningProjections <LearningProjection>` of the
@@ -47,7 +47,7 @@ entry in its `memory <EMComposition_Proj.memory>` attribute each time it execute
 
 .. _EMStorageMechanism_Entry:
 
-* **Entry** -- an entry is a 2d np.array with a shape that corresponds to the `memory_matrix
+* **Entry** -- an entry is a np.ndarray with a shape that corresponds to the `memory_matrix
     <EMStorageMechanism.memory_matrix>` attribute of the EMStorageMechanism that stores it.  Each entry is stored in the
     `memory <EMComposition_Proj.memory>` attribute of the EMComposition_Proj as a row or column of the `matrix
     <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` to which the
@@ -262,7 +262,7 @@ class EMStorageMechanism(LearningMechanism):
     Arguments
     ---------
 
-    variable : List or 2d np.array : default None
+    variable : List or np.ndarray : default None
         each item of the 2d array specifies the shape of the corresponding `field <EMStorageMechanism_Fields>` of
         an `entry <EMStorageMechanism_Entry>`, that must be compatible (in number and type) with the `value
         <InputPort.value>` of the corresponding item of its `fields <EMStorageMechanism.fields>`
@@ -292,7 +292,7 @@ class EMStorageMechanism(LearningMechanism):
         <EMStorageMechanism_Fields>` are concatenated (see `concatenate keys <EMComposition_Concatenate_Queries>`
         for additional details).
 
-    memory_matrix : List or 2d np.array : default None
+    memory_matrix : List or np.ndarray : default None
         specifies the shape of the `memory <EMStorageMechanism_Memory>` used to store an `entry
         <EMStorageMechanism_Entry>` (see `memory_matrix <EMStorageMechanism.memory_matrix>` for additional details).
 
@@ -305,7 +305,7 @@ class EMStorageMechanism(LearningMechanism):
         determine where in ``memory_matrix`` the `variable <EMStorageMechanism.variable>` is stored; and optional
         ``storage_prob`` and ``decay_rate`` arguments that determine the probability with which storage occurs and
         the rate at which the `memory_matrix <EMStorageMechanism.memory_matrix>` decays, respectively.  The function
-        must return a list, 2d np.array for the corresponding `field <EMStorageMechanism_Fields>` of the
+        must return a list, np.ndarray for the corresponding `field <EMStorageMechanism_Fields>` of the
         `memory_matrix <EMStorageMechanism.memory_matrix>` that is updated (see `EMStorage` for additional details).
 
     learning_signals : List[ParameterPort, Projection, tuple[str, Projection] or dict] : default None
@@ -335,7 +335,7 @@ class EMStorageMechanism(LearningMechanism):
 
     # FIX: FINISH EDITING:
 
-    variable : 2d np.array
+    variable : np.ndarray
 
         each item of the 2d array is used as a template for the shape of each the `fields
         <EMStorageMechanism_Fields>` that  comprise and `entry <EMStorageMechanism_Entry>` in the `memory_matrix
@@ -368,7 +368,7 @@ class EMStorageMechanism(LearningMechanism):
         the function used to assign the value of each `field <EMStorageMechanism.fields>` to the corresponding entry
         in `memory_matrix <EMStorageMechanism.memory_matrix>`.  It must take as its `variable <EMSorage.variable>`
         argument a list or 1d array of numeric values (an `entry
-        <EMStorage.entry`) and return a list, 2d np.array assigned to
+        <EMStorage.entry`) and return a list, np.ndarray assigned to
         the corresponding `field <EMStorageMechanism_Fields>` of the
         `memory_matrix <EMStorageMechanism.memory_matrix>`.
 
@@ -408,7 +408,7 @@ class EMStorageMechanism(LearningMechanism):
         `learning_signals <EMStorageMechanism.learning_signals>`, and followed by any additional
         (user-specified) `OutputPorts <OutputPort>`.
 
-    output_values : 2d np.array
+    output_values : np.ndarray
         the first items are the `value <OutputPort.value>`\\(s) of the LearningMechanism's `learning_signal
         <EMStorageMechanism.learning_signal>`\\(s), followed by the `value <OutputPort.value>`(s)
         of any additional (user-specified) OutputPorts.
@@ -633,7 +633,7 @@ class EMStorageMechanism(LearningMechanism):
         # Items in variable should be 1d and have numeric values
         if not (all(np.array(variable)[i].ndim == 1 for i in range(len(variable))) and is_numeric(variable)):
             raise EMStorageMechanismError(f"Variable for {self.name} ({variable}) must be "
-                                          f"a list or 2d np.array containing 1d arrays with only numbers.")
+                                          f"a list or np.ndarray containing 1d arrays with only numbers.")
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -645,7 +645,7 @@ class EMStorageMechanism(LearningMechanism):
             # Items in variable should have the same shape as memory_matrix
             if memory_matrix[0].shape != np.array(self.variable).shape:
                 raise EMStorageMechanismError(f"The 'variable' arg for {self.name} ({self.variable}) must be "
-                                              f"a list or 2d np.array containing entries that have the same shape "
+                                              f"a list or np.ndarray containing entries that have the same shape "
                                               f"({memory_matrix.shape}) as an entry (row) in 'memory_matrix' arg.")
 
         # Ensure the number of fields is equal to the number of items in variable
@@ -751,7 +751,7 @@ class EMStorageMechanism(LearningMechanism):
          - decay existing memories
          - assign input to weakest entry (given index passed from EMStorageMechanism)
 
-        :return: List[2d np.array] self.learning_signal
+        :return: List[np.ndarray] self.learning_signal
         """
 
         # FIX: SET LEARNING MODE HERE FOR SHOW_GRAPH

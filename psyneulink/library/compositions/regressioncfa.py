@@ -176,7 +176,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         <RegressionCFA.evaluate>` method to improve its prediction of `net_outcome <ControlMechanism.net_outcome>`
         from a given set of `state_feature_values <OptimizationControlMechanism.state_feature_values>` and a
         `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimizationControlMechanism`.
-        It must take a 2d array as its first argument, the first item of which is an array the same length of the
+        It must take a >=2d array as its first argument, the first item of which is an array the same shape of the
         `vector <PredictionVector.prediction_vector>` attribute of its `prediction_vector
         <RegressionCFA.prediction_vector>`, and the second item a 1d array containing a scalar
         value that it tries predict.
@@ -397,7 +397,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         Arguments
         ---------
 
-        feature_values : 2d array
+        feature_values : np.ndarray
             arrays of state_features to assign as the `PV.F` term of `terms <PredictionVector.terms>`.
 
         control_signals : List[ControlSignal]
