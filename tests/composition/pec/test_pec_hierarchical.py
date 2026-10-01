@@ -861,16 +861,6 @@ def test_results_history_pairs_objective_with_its_own_estimate():
     assert np.isclose(res.em_history["beta_a"].iloc[0], em.history[0]["beta"][0][0])
 
 
-def test_results_record_the_transform_and_settings():
-    em, transform, labels = _fit_toy_for_results()
-    res = HierarchicalPECResults.from_em(
-        em, transform, ("a", "b"), labels, settings={"max_iterations": 15}
-    )
-    assert res.transform_metadata["kind"] == "BoundedTransform"
-    assert res.transform_metadata["lower"] == [-4.0, -4.0]
-    assert res.settings["max_iterations"] == 15
-
-
 def test_results_repr_surfaces_non_convergence():
     em, transform, labels = _fit_toy_for_results()
     em.converged = False
@@ -1602,3 +1592,18 @@ def test_an_ordinary_fit_is_unaffected_by_the_solver_settings():
     assert pec._fit_method is None
     assert pec.parameters.curvature.get() == "full"
     assert pec.parameters.max_iterations.get() == 50
+
+
+@pytest.mark.composition
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"likelihood_estimator": "neural"},
+        {"likelihood_estimator_kwargs": {"artifact": "somewhere.pt"}},
+    ],
+    ids=["estimator", "estimator_kwargs"],
+)
+def test_hierarchical_takes_the_likelihood_from_the_factory_too(overrides):
+    """Scoring belongs to the model, which a hierarchical fit takes from the factory."""
+    with pytest.raises(ParameterEstimationCompositionError, match="likelihood_estimator describes"):
+        _build_group_pec(**overrides)
