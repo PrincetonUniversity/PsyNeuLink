@@ -17,20 +17,32 @@ def _histogram_edges(low, high, bins):
     """Construct the FP32 edges used by the CUDA histogram observation model.
 
     CUDA linspace calculates each half from its nearest endpoint using a
-    fused multiply-add. Evaluate the FP32 operands in FP64 before rounding
-    once, so CPU-only scoring uses the same edges without requiring CUDA.
+    fused multiply-add. FP64 intermediates and a correction for halfway cases
+    reproduce that rounding without requiring CUDA for CPU-only scoring.
     """
     with np.errstate(over="ignore", invalid="ignore"):
         start = np.float32(low)
         end = np.float32(high + (high - low) * 1e-6)
         step = np.float32((end - start) / np.float32(bins))
         indices = np.arange(bins + 1)
-        edges = np.where(
-            indices < (bins + 1) // 2,
-            float(start) + float(step) * indices.astype(np.float32).astype(float),
-            float(end)
-            - float(step) * (bins - indices).astype(np.float32).astype(float),
-        ).astype(np.float32)
+        from_start = indices < (bins + 1) // 2
+        origin = np.where(from_start, start, end).astype(float)
+        offset = np.where(from_start, indices, indices - bins).astype(np.float32)
+        product = float(step) * offset.astype(float)
+        total = product + origin
+        # The FP32 product is exact in FP64. FastTwoSum retains an endpoint
+        # too small to affect the FP64 sum but capable of breaking an FP32 tie.
+        residual = np.where(
+            abs(product) >= abs(origin),
+            (product - total) + origin,
+            (origin - total) + product,
+        )
+        edges = total.astype(np.float32)
+        neighbor = np.nextafter(
+            edges, np.where(residual > 0, np.float32(np.inf), np.float32(-np.inf))
+        )
+        midpoint = (edges.astype(float) + neighbor.astype(float)) / 2
+        edges = np.where((residual != 0) & (total == midpoint), neighbor, edges)
     if not np.isfinite(edges).all() or np.any(edges[1:] <= edges[:-1]):
         raise ValueError("Histogram edges must be finite and distinct in FP32.")
     return edges
@@ -111,7 +123,11 @@ class ParticleObservationModel:
         if bandwidth is not None and kernel != "gaussian":
             raise ValueError("bandwidth is only used by the Gaussian kernel.")
         values = self._observations[:, self.continuous]
-        if bandwidth is None:
+        if kernel == "histogram":
+            # A Gaussian bandwidth is not part of the histogram observation
+            # law. In particular, do not overflow an unused FP32 variance.
+            bandwidth = np.ones(len(self.continuous))
+        elif bandwidth is None:
             scale = np.std(values, axis=0)
             scale = np.where(np.ptp(values, axis=0) > 0, scale, 1.0)
             bandwidth = 1.06 * scale * len(self.data) ** (-0.2)
@@ -151,9 +167,10 @@ class ParticleObservationModel:
                     "All assimilated observations, including masked rows, must lie inside bin_range."
                 )
             self.edges.append(edge)
-            self.bin_volume *= (
-                edge[1] - edge[0] if kernel == "histogram" else (high - low) / bins
-            )
+            with np.errstate(over="ignore", under="ignore"):
+                self.bin_volume *= (
+                    edge[1] - edge[0] if kernel == "histogram" else (high - low) / bins
+                )
             domain_volume *= high - low
             observed_bin = np.searchsorted(edge[1:-1], values[:, j], side="left")
             delta = np.arange(bins)[None, :] - observed_bin[:, None]
@@ -176,6 +193,10 @@ class ParticleObservationModel:
                 lookup /= normalization
             self.bin_lookups.append(lookup)
         if kernel == "histogram":
+            if not np.isfinite(self.bin_volume) or self.bin_volume <= 0:
+                raise ValueError(
+                    "Histogram bin volume must be finite and positive in FP32."
+                )
             # The GPU's pseudocount mixture is uniform over joint histogram
             # cells, using the same rounded bin volume as the observation law.
             domain_volume = float(self.bin_volume) * bins ** len(self.continuous)

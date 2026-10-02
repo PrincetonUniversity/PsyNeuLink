@@ -280,10 +280,44 @@ def test_histogram_rejects_collapsed_fp32_edges():
         )
 
 
+def test_histogram_large_domain_does_not_require_a_gaussian_bandwidth():
+    model = ParticleObservationModel(
+        [[1e20], [2e20]], [False], kernel="histogram", bin_range=[(0, 3e20)]
+    )
+    assert np.isfinite(model.evaluate([[1e20]], 0)[0])
+
+
+@pytest.mark.parametrize("width", [1e-30, 1e30])
+def test_histogram_rejects_unrepresentable_joint_bin_volume(width):
+    with pytest.raises(ValueError, match="bin volume.*FP32"):
+        ParticleObservationModel(
+            [[0, 0]], [False, False], kernel="histogram", bin_range=[(0, width)] * 2
+        )
+
+
+@pytest.mark.parametrize(
+    "low, high, bins, index, bits",
+    [(1e-30, 1.0, 100, 9, 1035489783), (-1e-30, 1e20, 7, 3, 1611968723)],
+)
+def test_histogram_cuda_edge_rounding_keeps_tiny_endpoints(
+    low, high, bins, index, bits
+):
+    # Recorded CUDA values: rounding an FP64 sum alone loses the endpoint's
+    # contribution when the product lies exactly halfway between FP32 values.
+    assert _histogram_edges(low, high, bins).view(np.uint32)[index] == bits
+
+
 @pytest.mark.pytorch
 @pytest.mark.parametrize(
     "low, high, bins",
-    [(0, 3, 100), (-0.7, 1.3, 7), (0.3, 0.6, 9), (12345.6, 12346.7, 17)],
+    [
+        (0, 3, 100),
+        (-0.7, 1.3, 7),
+        (0.3, 0.6, 9),
+        (12345.6, 12346.7, 17),
+        (1e-30, 1, 100),
+        (-1e-30, 1e20, 7),
+    ],
 )
 def test_histogram_edges_match_cuda_linspace(low, high, bins):
     torch = pytest.importorskip("torch")
