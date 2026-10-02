@@ -1258,24 +1258,28 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
         recurrent_params, recurrent_state = ctx.get_param_or_state_ptr(builder,
                                                                        self,
-                                                                       "recurrent_projection",
+                                                                       self.parameters.recurrent_projection,
                                                                        param_struct_ptr=params,
                                                                        state_struct_ptr=state)
-        recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
+
+        recurrent_projection = self.parameters.recurrent_projection._get_value_for_codegen()
+        recurrent_f = ctx.import_llvm_function(recurrent_projection)
+
+        input_ports = self.parameters.input_ports._get_value_for_codegen()
+        output_ports = self.parameters.output_ports._get_value_for_codegen()
 
         # Extract the correct output port value
         old_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=state)
-        recurrent_index = self.output_ports.index(self.recurrent_projection.sender)
-        recurrent_in = builder.gep(old_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(recurrent_index)])
+        recurrent_in = builder.gep(old_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(output_ports.index(recurrent_projection.sender))])
 
         # Get the correct recurrent output location
         recurrent_out = builder.gep(arg_in, [ctx.int32_ty(0),
-                                             ctx.int32_ty(self.input_ports.index(self.recurrent_projection.receiver)),
-                                             ctx.int32_ty(self.recurrent_projection.receiver.pathway_projections.index(self.recurrent_projection))])
+                                             ctx.int32_ty(input_ports.index(recurrent_projection.receiver)),
+                                             ctx.int32_ty(recurrent_projection.receiver.pathway_projections.index(recurrent_projection))])
 
         # the recurrent projection is not executed in standalone mode
         if len(self.afferents) == 1:
-            assert self.path_afferents[0] is self.recurrent_projection
+            assert self.path_afferents[0] is recurrent_projection
             # NOTE: we should zero the target location here, but in standalone
             # mode ctypes does it for us when instantiating the input structure
         else:
@@ -1284,7 +1288,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             # input
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
 
-        assert not self.has_recurrent_input_port, "Configuration using combination function is not supported!"
+        assert not self.parameters.has_recurrent_input_port._get_value_for_codegen(), \
+            "Configuration using combination function is not supported!"
 
         return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 

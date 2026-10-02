@@ -2140,24 +2140,23 @@ class Normalize(DeterministicTransferFunction):
         # Normalize derivative is computed from the forward output.
         if "derivative_out" in tags:
             all_out = arg_in
+
         else:
             all_out = builder.alloca(arg_out.type.pointee)
-            builder = self._gen_llvm_function_body(
-                ctx, builder, params, state, arg_in, all_out, tags=forward_tags
-            )
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, tags=forward_tags)
 
-        if self.parameters.per_item.get():
+        # TODO: Convert 'per_item' to runtime parameter
+        if self.parameters.per_item._get_value_for_codegen():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
                 inner_all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply_derivative(
-                    ctx, builder, params, state, inner_all_out, inner_out, tags=tags
-                )
+                builder = self.__gen_llvm_apply_derivative(ctx, builder, params, state, inner_all_out, inner_out, tags=tags)
+
             return builder
-        else:
-            return self.__gen_llvm_apply_derivative(ctx, builder, params, state, all_out, arg_out, tags=tags)
+
+        return self.__gen_llvm_apply_derivative(ctx, builder, params, state, all_out, arg_out, tags=tags)
 
     def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags: frozenset):
         # NOTE:
@@ -2218,16 +2217,18 @@ class Normalize(DeterministicTransferFunction):
         if "derivative" in tags or "derivative_out" in tags:
             return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
-        if self.parameters.per_item.get():
+        # TODO: Convert 'per_item' to runtime parameter
+        if self.parameters.per_item._get_value_for_codegen():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
                 inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, tags=tags)
+
             return builder
-        else:
-            return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+
+        return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
     def _gen_pytorch_fct(self, device, context=None):
         eps = self._get_pytorch_fct_param_value('eps', device, context)
@@ -3774,26 +3775,32 @@ class SoftMax(TransferFunction):
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
-            self.__gen_llvm_exp_sum(*args, ctx=ctx, vi=arg_in, gain=gain,
-                                    exp_sum_ptr=exp_sum_ptr)
+            self.__gen_llvm_exp_sum(*args, ctx=ctx, vi=arg_in, gain=gain, exp_sum_ptr=exp_sum_ptr)
 
         exp_sum = builder.load(exp_sum_ptr)
 
         if output_type == ALL:
-            one_hot_p = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params,
+            one_hot_p = ctx.get_param_or_state_ptr(builder,
+                                                   self,
+                                                   self.parameters.one_hot_function,
+                                                   param_struct_ptr=params,
                                                    state_struct_ptr=state)
 
             # Derivative first gets the output_type == ALL result even if the selected output type is different.
-            assert self.output != output_type or one_hot_p.type.pointee.elements == (), \
+            assert self.parameters.output._get_value_for_codegen() != output_type or one_hot_p.type.pointee.elements == (), \
                 "OneHot parameter should be empty for output_type == ALL: {}".format(one_hot_p)
+
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
-                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
-                                        gain=gain, exp_sum=exp_sum, *args)
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out, gain=gain, exp_sum=exp_sum, *args)
+
             return builder
 
-        one_hot_p, one_hot_s = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params,
+        one_hot_p, one_hot_s = ctx.get_param_or_state_ptr(builder,
+                                                          self,
+                                                          self.parameters.one_hot_function,
+                                                          param_struct_ptr=params,
                                                           state_struct_ptr=state)
-        one_hot_f = ctx.import_llvm_function(self.one_hot_function, tags=tags)
+        one_hot_f = ctx.import_llvm_function(self.parameters.one_hot_function._get_value_for_codegen(), tags=tags)
 
         assert one_hot_f.args[3].type == arg_out.type
         one_hot_out = arg_out
@@ -3801,8 +3808,7 @@ class SoftMax(TransferFunction):
 
         if output_type in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
-                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in,
-                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in, gain=gain, exp_sum=exp_sum, builder=b, index=i)
 
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
 
@@ -3811,14 +3817,14 @@ class SoftMax(TransferFunction):
             one_hot_in_dist = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
-                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in_dist,
-                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in_dist, gain=gain, exp_sum=exp_sum, builder=b, index=i)
 
                 dist_in = b.gep(arg_in, [ctx.int32_ty(0), i])
                 dist_out = b.gep(one_hot_in_data, [ctx.int32_ty(0), i])
                 b.store(b.load(dist_in), dist_out)
 
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
+
         else:
             assert False, "Unsupported output in {} for LLVM execution mode: {}".format(self, output_type)
 
@@ -3832,28 +3838,29 @@ class SoftMax(TransferFunction):
         # SoftMax derivative is calculated from the "ALL" results.
         if "derivative_out" in tags:
             all_out = arg_in
+
         else:
             all_out = builder.alloca(arg_out.type.pointee)
-            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL,
-                                                   tags=forward_tags)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
 
-        if self.parameters.per_item.get():
+        # TODO: Convert 'per_item' to runtime parameter
+        if self.parameters.per_item._get_value_for_codegen():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
                 inner_all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply_derivative(ctx, builder, params, state, inner_all_out, inner_out,
-                                                           tags=tags)
+                builder = self.__gen_llvm_apply_derivative(ctx, builder, params, state, inner_all_out, inner_out, tags=tags)
+
             return builder
-        else:
-            return self.__gen_llvm_apply_derivative(ctx, builder, params, state, all_out, arg_out, tags=tags)
+
+        return self.__gen_llvm_apply_derivative(ctx, builder, params, state, all_out, arg_out, tags=tags)
 
     def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags: frozenset):
 
-        assert self.output in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}, (
-            "Derivative of SoftMax is only implemented for ARG_MAX and ARG_MAX_INDICATOR "
-            "in LLVM execution mode ({})".format(self.output))
+        assert self.parameters.output._get_value_for_codegen() in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}, \
+            "Derivative of SoftMax is only implemented for ARG_MAX and ARG_MAX_INDICATOR " \
+            "in LLVM execution mode ({})".format(self.parameters.output._get_value_for_codegen())
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
@@ -3886,23 +3893,23 @@ class SoftMax(TransferFunction):
 
         return builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *,
-                                tags: frozenset):
-        output_type = self.output if output_type is None else output_type
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags: frozenset):
+        output_type = self.parameters.output._get_value_for_codegen() if output_type is None else output_type
         if "derivative" in tags or "derivative_out" in tags:
             return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
 
-        if self.parameters.per_item.get():
+        # TODO: Convert 'per_item' to runtime parameter
+        if self.parameters.per_item._get_value_for_codegen():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
                 inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, output_type,
-                                                tags=tags)
+                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, output_type, tags=tags)
+
             return builder
-        else:
-            return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, output_type, tags=tags)
+
+        return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, output_type, tags=tags)
 
     def _gen_pytorch_fct(self, device, context=None):
         gain = self._get_pytorch_fct_param_value('gain', device, context)
@@ -5172,11 +5179,10 @@ class TransferWithCosts(TransferFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
         # Run transfer function first
-        transfer_f = self.parameters.transfer_fct
-        trans_f = ctx.import_llvm_function(transfer_f.get())
+        trans_f = ctx.import_llvm_function(self.parameters.transfer_fct._get_value_for_codegen())
         trans_p, trans_s = ctx.get_param_or_state_ptr(builder,
                                                       self,
-                                                      transfer_f.name,
+                                                      self.parameters.transfer_fct,
                                                       param_struct_ptr=params,
                                                       state_struct_ptr=state)
         trans_in = arg_in
@@ -5189,18 +5195,19 @@ class TransferWithCosts(TransferFunction):
                  (self.parameters.adjustment_cost_fct, CostFunctions.ADJUSTMENT, self.parameters.adjustment_cost),
                  (self.parameters.duration_cost_fct, CostFunctions.DURATION, self.parameters.duration_cost)]
 
-        for (func, flag, res_param) in costs:
+        for (func_param, flag, res_param) in costs:
 
             cost_in = trans_out
             cost_out = ctx.get_state_space(builder, self, state, res_param)
 
             # The check for enablement is structural and has to be done in Python.
             # If a cost function is not enabled the cost parameter is None
-            if flag in self.parameters.enabled_cost_functions.get():
-                cost_f = ctx.import_llvm_function(func.get())
+            # TODO: Concert 'enabled_cost_functions' to runtime parameter
+            if flag in self.parameters.enabled_cost_functions._get_value_for_codegen():
+                cost_f = ctx.import_llvm_function(func_param._get_value_for_codegen())
                 cost_p, cost_s = ctx.get_param_or_state_ptr(builder,
                                                             self,
-                                                            func,
+                                                            func_param,
                                                             param_struct_ptr=params,
                                                             state_struct_ptr=state)
 
@@ -5216,12 +5223,12 @@ class TransferWithCosts(TransferFunction):
                     builder.store(adjustment, builder.gep(cost_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
                 builder.call(cost_f, [cost_p, cost_s, cost_in, cost_out])
+
             else:
                 # Intensity is [1] when the cost function is disabled but other cost functions are enabled
                 # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
-                exp_out_len = 0 if self.parameters.enabled_cost_functions.get() == CostFunctions.NONE or flag != CostFunctions.INTENSITY else 1
-                assert len(cost_out.type.pointee) == exp_out_len, "Unexpected out sturct for {}: {}".format(flag,
-                                                                                                            cost_out.type.pointee)
+                exp_out_len = 0 if self.parameters.enabled_cost_functions._get_value_for_codegen() == CostFunctions.NONE or flag != CostFunctions.INTENSITY else 1
+                assert len(cost_out.type.pointee) == exp_out_len, "Unexpected out sturct for {}: {}".format(flag, cost_out.type.pointee)
 
         # TODO: combine above costs via a call to combine_costs_fct
         # depends on: https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
