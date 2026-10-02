@@ -536,7 +536,12 @@ class PECOptimizationFunction(OptimizationFunction):
         ``1.06 * std * num_trials**(-1/5)``; constant columns use unit scale.
         Bandwidths and histogram domains are fixed across parameter candidates
         and particle counts. Histogram domains default to observed extrema with
-        a 2 percent margin (unit padding for constant columns).
+        a 2 percent margin (unit padding for constant columns). Histogram binning
+        matches the GPU observation model: FP32 observations, predictions and
+        edges, a one-part-per-million upper-bound expansion, and interior edges
+        assigned to the lower bin. Histogram category matching uses absolute
+        tolerance 1e-6; declared supports must be separated by more than 2e-6.
+        Log-likelihood accumulation remains FP64 for both kernels.
         Contamination is an explicit uniform mixture over that domain and the
         declared categories. Declare absent possible categories when using it.
         No density floor or contamination is added automatically.

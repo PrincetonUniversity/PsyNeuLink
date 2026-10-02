@@ -281,6 +281,14 @@ check sensitivity to both those settings and ``num_estimates``. Filtering
 corrects history conditioning, not the observation approximation or finite
 particle error. No probability floor or contamination is introduced silently.
 
+Histogram observation arithmetic matches the GPU's FP32 binning independently
+of LLVM simulation precision: interior edges belong to the lower bin, and the
+upper bound is expanded by one part per million. Category matching uses absolute
+tolerance 1e-6 with nonoverlapping declared supports. Gaussian kernels and the
+accumulation of log likelihoods retain FP64 arithmetic. Backend random streams
+and reduction rounding differ, so simulated likelihood estimates are compared
+statistically rather than by exact seeded equality.
+
 All finite observed rows update history, including those excluded from the
 score by ``likelihood_include_mask``. One call is one contiguous subject
 sequence; separate subjects require separate PECs or the hierarchical wrapper.

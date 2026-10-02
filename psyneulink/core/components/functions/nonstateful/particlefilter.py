@@ -13,6 +13,29 @@ class ParticleSupportError(ValueError):
     """An observation has zero support under the predictive population."""
 
 
+def _histogram_edges(low, high, bins):
+    """Construct the FP32 edges used by the CUDA histogram observation model.
+
+    CUDA linspace calculates each half from its nearest endpoint using a
+    fused multiply-add. Evaluate the FP32 operands in FP64 before rounding
+    once, so CPU-only scoring uses the same edges without requiring CUDA.
+    """
+    with np.errstate(over="ignore", invalid="ignore"):
+        start = np.float32(low)
+        end = np.float32(high + (high - low) * 1e-6)
+        step = np.float32((end - start) / np.float32(bins))
+        indices = np.arange(bins + 1)
+        edges = np.where(
+            indices < (bins + 1) // 2,
+            float(start) + float(step) * indices.astype(np.float32).astype(float),
+            float(end)
+            - float(step) * (bins - indices).astype(np.float32).astype(float),
+        ).astype(np.float32)
+    if not np.isfinite(edges).all() or np.any(edges[1:] <= edges[:-1]):
+        raise ValueError("Histogram edges must be finite and distinct in FP32.")
+    return edges
+
+
 class ParticleObservationModel:
     """Normalized mixed categorical/continuous observation kernels.
 
@@ -21,6 +44,12 @@ class ParticleObservationModel:
     deviation and Silverman's one-dimensional rule, independently by dimension;
     constant columns use unit scale. ``kernel='histogram'`` uses fixed bins and
     Gaussian smoothing in bin units, normalized around each simulated bin.
+    Histogram observations, predictions and tables use FP32 to match the GPU
+    observation model, independently of simulator precision. Interior edges
+    belong to the lower bin; the upper domain bound is expanded by one part
+    per million before constructing edges. Histogram categorical matching
+    uses absolute tolerance 1e-6 and requires nonoverlapping category supports.
+    Gaussian kernels and likelihood accumulation retain FP64 arithmetic.
 
     ``contamination_probability`` explicitly mixes in a uniform observation
     distribution over ``bin_range`` and ``categorical_values``. Its probability
@@ -59,6 +88,12 @@ class ParticleObservationModel:
         if kernel not in {"gaussian", "histogram"}:
             raise ValueError("kernel must be 'gaussian' or 'histogram'.")
         self.kernel = kernel
+        with np.errstate(over="ignore"):
+            self._observations = (
+                self.data.astype(np.float32) if kernel == "histogram" else self.data
+            )
+        if not np.isfinite(self._observations).all():
+            raise ValueError("Histogram observations must be finite in FP32.")
         if (
             not np.isfinite(contamination_probability)
             or not 0 <= contamination_probability < 1
@@ -75,7 +110,7 @@ class ParticleObservationModel:
             raise ValueError("smoothing_sigma must be finite and nonnegative.")
         if bandwidth is not None and kernel != "gaussian":
             raise ValueError("bandwidth is only used by the Gaussian kernel.")
-        values = self.data[:, self.continuous]
+        values = self._observations[:, self.continuous]
         if bandwidth is None:
             scale = np.std(values, axis=0)
             scale = np.where(np.ptp(values, axis=0) > 0, scale, 1.0)
@@ -89,7 +124,7 @@ class ParticleObservationModel:
             )
         self.edges = []
         self.bin_lookups = []
-        self.bin_volume = 1.0
+        self.bin_volume = np.float32(1.0) if kernel == "histogram" else 1.0
         domain_volume = 1.0
         if bin_range is not None and len(bin_range) != len(self.continuous):
             raise ValueError(
@@ -97,42 +132,53 @@ class ParticleObservationModel:
             )
         for j, dimension in enumerate(self.continuous):
             if bin_range is None:
-                low, high = np.min(values[:, j]), np.max(values[:, j])
+                low, high = float(np.min(values[:, j])), float(np.max(values[:, j]))
                 margin = 0.02 * (high - low) if high > low else 1.0
                 low, high = low - margin, high + margin
             else:
                 low, high = bin_range[j]
             if not np.isfinite([low, high]).all() or not high > low:
                 raise ValueError("Every bin_range must have finite low < high.")
+            edge = (
+                _histogram_edges(low, high, bins)
+                if kernel == "histogram"
+                else np.linspace(low, high, bins + 1)
+            )
             if (kernel == "histogram" or self.contamination) and np.any(
-                (values[:, j] < low) | (values[:, j] > high)
+                (values[:, j] < edge[0]) | (values[:, j] > edge[-1])
             ):
                 raise ValueError(
                     "All assimilated observations, including masked rows, must lie inside bin_range."
                 )
-            edge = np.linspace(low, high, bins + 1)
             self.edges.append(edge)
-            self.bin_volume *= (high - low) / bins
+            self.bin_volume *= (
+                edge[1] - edge[0] if kernel == "histogram" else (high - low) / bins
+            )
             domain_volume *= high - low
-            observed_bin = np.searchsorted(edge[1:-1], values[:, j], side="right")
+            observed_bin = np.searchsorted(edge[1:-1], values[:, j], side="left")
             delta = np.arange(bins)[None, :] - observed_bin[:, None]
+            dtype = self._observations.dtype
             if smoothing_sigma == 0:
-                lookup = (delta == 0).astype(float)
+                lookup = (delta == 0).astype(dtype)
             else:
                 radius = max(1, int(np.ceil(3 * smoothing_sigma)))
                 offsets = np.arange(-radius, radius + 1)
-                weights = np.exp(-0.5 * (offsets / smoothing_sigma) ** 2)
+                weights = np.exp(-0.5 * (offsets.astype(dtype) / smoothing_sigma) ** 2)
                 valid = (np.arange(bins)[:, None] + offsets >= 0) & (
                     np.arange(bins)[:, None] + offsets < bins
                 )
                 normalization = (valid * weights).sum(axis=1)
                 lookup = np.where(
                     abs(delta) <= radius,
-                    np.exp(-0.5 * (delta / smoothing_sigma) ** 2),
+                    np.exp(-0.5 * (delta.astype(dtype) / smoothing_sigma) ** 2),
                     0.0,
                 )
                 lookup /= normalization
             self.bin_lookups.append(lookup)
+        if kernel == "histogram":
+            # The GPU's pseudocount mixture is uniform over joint histogram
+            # cells, using the same rounded bin volume as the observation law.
+            domain_volume = float(self.bin_volume) * bins ** len(self.continuous)
         if categorical_values is None:
             categorical_values = [
                 np.unique(self.data[:, dim]) for dim in self.categorical
@@ -155,6 +201,16 @@ class ParticleObservationModel:
                 )
             if not np.isin(self.data[:, dimension], support).all():
                 raise ValueError("Observed category is absent from categorical_values.")
+            if kernel == "histogram":
+                with np.errstate(over="ignore"):
+                    rounded_support = support.astype(np.float32)
+                if not np.isfinite(rounded_support).all() or np.any(
+                    np.diff(np.sort(rounded_support).astype(float))
+                    <= 2 * np.float32(1e-6)
+                ):
+                    raise ValueError(
+                        "Histogram categorical values must be finite in FP32 and separated by more than 2e-6."
+                    )
             self.categorical_values.append(support.copy())
             domain_volume *= len(support)
         self._log_uniform_density = -np.log(domain_volume)
@@ -167,7 +223,12 @@ class ParticleObservationModel:
             if np.issubdtype(simulated.dtype, np.floating)
             else np.dtype(float)
         )
-        simulated = np.asarray(simulated, dtype=float)
+        if self.kernel == "histogram":
+            category_dtype = np.dtype(np.float32)
+        with np.errstate(over="ignore"):
+            simulated = np.asarray(
+                simulated, dtype=np.float32 if self.kernel == "histogram" else float
+            )
         if (
             simulated.ndim != 2
             or simulated.shape[1] != self.data.shape[1]
@@ -183,10 +244,16 @@ class ParticleObservationModel:
                 raise ValueError(
                     "Categorical values are indistinguishable at the simulation precision."
                 )
-        observed_categories = (
-            self.data[trial, self.categorical].astype(category_dtype).astype(float)
+        observed_categories = self._observations[trial, self.categorical].astype(
+            category_dtype
         )
-        match = (simulated[:, self.categorical] == observed_categories).all(axis=1)
+        if self.kernel == "histogram":
+            match = (
+                abs(simulated[:, self.categorical] - observed_categories)
+                <= np.float32(1e-6)
+            ).all(axis=1)
+        else:
+            match = (simulated[:, self.categorical] == observed_categories).all(axis=1)
         log_weights = np.where(match, 0.0, -np.inf)
         if self.kernel == "gaussian":
             residual = (
@@ -197,17 +264,19 @@ class ParticleObservationModel:
                     0.5 * residual**2 + np.log(self.bandwidth) + 0.5 * np.log(2 * np.pi)
                 ).sum(axis=1)
         else:
+            contributions = match.astype(np.float32)
             with np.errstate(divide="ignore"):
                 for dimension, edge, lookup in zip(
                     self.continuous, self.edges, self.bin_lookups
                 ):
                     values = simulated[:, dimension]
-                    source_bin = np.searchsorted(edge[1:-1], values, side="right")
-                    contributions = lookup[trial, source_bin] * (
+                    source_bin = np.searchsorted(edge[1:-1], values, side="left")
+                    contributions *= lookup[trial, source_bin] * (
                         (values >= edge[0]) & (values <= edge[-1])
                     )
-                    log_weights += np.log(contributions)
-            log_weights -= np.log(self.bin_volume)
+                log_weights = np.log(contributions.astype(float)) - np.log(
+                    float(self.bin_volume)
+                )
         if self.contamination:
             log_weights = np.logaddexp(
                 np.log1p(-self.contamination) + log_weights,

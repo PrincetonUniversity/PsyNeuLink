@@ -1,5 +1,7 @@
 """Probability targets and filtering checked against independent small models."""
 
+import json
+from pathlib import Path
 import numpy as np
 import pytest
 from scipy.stats import norm
@@ -7,6 +9,7 @@ from scipy.stats import norm
 from psyneulink.core.components.functions.nonstateful.particlefilter import (
     ParticleObservationModel,
     ParticleSupportError,
+    _histogram_edges,
     particle_filter,
     systematic_resample,
 )
@@ -83,7 +86,7 @@ def test_histogram_observation_integrates_to_one_at_boundaries(source, contamina
             density.append(np.exp(model.evaluate([[0.0, (source + 0.5) / 5]], t)[0]))
         except ParticleSupportError:
             density.append(0.0)
-    assert sum(density) / 5 == pytest.approx(1.0)
+    assert sum(density) * float(model.bin_volume) == pytest.approx(1.0)
 
 
 def test_histogram_keeps_overflow_mass():
@@ -96,7 +99,10 @@ def test_histogram_keeps_overflow_mass():
         bin_range=[(0, 1)],
         smoothing_sigma=2.0,
     )
-    mass = sum(np.exp(model.evaluate([[0.5], [2.0]], t)[0]) / 5 for t in range(5))
+    mass = sum(
+        np.exp(model.evaluate([[0.5], [2.0]], t)[0]) * float(model.bin_volume)
+        for t in range(5)
+    )
     assert mass == pytest.approx(0.5)
 
 
@@ -195,3 +201,103 @@ def test_systematic_resampling_and_seed_replay():
 def test_invalid_observation_models_rejected(options):
     with pytest.raises(ValueError):
         ParticleObservationModel([[0.0], [1.0]], [False], **options)
+
+
+_GPU_REFERENCE = json.loads(
+    Path(__file__).with_name("particlefilter_gpu_reference.json").read_text()
+)
+
+
+@pytest.mark.parametrize("case", _GPU_REFERENCE["cases"], ids=lambda case: case["name"])
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+def test_histogram_matches_recorded_gpu_observation_kernel(case, dtype):
+    """CUDA-generated oracle includes exact edges, neighbors, overflow and mixtures.
+
+    The fixture records the unmodified feature-branch GPU implementation and
+    its revision. These checks run on CPU-only CI, without the batched compiler.
+    """
+    options = {
+        key: case[key]
+        for key in (
+            "bins",
+            "bin_range",
+            "smoothing_sigma",
+            "categorical_values",
+            "contamination_probability",
+        )
+    }
+    model = ParticleObservationModel(
+        case["data"], case["categorical_dims"], kernel="histogram", **options
+    )
+    for edge, expected in zip(model.edges, case["edge_bits"]):
+        np.testing.assert_array_equal(edge.view(np.uint32), expected)
+    simulations = np.asarray(case["simulated"], dtype=dtype)
+    for trial in range(len(case["data"])):
+        log_density, weights, responsibility = model.evaluate(simulations, trial)
+        assert log_density == pytest.approx(case["log_densities"][trial], abs=2e-6)
+        np.testing.assert_allclose(
+            weights, case["weights"][trial], rtol=2e-6, atol=1e-9
+        )
+        assert responsibility == pytest.approx(
+            case["responsibilities"][trial], rel=2e-6, abs=1e-9
+        )
+
+
+def test_histogram_edge_belongs_to_lower_bin_in_observations_and_predictions():
+    # CUDA linspace(0, 1 + 1e-6, 3), including the GPU's upper-bound expansion.
+    edge = np.float32(0.5000004768371582)
+    above = np.nextafter(edge, np.float32(np.inf))
+    model = ParticleObservationModel(
+        [[edge], [above]],
+        [False],
+        kernel="histogram",
+        bins=2,
+        bin_range=[(0.0, 1.0)],
+        smoothing_sigma=0,
+    )
+    np.testing.assert_array_equal(model.evaluate([[0.25], [0.75]], 0)[1], [1, 0])
+    np.testing.assert_array_equal(model.evaluate([[edge], [above]], 0)[1], [1, 0])
+    np.testing.assert_array_equal(model.evaluate([[edge], [above]], 1)[1], [0, 1])
+    # FP64 simulator values are rounded to the declared FP32 observation law.
+    barely_above = np.nextafter(float(edge), np.inf)
+    np.testing.assert_array_equal(
+        model.evaluate([[barely_above], [above]], 0)[1], [1, 0]
+    )
+
+
+@pytest.mark.parametrize("support", [[0.3, 0.300000001], [0.3, 0.3000015], [1e40]])
+def test_histogram_rejects_unrepresentable_or_overlapping_categories(support):
+    with pytest.raises(ValueError, match="FP32|separated"):
+        ParticleObservationModel(
+            [[support[0]]], [True], kernel="histogram", categorical_values=[support]
+        )
+
+
+def test_histogram_rejects_collapsed_fp32_edges():
+    with pytest.raises(ValueError, match="edges.*FP32"):
+        ParticleObservationModel(
+            [[1e8]], [False], kernel="histogram", bin_range=[(1e8, 1e8 + 1)]
+        )
+
+
+@pytest.mark.pytorch
+@pytest.mark.parametrize(
+    "low, high, bins",
+    [(0, 3, 100), (-0.7, 1.3, 7), (0.3, 0.6, 9), (12345.6, 12346.7, 17)],
+)
+def test_histogram_edges_match_cuda_linspace(low, high, bins):
+    torch = pytest.importorskip("torch")
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA is needed only to check the live GPU edge constructor.")
+    expected = (
+        torch.linspace(
+            low,
+            high + (high - low) * 1e-6,
+            bins + 1,
+            dtype=torch.float32,
+            device="cuda",
+        )
+        .cpu()
+        .numpy()
+    )
+    np.testing.assert_array_equal(_histogram_edges(low, high, bins), expected)
