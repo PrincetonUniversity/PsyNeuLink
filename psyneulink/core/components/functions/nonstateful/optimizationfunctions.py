@@ -1791,8 +1791,6 @@ class GridSearch(OptimizationFunction):
         select_random = builder.fcmp_ordered("!=", select_random_val,
                                              select_random_val.type(0))
 
-        rand_out_ptr = builder.alloca(ctx.float_ty)
-
         # KDM 8/22/19: nonstateful direction here - OK?
         direction = "<" if self.direction == MINIMIZE else ">"
         replace_ptr = builder.alloca(ctx.bool_ty)
@@ -1820,10 +1818,10 @@ class GridSearch(OptimizationFunction):
                         b.store(opt_count, opt_count_ptr)
 
                         # Roll a dice to see if we should replace the current min
-                        prob = b.fdiv(opt_count.type(1), opt_count)
                         rand_f = ctx.get_uniform_dist_function_by_state(random_state)
-                        b.call(rand_f, [random_state, rand_out_ptr])
-                        rand_out = b.load(rand_out_ptr)
+                        rand_out = b.call(rand_f, [random_state])
+
+                        prob = b.fdiv(opt_count.type(1), opt_count)
                         replace = b.fcmp_ordered("<", rand_out, prob)
                         b.store(replace, replace_ptr)
                     with eb:

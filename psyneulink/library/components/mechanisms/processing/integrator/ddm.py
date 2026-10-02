@@ -1183,9 +1183,7 @@ class DDM(ProcessingMechanism):
         if isinstance(self.function, DriftDiffusionAnalytical):
             random_state = ctx.get_random_state_ptr(builder, self, m_state, m_params)
             random_f = ctx.get_uniform_dist_function_by_state(random_state)
-            random_val_ptr = builder.alloca(random_f.args[1].type.pointee, name="random_out")
-            builder.call(random_f, [random_state, random_val_ptr])
-            random_val = builder.load(random_val_ptr)
+            random_val = builder.call(random_f, [random_state])
 
             # Convert ER to decision variable:
             prob_lthr_ptr = builder.gep(m_val, [ctx.int32_ty(0),

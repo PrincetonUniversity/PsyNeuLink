@@ -2394,9 +2394,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         # The call to random function needs to be after check to match python
         with builder.if_then(retr_rand):
-            rand_ptr = builder.alloca(ctx.float_ty)
-            builder.call(uniform_f, [rand_struct, rand_ptr])
-            rand = builder.load(rand_ptr)
+            rand = builder.call(uniform_f, [rand_struct])
             passed = builder.fcmp_ordered('<', rand, retr_prob)
             builder.store(passed, retr_ptr)
 
@@ -2455,9 +2453,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # The call to random function needs to be behind the check of 'store_rand'
         # to match python code semantics
         with builder.if_then(store_rand):
-            rand_ptr = builder.alloca(ctx.float_ty)
-            builder.call(uniform_f, [rand_struct, rand_ptr])
-            rand = builder.load(rand_ptr)
+            rand = builder.call(uniform_f, [rand_struct])
             passed = builder.fcmp_ordered('<', rand, store_prob)
             builder.store(passed, store_ptr)
 
