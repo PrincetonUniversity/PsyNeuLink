@@ -461,6 +461,7 @@ class ShowGraph:
     COMMENT
 
     """
+    _NESTED_PREFIX = 'cluster_'
 
     def __init__(self,
                  composition,
@@ -1095,7 +1096,7 @@ class ShowGraph:
                     rcvr._animate_num_trials = composition._animate_num_trials + 1
                 nested_comp_graph = rcvr._show_graph.show_graph(**nested_args)
 
-                nested_comp_graph.name = "cluster_" + rcvr.name
+                nested_comp_graph.name = self._NESTED_PREFIX + rcvr.name
                 rcvr_label = rcvr.name
 
                 # Assign color to nested_comp, including highlighting if it is the active_item
@@ -2732,7 +2733,7 @@ class ShowGraph:
                         assert False, f'PROGRAM ERROR: node ({node.name}) not Mechanism or Projection in G.body'
                 elif (node_type in {COMPOSITION}
                       and item.lstrip().startswith('subgraph ')
-                      and f'cluster_{node.name}' in item):
+                      and f'{self._NESTED_PREFIX}{node.name}' in item):
                     return i
 
         def get_node_id_in_G_body(node):
