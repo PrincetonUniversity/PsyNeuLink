@@ -1556,7 +1556,9 @@ class ParameterEstimationComposition(Composition):
         # Before we do anything, clear any compilation structures that have been generated. This is a workaround to
         # an issue that causes the PEC to fail to run in LLVM mode when the inner composition that we are fitting
         # has already been compiled.
-        if self.controller.parameters.comp_execution_mode.get(context) != "Python":
+        # A neural likelihood compiles nothing, so it leaves other compositions' binaries in place.
+        if (self.controller.parameters.comp_execution_mode.get(context) != "Python"
+                and self._neural_likelihood is None):
             pnllvm.cleanup()
 
         # Capture the input passed to run and pass it on to the OCM
