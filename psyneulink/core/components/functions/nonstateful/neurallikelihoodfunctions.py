@@ -627,6 +627,11 @@ def train_neural_likelihood(
             f"The composition reported {raw.shape[1]} outcome columns but "
             f"{n_outcomes} outcome_names were given: {list(outcome_names)}."
         )
+    if not np.isfinite(raw).all():
+        raise NeuralLikelihoodError(
+            "The model simulated outcomes that are not finite, which an estimator cannot be "
+            "trained on; check the model, or narrow bounds to where it gives finite outcomes."
+        )
 
     flags = tuple(bool(c) for c in categorical) if categorical is not None \
         else _infer_categorical(raw)

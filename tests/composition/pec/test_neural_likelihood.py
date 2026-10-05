@@ -501,6 +501,21 @@ def test_an_estimator_that_did_not_train_is_refused(monkeypatch):
 
 
 @pytest.mark.composition
+def test_outcomes_simulated_as_not_finite_are_refused(monkeypatch):
+    simulate = nlf._simulate
+
+    def with_a_missing_outcome(*args, **kwargs):
+        cond, raw, layout = simulate(*args, **kwargs)
+        raw[0, 0] = np.nan
+        return cond, raw, layout
+
+    monkeypatch.setattr(nlf, "_simulate", with_a_missing_outcome)
+    with pytest.raises(nlf.NeuralLikelihoodError, match="simulated outcomes that are not finite"):
+        nlf.train_neural_likelihood(BOUNDS, OUTCOMES, pec_factory=_ddm_training_pec,
+                                    n_parameter_samples=4, n_trials_per_sample=5)
+
+
+@pytest.mark.composition
 def test_training_rejects_a_model_that_orders_its_parameters_differently():
     """Draws are matched to parameters by position, so the two orders have to agree."""
     # The model declares rate first.
