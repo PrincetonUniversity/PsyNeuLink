@@ -50,10 +50,8 @@ fitting. Each worker calls it with a table of **n_trials_per_sample** rows to bu
 model.
 
 `train_neural_likelihood` generates an error if the estimator's negative log-likelihood on the data held
-out from training is not finite, and records the held-out negative log-likelihood per trial with the
-estimator, as ``metadata.val_nll``. This identifies an estimator that failed to train, but not one that is
-inaccurate. The accuracy of an estimator for a given model can be assessed by fitting data simulated at
-known parameter values, and comparing the estimates with those values.
+out from training is not finite, and records it per trial as ``metadata.val_nll``. This shows that training
+worked, not that the estimator is accurate; for that, fit data simulated at known parameter values.
 
 
 .. _Neural_Likelihood_Fitting:
