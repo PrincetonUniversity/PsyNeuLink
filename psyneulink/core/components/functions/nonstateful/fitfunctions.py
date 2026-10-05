@@ -311,7 +311,7 @@ def _live_worker_count(client):
     if client is None:
         return None
     try:
-        return len(client.scheduler_info()["workers"])
+        return len(client.nthreads())
     except Exception:
         return None
 
@@ -1284,7 +1284,7 @@ class PECOptimizationFunction(OptimizationFunction):
         batch = self._distributed_options.get("max_concurrent_evaluations")
         if batch is None:
             try:
-                batch = len(client.scheduler_info()["workers"])
+                batch = len(client.nthreads())
             except Exception:
                 batch = 0
             batch = max(batch, 1)

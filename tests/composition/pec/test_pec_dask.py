@@ -159,8 +159,8 @@ def test_resolve_worker_cores_auto_localcluster_splits_available_cores(monkeypat
 
 def test_resolve_worker_cores_supplied_client_uses_live_worker_count(monkeypatch):
     class _InfoClient:
-        def scheduler_info(self):
-            return {"workers": {f"w{i}": {} for i in range(4)}}
+        def nthreads(self):
+            return {f"w{i}": 1 for i in range(4)}
 
     monkeypatch.delenv("SLURM_CPUS_PER_TASK", raising=False)
     monkeypatch.setattr(fitfunctions, "_available_cores", lambda: 8)
@@ -414,8 +414,8 @@ class _InfoClient:
     def __init__(self, n_workers):
         self._n = n_workers
 
-    def scheduler_info(self):
-        return {"workers": {f"w{i}": {} for i in range(self._n)}}
+    def nthreads(self):
+        return {f"w{i}": 1 for i in range(self._n)}
 
 
 def _opt_func(sampler, **dist_opts):
