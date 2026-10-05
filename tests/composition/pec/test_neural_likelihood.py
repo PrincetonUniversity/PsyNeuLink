@@ -380,8 +380,10 @@ def test_training_data_generation_distributes():
         ({"pec": object()}, "pec requires inputs"),
         ({"pec": object(), "inputs": {}, "n_trials_per_sample": 10},
          "applies to pec_factory only"),
+        ({"pec_factory": _ddm_training_pec, "epochs": 0}, "epochs must be at least 1"),
     ],
-    ids=["neither", "both", "pec-distributed", "pec-without-inputs", "pec-trial-count"],
+    ids=["neither", "both", "pec-distributed", "pec-without-inputs", "pec-trial-count",
+         "no-epochs"],
 )
 def test_model_source_is_validated(kwargs, expected):
     with pytest.raises(nlf.NeuralLikelihoodError, match=expected):

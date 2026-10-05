@@ -578,6 +578,8 @@ def train_neural_likelihood(
         raise NeuralLikelihoodError("n_parameter_samples must be at least 2.")
     if n_trials_per_sample is not None and n_trials_per_sample < 1:
         raise NeuralLikelihoodError("n_trials_per_sample must be at least 1.")
+    if epochs < 1:
+        raise NeuralLikelihoodError("epochs must be at least 1.")
     # Checked before simulating, which is most of the cost.
     _require_sbi()
 
