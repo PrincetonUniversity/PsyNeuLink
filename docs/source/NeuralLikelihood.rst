@@ -77,8 +77,7 @@ one saved with its `save <NeuralLikelihood.save>` method, as the ``"artifact"`` 
     pec.run(inputs={comp: trial_inputs})
 
 The composition being fitted is not simulated when fitting with an estimator, so it is not compiled.
-`log_likelihood <ParameterEstimationComposition.log_likelihood>` also uses the estimator, but cannot return
-simulated data (``return_sim_data``).
+`log_likelihood <ParameterEstimationComposition.log_likelihood>` also uses the estimator.
 
 A parameter that depends on a condition (specified in **depends_on**) is fit separately for each condition,
 and each trial is scored with the value for its condition. The estimator for such a fit is trained on the
@@ -121,10 +120,6 @@ an error if it is used to fit a model that differs in any of them:
 Other properties of the model, such as the values of parameters that are not fit, are not recorded; an
 estimator should be retrained if any of these are changed.
 
-An error is also generated if the **data** contain values that are not finite or, where the estimator
-models a continuous outcome on a logarithmic scale (as it does for response times when another outcome is
-categorical), values of it that are not positive.
-
 
 .. _Neural_Likelihood_Limitations:
 
@@ -133,8 +128,6 @@ Limitations
 
 * At least one outcome must be continuous, such as a response time: an estimator cannot be trained for a
   model whose outcomes are all categorical.
-* A fit of one model that uses a neural likelihood cannot be distributed (``distributed=True``); a
-  :ref:`hierarchical fit <HierarchicalFitting>` of participants that use one can be.
 
 
 .. _Neural_Likelihood_Requirements:
