@@ -76,9 +76,9 @@ one saved with its `save <NeuralLikelihood.save>` method, as the ``"artifact"`` 
     )
     pec.run(inputs={comp: trial_inputs})
 
-The model is not simulated in the fit, so it is not compiled. `log_likelihood
-<ParameterEstimationComposition.log_likelihood>` also uses the estimator, but cannot return simulated data
-(``return_sim_data``).
+The composition being fitted is not simulated when fitting with an estimator, so it is not compiled.
+`log_likelihood <ParameterEstimationComposition.log_likelihood>` also uses the estimator, but cannot return
+simulated data (``return_sim_data``).
 
 A parameter that depends on a condition (specified in **depends_on**) is fit separately for each condition,
 and each trial is scored with the value for its condition. The estimator for such a fit is trained on the
