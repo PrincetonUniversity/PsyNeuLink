@@ -1417,6 +1417,8 @@ class ParameterEstimationComposition(Composition):
             )
         else:
             optimization_function.set_pec_objective_function(objective_function)
+            # A function passed in may have been used by another composition, and scored its data.
+            optimization_function.set_neural_likelihood(None)
 
         optimization_function._pec_initial_seed_user_specified = initial_seed is not None
 

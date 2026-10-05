@@ -138,6 +138,8 @@ class NeuralLikelihoodMetadata:
             raise NeuralLikelihoodError(
                 "The data contain outcomes that are not finite, which a neural likelihood cannot score."
             )
+        # Raises for a categorical value never simulated in training.
+        _encode_outcomes(outcomes, self.categorical, self.categories, self.outcome_names)
         continuous = outcomes[:, ~np.asarray(self.categorical, dtype=bool)]
         if self.log_transform and (continuous <= 0).any():
             raise NeuralLikelihoodError(

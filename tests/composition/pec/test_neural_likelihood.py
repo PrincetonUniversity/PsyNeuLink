@@ -125,6 +125,28 @@ def test_unseen_category_is_rejected(toy_likelihood):
         likelihood.log_likelihood([0.5, 0.9], outcomes)
 
 
+@pytest.mark.composition
+def test_data_with_an_unseen_category_are_refused_when_the_pec_is_built(ddm_data, toy_likelihood):
+    ddm_data["decision"] = ddm_data["decision"].cat.add_categories([7.0])
+    ddm_data.loc[0, "decision"] = 7.0
+    with pytest.raises(nlf.NeuralLikelihoodError, match="never simulated during training"):
+        _ddm_pec(ddm_data, likelihood_estimator="neural",
+                 likelihood_estimator_kwargs={"artifact": toy_likelihood[0]})
+
+
+@pytest.mark.composition
+def test_an_optimization_function_used_again_scores_by_simulating(ddm_data, toy_likelihood):
+    """A function that scored one composition with an estimator must not carry it to the next."""
+    function = pnl.PECOptimizationFunction(method="differential_evolution", max_iterations=1)
+    neural, _ = _ddm_pec(ddm_data, optimization_function=function, likelihood_estimator="neural",
+                         likelihood_estimator_kwargs={"artifact": toy_likelihood[0]})
+    neural.log_likelihood(0.3, 0.9)
+    assert neural.controller.function._neural_log_likelihood is not None
+
+    simulated, _ = _ddm_pec(ddm_data, optimization_function=function)
+    assert simulated.controller.function._neural_log_likelihood is None
+
+
 # ------------------------------------------------------------------ scoring
 
 
