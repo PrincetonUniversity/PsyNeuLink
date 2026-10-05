@@ -542,6 +542,9 @@ def train_neural_likelihood(
     -------
     A trained :class:`NeuralLikelihood`.
     """
+    # Distributed fitting takes its factory from distributed_options, so the same options serve here.
+    if pec_factory is None and distributed_options:
+        pec_factory = distributed_options.get("pec_factory")
     if (pec is None) == (pec_factory is None):
         raise NeuralLikelihoodError(
             "Supply exactly one of pec, a model to simulate in this process, or "

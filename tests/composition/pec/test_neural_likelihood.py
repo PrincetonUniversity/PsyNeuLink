@@ -363,9 +363,9 @@ def test_training_data_is_generated_from_the_composition(tmp_path):
 @pytest.mark.dask
 def test_training_data_generation_distributes():
     likelihood = nlf.train_neural_likelihood(
-        BOUNDS, OUTCOMES, pec_factory=_ddm_training_pec,
-        n_parameter_samples=8, n_trials_per_sample=10, epochs=1,
-        distributed_options={"n_workers": 2},
+        BOUNDS, OUTCOMES, n_parameter_samples=8, n_trials_per_sample=10, epochs=1,
+        # The factory where distributed fitting takes it.
+        distributed_options={"pec_factory": _ddm_training_pec, "n_workers": 2},
     )
     assert np.isfinite(likelihood.metadata.val_nll)
 
