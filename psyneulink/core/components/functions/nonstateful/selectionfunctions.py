@@ -423,7 +423,9 @@ class OneHot(SelectionFunction):
                                     f"cannot be specified.")
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        if self.mode in {PROB, PROB_INDICATOR}:
+        # TODO: Convert 'mode' to runtime parameter by using StrEnum
+        mode = self.parameters.mode._get_value_for_codegen()
+        if mode in {PROB, PROB_INDICATOR}:
 
             sum_ptr = builder.alloca(ctx.float_ty)
             builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
@@ -437,13 +439,6 @@ class OneHot(SelectionFunction):
             prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-            # The final prefix sum can drift just below 1.0 due to float
-            # rounding while the uniform() draw lives in [0, 1), so a draw in
-            # (cum_sum[-1], 1.0) misses every bucket and would otherwise leave
-            # arg_out at all zeros. Force the last iteration to win in that
-            # case by relaxing the upper bound only at the last index.
-            last_idx = ctx.int32_ty(arg_in.type.pointee.count - 1)
-
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, idx):
 
                 current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
@@ -455,14 +450,23 @@ class OneHot(SelectionFunction):
                 sum_new = b1.fadd(sum_old, b1.load(current_prob_ptr))
                 b1.store(sum_new, sum_ptr)
 
-                is_last = b1.icmp_signed("==", idx, last_idx)
                 old_below = b1.fcmp_ordered("<=", sum_old, random_draw)
-                new_above = b1.or_(b1.fcmp_ordered("<", random_draw, sum_new),
-                                   is_last)
+                new_above = b1.fcmp_ordered("<", random_draw, sum_new)
+
+                # The final prefix sum can drift just below 1.0 due to float
+                # rounding while the uniform() draw lives in [0, 1), so a draw in
+                # (cum_sum[-1], 1.0) misses every bucket and would otherwise leave
+                # arg_out at all zeros. Force the last iteration to win in that
+                # case by relaxing the upper bound only at the last index.
+                # The old_below is false if there already is a selected element.
+                last_idx = ctx.int32_ty(arg_in.type.pointee.count - 1)
+                is_last = b1.icmp_signed("==", idx, last_idx)
+                new_above = b1.or_(new_above, is_last)
                 cond = b1.and_(new_above, old_below)
 
-                if self.mode == PROB:
+                if mode == PROB:
                     val = current
+
                 else:
                     val = current.type(1.0)
 
@@ -472,9 +476,10 @@ class OneHot(SelectionFunction):
 
             return builder
 
-        elif self.mode == DETERMINISTIC:
-            direction = self.direction
-            tie = self.tie
+        elif mode == DETERMINISTIC:
+            # TODO: Convert 'direction' and 'tie' to runtime param(s) using StrEnum(s)
+            direction = self.parameters.direction._get_value_for_codegen()
+            tie = self.parameters.tie._get_value_for_codegen()
             abs_val_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.abs_val, param_struct_ptr=params)
             indicator_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.indicator, param_struct_ptr=params)
 
@@ -485,7 +490,7 @@ class OneHot(SelectionFunction):
             is_indicator = builder.fcmp_unordered("!=", indicator, indicator.type(0))
 
         else:
-            direction, abs_val, indicator, tie = self._parse_mode(self.mode)
+            direction, abs_val, indicator, tie = self._parse_mode(mode)
             is_abs_val = ctx.bool_ty(abs_val)
             is_indicator = ctx.bool_ty(indicator)
 

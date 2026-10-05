@@ -2325,16 +2325,17 @@ class Port_Base(Port):
     def _get_input_struct_type(self, ctx):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
-        func_input_type = ctx.get_input_struct_type(self.function)
+        function = self.parameters.function._get_value_for_codegen()
+        func_input_type = ctx.get_input_struct_type(function)
 
         # Not all ports have path_afferents property.
         len_path_afferents = len(self._get_all_afferents()) - len(self.mod_afferents)
 
-        # Check that either all inputs or none are delivered by projections.
+        # Check that either all inputs are none or delivered by projections.
         if len_path_afferents > 0:
             assert len(func_input_type) == len_path_afferents, \
                 f"{self.name} shape mismatch: {func_input_type}\nport:\n\t{self.defaults.variable}" \
-                f"\n\tfunc: {self.function.defaults.variable}\npath_afferents: {len(self.path_afferents)}."
+                f"\n\tfunc: {function.defaults.variable}\npath_afferents: {len(self.path_afferents)}."
 
         if len(self.mod_afferents) == 0:
             # Not need to wrap inputs of non-modulated ports inside mechanisms
@@ -2342,17 +2343,20 @@ class Port_Base(Port):
             return func_input_type
 
         input_types = [func_input_type]
+
         # Add modulation
         for mod in self.mod_afferents:
             input_types.append(ctx.get_output_struct_type(mod))
+
         return pnlvm.ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        port_f = ctx.import_llvm_function(self.function)
+        function = self.parameters.function._get_value_for_codegen()
+        port_f = ctx.import_llvm_function(function)
 
         base_params, f_state = ctx.get_param_or_state_ptr(builder,
                                                           self,
-                                                          "function",
+                                                          self.parameters.function,
                                                           param_struct_ptr=params,
                                                           state_struct_ptr=state)
 
@@ -2360,9 +2364,9 @@ class Port_Base(Port):
             # Create a local copy of the function parameters only if
             # there are modulating projections of type other than OVERRIDE.
             # LLVM is not eliminating the redundant copy.
-            f_params = builder.alloca(port_f.args[0].type.pointee,
-                                      name="modulated_port_params")
+            f_params = builder.alloca(port_f.args[0].type.pointee, name="modulated_port_params")
             builder.store(builder.load(base_params), f_params)
+
         else:
             f_params = base_params
 
@@ -2375,16 +2379,18 @@ class Port_Base(Port):
             # Modulatory projections are ordered after that
 
             # Get the modulation value
-            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0),
-                                             ctx.int32_ty(idx + 1)])
+            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1)])
 
             # Get name of the modulated parameter
             if afferent.sender.modulation == MULTIPLICATIVE:
-                name = self.function.parameters.multiplicative_param.source.name
+                name = function.parameters.multiplicative_param.source.name
+
             elif afferent.sender.modulation == ADDITIVE:
-                name = self.function.parameters.additive_param.source.name
+                name = function.parameters.additive_param.source.name
+
             elif afferent.sender.modulation == DISABLE:
                 name = None
+
             elif afferent.sender.modulation == OVERRIDE:
                 assert f_mod_ptr.type == arg_out.type, \
                     "Shape mismatch: Value of '{}' for '{}' ({}) " \
@@ -2397,17 +2403,18 @@ class Port_Base(Port):
                 # Directly store the value in the output array
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
+
             else:
                 assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
 
             # Replace base param with the modulation value
             if name is not None:
-                f_mod_param_ptr = pnlvm.helpers.get_param_ptr(builder, self.function, f_params, name)
+                f_mod_param_ptr = pnlvm.helpers.get_param_ptr(builder, function, f_params, name)
 
                 if f_mod_param_ptr.type != f_mod_ptr.type:
                     warnings.warn("Shape mismatch: Modulation vs. modulated parameter: {} vs. {}".format(
-                                  afferent.defaults.value,
-                                  getattr(self.function.parameters, name).get(None)),
+                                      afferent.defaults.value,
+                                      getattr(function.parameters, name).default_value),
                                   category=pnlvm.PNLCompilerWarning)
 
                     # The below steps can convert all the way from 2D single element
@@ -2429,6 +2436,7 @@ class Port_Base(Port):
         # Extract the data part of input
         if len(self.mod_afferents) == 0:
             f_input = arg_in
+
         else:
             f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 

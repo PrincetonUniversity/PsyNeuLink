@@ -4482,11 +4482,32 @@ class TestRun:
         self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
 
     @pytest.mark.usefixtures("comp_mode_no_per_node")
+    @pytest.mark.parametrize("use_explicit_context", [True, False], ids=["use-explicit-context", "use-property-assignment"])
+    def test_multiple_runs_with_parameter_change_from_compile_time(self, comp_mode, use_explicit_context):
+        A = TransferMechanism(input_shapes=2, integrator_mode=True)
+        comp = Composition([A])
+
+        inputs_dict = {A: [[1, 1], [2, 3]]}
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose(output, [[1.25, 1.75]])
+
+        # Change integrator mode
+        if use_explicit_context:
+            A.parameters.integrator_mode.set(False, comp)
+
+        else:
+            A.integrator_mode = False
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose(output, [[2, 3]])
+
+
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     @pytest.mark.parametrize("comp_mode2", [m for m in pytest.helpers.get_comp_execution_modes() if m.values[0] is not pnl.ExecutionMode._LLVMPerNode])
     def test_execution_after_cleanup_enum_param(self, comp_mode, comp_mode2):
         """
         This test checks that compiled sync works for Parameters with Enum values.
-        Enums are converted to 0-d numpy arrays of tyep integer and the synced value
+        Enums are converted to 0-d numpy arrays of type integer and the synced value
         should be correctly consumed by the following execution, both Python and compiled
         """
 

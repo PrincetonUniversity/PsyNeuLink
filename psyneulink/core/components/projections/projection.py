@@ -1152,7 +1152,7 @@ class Projection_Base(Projection):
                                                          self.parameters.function,
                                                          param_struct_ptr=params,
                                                          state_struct_ptr=state)
-        main_function = ctx.import_llvm_function(self.function)
+        main_function = ctx.import_llvm_function(self.parameters.function._get_value_for_codegen())
         builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
 
         return builder
