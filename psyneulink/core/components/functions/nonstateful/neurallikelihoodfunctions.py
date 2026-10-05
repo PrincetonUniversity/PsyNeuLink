@@ -253,7 +253,7 @@ def _build_estimator(x, cond, categorical, categories, log_transform):
         counts = [len(c) for c, is_cat in zip(categories, categorical) if is_cat]
         with warnings.catch_warnings():
             # sbi warns that categorical columns must come last; they do, by construction.
-            warnings.simplefilter("ignore")
+            warnings.filterwarnings("ignore", message="The mixed neural density estimator assumes")
             return build_mnle(
                 batch_x=x,
                 batch_y=cond,
