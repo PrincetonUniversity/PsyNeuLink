@@ -511,7 +511,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self._update_debug_metadata(self.builder, node)
         node_slice_val = helpers.convert_type(self.builder, index, self.ctx.int32_ty)
         if not self.is_lval(node_val):
-            temp_node_val = self.builder.alloca(node_val.type)
+            temp_node_val = self.builder.alloca(node_val.type, name="temporary_for_subscript")
             self.builder.store(node_val, temp_node_val)
             node_val = temp_node_val
 

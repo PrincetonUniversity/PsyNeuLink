@@ -1801,13 +1801,13 @@ class GridSearch(OptimizationFunction):
         select_random_val = builder.load(select_random_ptr)
         select_random = builder.fcmp_ordered("!=", select_random_val, select_random_val.type(0))
 
-        rand_out_ptr = builder.alloca(ctx.float_ty)
+        rand_out_ptr = builder.alloca(ctx.float_ty, name="random_out")
 
         # TODO: Convert 'direction' to runtime parameter by using StrEnum
         direction = "<" if self.parameters.direction._get_value_for_codegen() == MINIMIZE else ">"
-        replace_ptr = builder.alloca(ctx.bool_ty)
+        replace_ptr = builder.alloca(ctx.bool_ty, name="should_replace")
 
-        min_idx_ptr = builder.alloca(stop.type)
+        min_idx_ptr = builder.alloca(stop.type, name="min_index")
         builder.store(stop.type(-1), min_idx_ptr)
 
         # Check the value against current min
@@ -1836,6 +1836,7 @@ class GridSearch(OptimizationFunction):
                         rand_out = b.load(rand_out_ptr)
                         replace = b.fcmp_ordered("<", rand_out, prob)
                         b.store(replace, replace_ptr)
+
                     with eb:
                         # Reset the counter if we are replacing with new best value
                         with b.if_then(b.load(replace_ptr)):
@@ -1890,10 +1891,9 @@ class GridSearch(OptimizationFunction):
                 assert not input_initialized[dst_idx], "Double initialization of input {}".format(dst_idx)
                 input_initialized[dst_idx] = True
 
-                src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
-
                 # Destination is a struct of 2d arrays
                 dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(dst_idx), ctx.int32_ty(0)])
+                src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
                 builder.store(builder.load(src), dst)
 
             # Assert that we have populated all inputs
@@ -1917,14 +1917,14 @@ class GridSearch(OptimizationFunction):
 
         sample_t = obj_func.args[2].type.pointee
         value_t = obj_func.args[3].type.pointee
-        min_sample_ptr = builder.alloca(sample_t)
-        min_value_ptr = builder.alloca(value_t)
-        sample_ptr = builder.alloca(sample_t)
-        value_ptr = builder.alloca(value_t)
+        min_sample_ptr = builder.alloca(sample_t, name="min_sample")
+        min_value_ptr = builder.alloca(value_t, name="min_value")
+        sample_ptr = builder.alloca(sample_t, name="sample")
+        value_ptr = builder.alloca(value_t, name="value")
 
         search_space_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.search_space, param_struct_ptr=params)
 
-        opt_count_ptr = builder.alloca(ctx.float_ty)
+        opt_count_ptr = builder.alloca(ctx.float_ty, name="optimized_count")
         builder.store(opt_count_ptr.type.pointee(0), opt_count_ptr)
 
         # Use NaN here. fcmp_unordered below returns true if one of the

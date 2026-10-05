@@ -2109,7 +2109,7 @@ class Normalize(DeterministicTransferFunction):
         builder.store(val, ptro)
 
     def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, tags: frozenset):
-        sq_sum_ptr = builder.alloca(ctx.float_ty)
+        sq_sum_ptr = builder.alloca(ctx.float_ty, name="square_sum")
         builder.store(sq_sum_ptr.type.pointee(0), sq_sum_ptr)
 
         eps_ptr = ctx.get_param_or_state_ptr(builder, self, 'eps', param_struct_ptr=params)
@@ -2142,7 +2142,7 @@ class Normalize(DeterministicTransferFunction):
             all_out = arg_in
 
         else:
-            all_out = builder.alloca(arg_out.type.pointee)
+            all_out = builder.alloca(arg_out.type.pointee, name="all_out")
             builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, tags=forward_tags)
 
         # TODO: Convert 'per_item' to runtime parameter
@@ -2168,7 +2168,7 @@ class Normalize(DeterministicTransferFunction):
         eps_ptr = ctx.get_param_or_state_ptr(builder, self, 'eps', param_struct_ptr=params)
         eps = pnlvm.helpers.load_extract_scalar_array_one(builder, eps_ptr)
 
-        out_sq_sum_ptr = builder.alloca(ctx.float_ty)
+        out_sq_sum_ptr = builder.alloca(ctx.float_ty, name="out_square_sum")
         builder.store(out_sq_sum_ptr.type.pointee(0), out_sq_sum_ptr)
 
         # Compute ||all_out||^2
@@ -2901,10 +2901,10 @@ class BinomialDistort(
         p_ptr = ctx.get_param_or_state_ptr(builder, self, 'p', param_struct_ptr=params)
         p = builder.load(p_ptr)
         mod_p = builder.fsub(p.type(1), p)
-        p_mod_ptr = builder.alloca(mod_p.type)
+        p_mod_ptr = builder.alloca(mod_p.type, name="binomial_modified_p")
         builder.store(mod_p, p_mod_ptr)
 
-        n_ptr = builder.alloca(ctx.int32_ty)
+        n_ptr = builder.alloca(ctx.int32_ty, name="binomial_n")
         builder.store(n_ptr.type.pointee(1), n_ptr)
 
         rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
@@ -3768,7 +3768,7 @@ class SoftMax(TransferFunction):
         builder.store(val, ptro)
 
     def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, output_type, tags: frozenset):
-        exp_sum_ptr = builder.alloca(ctx.float_ty)
+        exp_sum_ptr = builder.alloca(ctx.float_ty, name="exp_sum")
         builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
         gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
@@ -3804,7 +3804,7 @@ class SoftMax(TransferFunction):
 
         assert one_hot_f.args[3].type == arg_out.type
         one_hot_out = arg_out
-        one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
+        one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee, name="one_hot_input")
 
         if output_type in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
@@ -3840,7 +3840,7 @@ class SoftMax(TransferFunction):
             all_out = arg_in
 
         else:
-            all_out = builder.alloca(arg_out.type.pointee)
+            all_out = builder.alloca(arg_out.type.pointee, name="all_out")
             builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
 
         # TODO: Convert 'per_item' to runtime parameter
@@ -3862,9 +3862,9 @@ class SoftMax(TransferFunction):
             "Derivative of SoftMax is only implemented for ARG_MAX and ARG_MAX_INDICATOR " \
             "in LLVM execution mode ({})".format(self.parameters.output._get_value_for_codegen())
 
-        max_pos_ptr = builder.alloca(ctx.int32_ty)
+        max_pos_ptr = builder.alloca(ctx.int32_ty, name="max_pos")
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
-        max_val_ptr = builder.alloca(arg_out.type.pointee.element)
+        max_val_ptr = builder.alloca(arg_out.type.pointee.element, name="max_val")
         builder.store(max_val_ptr.type.pointee(float("NaN")), max_val_ptr)
 
         with pnlvm.helpers.array_ptr_loop(builder, all_out, id="max") as (b, idx):
@@ -4214,7 +4214,7 @@ class HypersphericalToCartesian(TransferFunction):
         builder.store(cos_val0, res0_ptr)
 
         # sin_prod = 1.0
-        sinprod_ptr = builder.alloca(fty)
+        sinprod_ptr = builder.alloca(fty, name="sin_product")
         builder.store(fty(1.0), sinprod_ptr)
 
         with pnlvm.helpers.for_loop(builder, one, n_angles, one, id="prefix_prod") as (b, j):
@@ -5219,7 +5219,7 @@ class TransferWithCosts(TransferFunction):
                     fabs_f = ctx.get_builtin("fabs", [adjustment.type])
                     adjustment = builder.call(fabs_f, [adjustment])
 
-                    cost_in = builder.alloca(cost_in.type.pointee)
+                    cost_in = builder.alloca(cost_in.type.pointee, name="adjustment_cost_in")
                     builder.store(adjustment, builder.gep(cost_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
                 builder.call(cost_f, [cost_p, cost_s, cost_in, cost_out])

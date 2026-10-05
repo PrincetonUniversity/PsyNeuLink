@@ -427,12 +427,12 @@ class OneHot(SelectionFunction):
         mode = self.parameters.mode._get_value_for_codegen()
         if mode in {PROB, PROB_INDICATOR}:
 
-            sum_ptr = builder.alloca(ctx.float_ty)
+            sum_ptr = builder.alloca(ctx.float_ty, name="sum")
             builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
 
             rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             rng_f = ctx.get_uniform_dist_function_by_state(rand_state_ptr)
-            random_draw_ptr = builder.alloca(rng_f.args[-1].type.pointee)
+            random_draw_ptr = builder.alloca(rng_f.args[-1].type.pointee, name="random_draw")
             builder.call(rng_f, [rand_state_ptr, random_draw_ptr])
             random_draw = builder.load(random_draw_ptr)
 
@@ -494,10 +494,10 @@ class OneHot(SelectionFunction):
             is_abs_val = ctx.bool_ty(abs_val)
             is_indicator = ctx.bool_ty(indicator)
 
-        num_extremes_ptr = builder.alloca(ctx.int32_ty)
+        num_extremes_ptr = builder.alloca(ctx.int32_ty, name="num_extremes")
         builder.store(num_extremes_ptr.type.pointee(0), num_extremes_ptr)
 
-        extreme_val_ptr = builder.alloca(ctx.float_ty)
+        extreme_val_ptr = builder.alloca(ctx.float_ty, name="extreme_value")
         builder.store(extreme_val_ptr.type.pointee(float("NaN")), extreme_val_ptr)
 
         fabs_f = ctx.get_builtin("fabs", [extreme_val_ptr.type.pointee])
@@ -538,7 +538,7 @@ class OneHot(SelectionFunction):
         elif tie == RANDOM:
             rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             rand_f = ctx.get_rand_int_function_by_state(rand_state_ptr)
-            random_draw_ptr = builder.alloca(rand_f.args[-1].type.pointee)
+            random_draw_ptr = builder.alloca(rand_f.args[-1].type.pointee, name="random_draw")
             num_extremes = builder.load(num_extremes_ptr)
 
             builder.call(rand_f, [rand_state_ptr, ctx.int32_ty(0), num_extremes, random_draw_ptr])
@@ -553,7 +553,7 @@ class OneHot(SelectionFunction):
 
         extreme_val = builder.load(extreme_val_ptr)
         extreme_write_val = builder.select(is_indicator, extreme_val.type(1), extreme_val)
-        next_extreme_ptr = builder.alloca(num_extremes_ptr.type.pointee)
+        next_extreme_ptr = builder.alloca(num_extremes_ptr.type.pointee, name="next_extreme")
         builder.store(next_extreme_ptr.type.pointee(0), next_extreme_ptr)
 
         pnlvm.helpers.printf(ctx,

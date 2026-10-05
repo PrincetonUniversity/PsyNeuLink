@@ -2380,7 +2380,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         out_val_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
         # Check retrieval probability
-        retr_ptr = builder.alloca(ctx.bool_ty)
+        retr_ptr = builder.alloca(ctx.bool_ty, name="should_retrive")
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
         retr_prob_ptr = ctx.get_param_or_state_ptr(builder, self, RETRIEVAL_PROB, param_struct_ptr=params)
 
@@ -2394,7 +2394,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         # The call to random function needs to be after check to match python
         with builder.if_then(retr_rand):
-            rand_ptr = builder.alloca(ctx.float_ty)
+            rand_ptr = builder.alloca(ctx.float_ty, name="rand_out")
             builder.call(uniform_f, [rand_struct, rand_ptr])
             rand = builder.load(rand_ptr)
             passed = builder.fcmp_ordered('<', rand, retr_prob)
@@ -2410,9 +2410,10 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                                                                          self.parameters.distance_function,
                                                                          param_struct_ptr=params,
                                                                          state_struct_ptr=state)
-            distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
+            distance_arg_in = builder.alloca(distance_f.args[2].type.pointee, name="distance_function_arg_in")
             builder.store(builder.load(var_key_ptr), builder.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
-            selection_arg_in = builder.alloca(pnlvm.ir.ArrayType(distance_f.args[3].type.pointee, max_entries))
+
+            selection_arg_in = builder.alloca(pnlvm.ir.ArrayType(distance_f.args[3].type.pointee, max_entries), name="selection_function_arg_in")
             with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b, idx):
                 compare_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
                 b.store(b.load(compare_ptr), b.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)]))
@@ -2425,11 +2426,11 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                                                                            self.parameters.selection_function,
                                                                            param_struct_ptr=params,
                                                                            state_struct_ptr=state)
-            selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
+            selection_arg_out = builder.alloca(selection_f.args[3].type.pointee, name="selection_function_arg_out")
             builder.call(selection_f, [selection_params, selection_state, selection_arg_in, selection_arg_out])
 
             # Find the selected index
-            selected_idx_ptr = builder.alloca(ctx.int32_ty)
+            selected_idx_ptr = builder.alloca(ctx.int32_ty, name="selected_index")
             builder.store(ctx.int32_ty(0), selected_idx_ptr)
             with pnlvm.helpers.for_loop_zero_inc(builder, entries, "selection_loop") as (b, idx):
                 selection_val = b.load(b.gep(selection_arg_out, [ctx.int32_ty(0), idx]))
@@ -2444,7 +2445,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             builder.store(selected_val, out_val_ptr)
 
         # Check storage probability
-        store_ptr = builder.alloca(ctx.bool_ty)
+        store_ptr = builder.alloca(ctx.bool_ty, name="should_store")
         builder.store(store_ptr.type.pointee(1), store_ptr)
         store_prob_ptr = ctx.get_param_or_state_ptr(builder, self, STORAGE_PROB, param_struct_ptr=params)
 
@@ -2455,7 +2456,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # The call to random function needs to be behind the check of 'store_rand'
         # to match python code semantics
         with builder.if_then(store_rand):
-            rand_ptr = builder.alloca(ctx.float_ty)
+            rand_ptr = builder.alloca(ctx.float_ty, name="random_out")
             builder.call(uniform_f, [rand_struct, rand_ptr])
             rand = builder.load(rand_ptr)
             passed = builder.fcmp_ordered('<', rand, store_prob)
@@ -2464,7 +2465,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # Store
         store = builder.load(store_ptr)
         with builder.if_then(store, likely=True):
-            modified_key_ptr = builder.alloca(var_key_ptr.type.pointee)
+            modified_key_ptr = builder.alloca(var_key_ptr.type.pointee, name="variable_key")
 
             # Apply noise to key.
             # There are 3 types of noise: scalar, vector1, and vector matching variable
@@ -2487,21 +2488,19 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 b.store(key_elem, modified_key_elem_ptr)
 
             # Check if such key already exists
-            is_new_key_ptr = builder.alloca(ctx.bool_ty)
+            is_new_key_ptr = builder.alloca(ctx.bool_ty, name="is_new_key")
             builder.store(is_new_key_ptr.type.pointee(1), is_new_key_ptr)
             with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
                 cmp_key_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
 
                 # Vector compare
                 # TODO: move this to helpers
-                key_differs_ptr = b.alloca(ctx.bool_ty)
+                key_differs_ptr = b.alloca(ctx.bool_ty, name="is_key_different")
                 b.store(key_differs_ptr.type.pointee(0), key_differs_ptr)
                 with pnlvm.helpers.array_ptr_loop(b, cmp_key_ptr, "key_compare") as (b2, idx2):
                     var_key_element = b2.gep(modified_key_ptr, [ctx.int32_ty(0), idx2])
                     cmp_key_element = b2.gep(cmp_key_ptr, [ctx.int32_ty(0), idx2])
-                    element_differs = b.fcmp_unordered('!=',
-                                                       b.load(var_key_element),
-                                                       b.load(cmp_key_element))
+                    element_differs = b.fcmp_unordered('!=', b.load(var_key_element), b.load(cmp_key_element))
                     key_differs = b2.load(key_differs_ptr)
                     key_differs = b2.or_(key_differs, element_differs)
                     b2.store(key_differs, key_differs_ptr)

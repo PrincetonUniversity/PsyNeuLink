@@ -3251,7 +3251,7 @@ class Mechanism_Base(Mechanism):
             if param_name == "num_executions":
                 count = builder.load(indexed)
                 count_fp = builder.uitofp(count, ctx.float_ty)
-                indexed = builder.alloca(pnlvm.ir.ArrayType(count_fp.type, 1))
+                indexed = builder.alloca(pnlvm.ir.ArrayType(count_fp.type, 1), name="float_num_executions")
                 ptr = builder.gep(indexed, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(count_fp, ptr)
 
@@ -3269,7 +3269,7 @@ class Mechanism_Base(Mechanism):
         else:
             aggregate_type = pnlvm.ir.LiteralStructType(types)
 
-        aggregate_storage = builder.alloca(aggregate_type)
+        aggregate_storage = builder.alloca(aggregate_type, name="aggregate_storage")
         for idx, location in enumerate(parsed):
             out_ptr = builder.gep(aggregate_storage, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             data = builder.load(location)
