@@ -39,7 +39,7 @@ class MSELoss(Loss):
         builder = ctx.create_llvm_function(args, self, name, return_type=ctx.float_ty)
         value, dim, target = builder.function.args
 
-        sum_ptr = builder.alloca(ctx.float_ty)
+        sum_ptr = builder.alloca(ctx.float_ty, name="mse_sum")
         builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
 
         with pnlvm.helpers.for_loop_zero_inc(builder, dim, "mse_sum_loop") as (b1, index):
@@ -61,9 +61,10 @@ class MSELoss(Loss):
         dim = len(value.type.pointee)
         assert len(target.type.pointee) == dim
         if output is None:
-            output = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
+            output = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim), name="output_loss")
             # zero output vector
             builder.store(output.type.pointee(None), output)
+
         assert len(output.type.pointee) == dim
 
         if sum_loss is False:
@@ -101,7 +102,7 @@ class CROSS_ENTROPYLoss(Loss):
         builder = ctx.create_llvm_function(args, self, name, return_type=ctx.float_ty)
         value, dim, target = builder.function.args
 
-        sum_ptr = builder.alloca(ctx.float_ty)
+        sum_ptr = builder.alloca(ctx.float_ty, name="cross_sum")
         builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
 
         with pnlvm.helpers.for_loop_zero_inc(builder, dim, "cross_entropy_sum_loop") as (b1, index):
@@ -125,9 +126,10 @@ class CROSS_ENTROPYLoss(Loss):
         dim = len(value.type.pointee)
         assert len(target.type.pointee) == dim
         if output is None:
-            output = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
+            output = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim), name="output_vec")
             # zero output vector
             builder.store(output.type.pointee(None), output)
+
         assert len(output.type.pointee) == dim
 
         if sum_loss is False:

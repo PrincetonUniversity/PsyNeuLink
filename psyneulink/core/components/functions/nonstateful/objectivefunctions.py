@@ -403,7 +403,7 @@ class Stability(ObjectiveFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Dot product
-        dot_out = builder.alloca(arg_in.type.pointee)
+        dot_out = builder.alloca(arg_in.type.pointee, name="dot_out")
         matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
 
         # Convert array pointer to pointer to the fist element
@@ -418,7 +418,7 @@ class Stability(ObjectiveFunction):
 
         # Prepare metric function
         metric_fun = ctx.import_llvm_function(self.parameters.metric_fct._get_value_for_codegen())
-        metric_in = builder.alloca(metric_fun.args[2].type.pointee)
+        metric_in = builder.alloca(metric_fun.args[2].type.pointee, name="metric_function_in")
         metric_in_variable = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         metric_in_transformed = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
@@ -1004,7 +1004,7 @@ class Distance(ObjectiveFunction):
         v1 = pnlvm.helpers.unwrap_2d_array(builder, v1)
         v2 = pnlvm.helpers.unwrap_2d_array(builder, v2)
 
-        acc_ptr = builder.alloca(ctx.float_ty)
+        acc_ptr = builder.alloca(ctx.float_ty, name="accumulator")
         builder.store(acc_ptr.type.pointee(-0.0), acc_ptr)
 
         # Inner functions expect v1/v2 to be pointers to the first element
@@ -1039,7 +1039,7 @@ class Distance(ObjectiveFunction):
 
         elif metric == MAX_ABS_DIFF:
             del inner_kwargs['acc']
-            max_diff_ptr = builder.alloca(ctx.float_ty)
+            max_diff_ptr = builder.alloca(ctx.float_ty, name="max_diff_ptr")
             builder.store(max_diff_ptr.type.pointee(float("NaN")), max_diff_ptr)
             inner_kwargs['max_diff_ptr'] = max_diff_ptr
 
@@ -1556,8 +1556,8 @@ class LossFunction(ObjectiveFunction):
         sample_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)], name="input_array_ptr")
         target_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)], name="target_array_ptr")
 
-        accumulator_ptr = builder.alloca(ctx.float_ty)
-        counter_ptr = builder.alloca(ctx.float_ty)
+        accumulator_ptr = builder.alloca(ctx.float_ty, name="accumulator")
+        counter_ptr = builder.alloca(ctx.float_ty, name="counter")
         builder.store(accumulator_ptr.type.pointee(0), accumulator_ptr)
         builder.store(counter_ptr.type.pointee(0), counter_ptr)
 
@@ -1592,6 +1592,7 @@ class LossFunction(ObjectiveFunction):
                 count = builder.load(counter_ptr)
                 norm_result = builder.fdiv(result, count)
                 builder.store(norm_result, arg_out)
+
             with e:
                 builder.store(result, arg_out)
 

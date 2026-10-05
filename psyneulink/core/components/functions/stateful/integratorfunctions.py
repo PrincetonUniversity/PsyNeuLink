@@ -398,8 +398,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         if param == NOISE and isinstance(param_p, tuple):
             # This is a noise function so call it to get value
             noise_f = ctx.import_llvm_function(self.parameters.noise._get_value_for_codegen())
-            noise_in = builder.alloca(noise_f.args[2].type.pointee)
-            noise_out = builder.alloca(noise_f.args[3].type.pointee)
+            noise_in = builder.alloca(noise_f.args[2].type.pointee, name="noise_in")
+            noise_out = builder.alloca(noise_f.args[3].type.pointee, name="noise_out")
             builder.call(noise_f, [param_p[0], param_p[1], noise_in, noise_out])
             value_p = noise_out
 
