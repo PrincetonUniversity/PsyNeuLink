@@ -1143,8 +1143,10 @@ class Projection_Base(Projection):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
 
         if "passthrough" in tags:
-            assert arg_in.type == arg_out.type, "Requestd passthrough projection but types are not compatible IN: {} OUT: {}".format(arg_in.type, arg_out.type)
-            builder.store(builder.load(arg_in), arg_out)
+            assert arg_in.type == arg_out.type, \
+                "Requested passthrough projection but types are not compatible IN: {} OUT: {}".format(arg_in.type, arg_out.type)
+
+            pnlvm.helpers.memcpy(builder, arg_out, arg_in)
             return builder
 
         mf_params, mf_state = ctx.get_param_or_state_ptr(builder,
