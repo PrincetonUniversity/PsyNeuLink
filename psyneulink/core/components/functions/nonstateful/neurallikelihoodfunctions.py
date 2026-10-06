@@ -278,19 +278,34 @@ def _infer_categorical(outcomes: np.ndarray) -> tuple[bool, ...]:
     return tuple(flags)
 
 
-def _input_columns(inputs, n_trials: int, model) -> np.ndarray:
-    """The values entering the model's input nodes, one row per trial.
+def _flatten(value) -> np.ndarray:
+    """All the numbers in ``value``, in order, whether or not its parts have the same size."""
+    try:
+        return np.asarray(value, dtype=float).ravel()
+    except ValueError:
+        return np.concatenate([_flatten(part) for part in value])
 
-    They are taken in the order ``model`` lists its nodes, so the same inputs give the same
-    columns however ``inputs`` lists them.
+
+def _input_columns(inputs, n_trials: int, model) -> np.ndarray:
+    """The values entering the model's inputs, one row per trial.
+
+    They are taken in the order ``model`` lists its nodes, and a node's input ports in their
+    order, so the same inputs give the same columns however ``inputs`` lists them.
     """
     position = {node: i for i, node in enumerate(model.nodes)}
+
+    def place(key):
+        if key in position:
+            return position[key], -1
+        owner = getattr(key, "owner", None)
+        if owner in position:
+            return position[owner], list(owner.input_ports).index(key)
+        return -1, -1
+
     columns = [np.zeros((n_trials, 0))]
-    for _, value in sorted((inputs or {}).items(), key=lambda item: position.get(item[0], -1)):
-        array = np.asarray(value, dtype=float)
-        array = array.reshape(array.shape[0], -1) if array.ndim > 1 else array.reshape(-1, 1)
-        if array.shape[0] == n_trials:
-            columns.append(array)
+    for _, value in sorted((inputs or {}).items(), key=lambda item: place(item[0])):
+        if hasattr(value, "__len__") and len(value) == n_trials:
+            columns.append(np.stack([_flatten(trial) for trial in value]))
     return np.concatenate(columns, axis=1)
 
 

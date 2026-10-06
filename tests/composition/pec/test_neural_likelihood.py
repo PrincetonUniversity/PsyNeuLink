@@ -237,6 +237,24 @@ def test_input_columns_are_the_same_however_the_inputs_are_listed():
                                   columns)
 
 
+def test_input_columns_from_inputs_given_to_the_model_whose_nodes_differ_in_size():
+    a = pnl.ProcessingMechanism(name="a")
+    b = pnl.ProcessingMechanism(name="b", default_variable=[0, 0])
+    model = pnl.Composition(nodes=[a, b])
+    by_node = {a: np.arange(10.0), b: np.column_stack([np.arange(10.0), 2 * np.arange(10.0)])}
+    by_model = {model: [[[t], [t, 2 * t]] for t in np.arange(10.0)]}
+    np.testing.assert_array_equal(nlf._input_columns(by_model, 10, model),
+                                  nlf._input_columns(by_node, 10, model))
+
+
+def test_input_columns_from_input_ports_are_the_same_however_they_are_listed():
+    mechanism = pnl.ProcessingMechanism(name="m", input_ports=["x", "y"])
+    model = pnl.Composition(nodes=[mechanism])
+    x, y = mechanism.input_ports[0], mechanism.input_ports[1]
+    columns = nlf._input_columns({y: 10 + np.arange(10.0), x: np.arange(10.0)}, 10, model)
+    np.testing.assert_array_equal(columns, np.column_stack([np.arange(10.0), 10 + np.arange(10.0)]))
+
+
 # --------------------------------------------------------------- PEC wiring
 
 
