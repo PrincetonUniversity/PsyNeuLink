@@ -46,29 +46,58 @@ except ImportError:
     torch = None
 from beartype import beartype
 
-from psyneulink._typing import List, Literal, Optional, Union
+from psyneulink._typing import List, Literal, Optional, Tuple, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions import function
 from psyneulink.core.components.functions.function import (
-    Function_Base, FunctionError, FunctionOutputType, function_keywords,
-    get_matrix, _random_state_getter, _seed_setter, DEFAULT_SEED)
+    DEFAULT_SEED,
+    Function_Base,
+    FunctionError,
+    FunctionOutputType,
+    _random_state_getter,
+    _seed_setter,
+    function_keywords,
+    get_matrix,
+)
 from psyneulink.core.components.shellclasses import Projection
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
     ADDITIVE_PARAM, ARRANGEMENT, AUTO, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
      CROSS_ENTROPY, DEFAULT, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
      HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0,
      MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_MEMORY_FUNCTION, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
      OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT,
-     REARRANGE_FUNCTION, RECEIVER, REDUCE_FUNCTION, RETRIEVE, SCALE, STORE, SUM, WEIGHTS, PREFERENCE_SET_NAME)
-from psyneulink.core.globals.utilities import (
-    all_within_range, convert_all_elements_to_np_array, convert_to_np_array,
-    is_numeric, is_matrix_keyword, is_numeric_scalar, np_array_less_than_2d, ValidParamSpecType)
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+    DEFAULT,
+    PREFERENCE_SET_NAME,
+    REARRANGE_FUNCTION,
+    RECEIVER,
+    REDUCE_FUNCTION,
+    RETRIEVE,
+    SCALE,
+    STORE,
+    SUM,
+    WEIGHTS,
+)
 from psyneulink.core.globals.parameters import (
-    Parameter, ParameterNoValueError, FunctionParameter, check_user_specified, copy_parameter_value)
+    FunctionParameter,
+    Parameter,
+    check_user_specified,
+    copy_parameter_value,
+)
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
+from psyneulink.core.globals.utilities import (
+    ValidParamSpecType,
+    _validate_np_tensordot_args,
+    all_within_range,
+    convert_all_elements_to_np_array,
+    convert_to_np_array,
+    is_matrix_keyword,
+    is_numeric,
+    is_numeric_scalar,
+    np_array_less_than_2d,
+)
 
 __all__ = ['TransformFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce',
            'LinearCombination', 'MatrixTransform', 'MatrixMemory', 'PredictionErrorDeltaFunction',
@@ -108,8 +137,13 @@ class TransformFunction(Function_Base):
             return ctx.float_ty(default)
 
         elif isinstance(param_type, pnlvm.ir.ArrayType):
-            index = ctx.int32_ty(0) if len(param_type) == 1 else index
-            param_ptr = builder.gep(param_ptr, [ctx.int32_ty(0), index])
+            if len(param_type) == 1 and not isinstance(param_type.element, pnlvm.ir.ArrayType):
+                index = [ctx.int32_ty(0)]
+
+            if not isinstance(index, list):
+                index = [index]
+
+            param_ptr = builder.gep(param_ptr, [ctx.int32_ty(0), *index])
 
         return builder.load(param_ptr)
 
@@ -119,6 +153,7 @@ class TransformFunction(Function_Base):
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_out, "linear") as args:
             self._gen_llvm_combine(ctx=ctx, vi=arg_in, vo=arg_out, params=params, *args)
+
         return builder
 
 
@@ -326,7 +361,7 @@ class Concatenate(TransformFunction):  # ---------------------------------------
         input : number
             value of the input to the function at which derivative is to be taken.
 
-        covariates : 2d np.array : default class_defaults.variable[1:]
+        covariates : np.ndarray : default class_defaults.variable[1:]
             the input(s) to the Concatenate function other than the one for which the derivative is being
             computed;  these are ignored and are accepted for consistency with other functions.
 
@@ -369,12 +404,12 @@ class Rearrange(TransformFunction):  # -----------------------------------------
     concatenating subsets of them into single 1d arrays.  The specification must be an integer, a tuple of integers,
     or a list containing either or both.  Each integer must be an index of an item in the outer dimension (axis 0) of
     `variable <Rearrange.variable>`.  Items referenced in a tuple are concatenated in the order specified into a single
-    1d array, and that 1d array is included in the resulting 2d array in the order it appears in **arrangement**.
+    inner array, and that inner array is included in the resulting outer array in the order it appears in **arrangement**.
     If **arrangement** is specified, then only the items of `variable <Rearrange.variable>` referenced in the
     specification are included in the result; if **arrangement** is not specified, all of the items of `variable
     <Rearrange.variable>` are concatenated into a single 1d array (i.e., it functions identically to `Concatenate`).
 
-    `function <Rearrange.function>` returns a 2d array with the items of `variable` rearranged
+    `function <Rearrange.function>` returns an array with the items of `variable` rearranged
     (and possibly concatenated) as specified by **arrangement**.
 
     Examples
@@ -601,7 +636,7 @@ class Rearrange(TransformFunction):  # -----------------------------------------
         -------
 
         Rearranged items of outer dimension (axis 0) of **variable** : array
-            in a 2d array.
+            in an array.
         """
         variable = np.atleast_2d(variable)
 
@@ -662,17 +697,17 @@ class Reduce(TransformFunction):  # --------------------------------------------
     default_variable : list or np.array : default class_defaults.variable
         specifies a template for the value to be transformed and its default value;  all entries must be numeric.
 
-    weights : 1d or 2d np.array : default None
+    weights : np.ndarray : default None
         specifies values used to multiply the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `weights <LinearCombination.weights>` for details)
 
-    exponents : 1d or 2d np.array : default None
+    exponents : np.ndarray : default None
         specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `exponents <LinearCombination.exponents>` for details)
 
@@ -954,14 +989,16 @@ class Reduce(TransformFunction):  # --------------------------------------------
         scale = self._gen_llvm_load_param(ctx, builder, params, SCALE, index, 1.0)
         offset = self._gen_llvm_load_param(ctx, builder, params, OFFSET, index, -0.0)
 
-        # assume operation does not change dynamically
-        operation = self.parameters.operation.get()
+        # TODO: Convert 'operation' to runtime param by using StrEnum
+        operation = self.parameters.operation._get_value_for_codegen()
         if operation == SUM:
             val = ctx.float_ty(-0.0)
             comb_op = "fadd"
+
         elif operation == PRODUCT:
             val = ctx.float_ty(1.0)
             comb_op = "fmul"
+
         else:
             assert False, "Unknown operation: {}".format(operation)
 
@@ -975,25 +1012,24 @@ class Reduce(TransformFunction):  # --------------------------------------------
             ptri = b.gep(vi, [ctx.int32_ty(0), idx])
             in_val = b.load(ptri)
 
-            exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS,
-                                                 index, 1.0)
+            exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS, index, 1.0)
+
             # Vector of vectors (even 1-element vectors)
             if isinstance(exponent.type, pnlvm.ir.ArrayType):
                 assert len(exponent.type) == 1 # FIXME: Add support for matrix weights
                 exponent = b.extract_value(exponent, [0])
+
             # FIXME: Remove this micro-optimization,
             #        it should be handled by the compiler
             if not isinstance(exponent, pnlvm.ir.Constant) or exponent.constant != 1.0:
                 in_val = b.call(pow_f, [in_val, exponent])
 
             # Try per element weights first
-            weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS,
-                                               idx, 1.0)
+            weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS, idx, 1.0)
 
             # Vector of vectors (even 1-element vectors)
             if isinstance(weight.type, pnlvm.ir.ArrayType):
-                weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS,
-                                                   index, 1.0)
+                weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS, index, 1.0)
                 assert len(weight.type) == 1 # FIXME: Add support for matrix weights
                 weight = b.extract_value(weight, [0])
 
@@ -1050,18 +1086,18 @@ class LinearCombination(
             * If there is more than one array in variable, they must all be of the same length
             * WEIGHTS and EXPONENTS can be:
                 - 1D: each array in variable is scaled by the corresponding element of WEIGHTS or EXPONENTS
-                - 2D: each array in variable is scaled by (Hadamard-wise) corresponding array of WEIGHTS or EXPONENTS
+                - >=2D: each array in variable is scaled by (Hadamard-wise) corresponding array of WEIGHTS or EXPONENTS
         Initialization arguments:
          - variable (value, np.ndarray or list): values to be combined;
-             can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
+             can be a list of lists, or an array; an array with one fewer dimension is always returned
              if it is a list, it must be a list of numbers, lists, or np.arrays
-             all items in the list or 2D np.array must be of equal length
-             + WEIGHTS (list of numbers or 1D np.array): multiplies each item of variable before combining them
+             all items in the list or array must be of equal length
+             + WEIGHTS (list of numbers or array): multiplies each item of variable before combining them
                   (default: [1,1])
-             + EXPONENTS (list of numbers or 1D np.array): exponentiates each item of variable before combining them
+             + EXPONENTS (list of numbers or array): exponentiates each item of variable before combining them
                   (default: [1,1])
          - params (dict) can include:
-             + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1,1])
+             + WEIGHTS (list of numbers or array): multiplies each variable before combining them (default: [1,1])
              + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
              + SCALE (value): multiples the result (after combining elements; default: 1)
              + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
@@ -1077,20 +1113,20 @@ class LinearCombination(
     Arguments
     ---------
 
-    variable : 1d or 2d np.array : default class_defaults.variable
-        specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
+    variable : np.ndarray : default class_defaults.variable
+        specifies a template for the arrays to be combined.  If it is >=2d, all items must have the same length.
 
-    weights : scalar or 1d or 2d np.array : default None
+    weights : scalar or np.ndarray : default None
         specifies values used to multiply the elements of each array in **variable**.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `weights <LinearCombination.weights>` for details of how weights are applied).
 
-    exponents : scalar or 1d or 2d np.array : default None
+    exponents : scalar or np.ndarray : default None
         specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `exponents <LinearCombination.exponents>` for details of how exponents are applied).
 
@@ -1123,24 +1159,24 @@ class LinearCombination(
     Attributes
     ----------
 
-    variable : 1d or 2d np.array
+    variable : np.ndarray
         contains the arrays to be combined by `function <LinearCombination>`.  If it is 1d, the array is simply
         linearly transformed by and `scale <LinearCombination.scale>` and `offset <LinearCombination.scale>`.
-        If it is 2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
+        If it is >=2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
         specified by `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>`
         and then combined as specified by `operation <LinearCombination.operation>`.
 
-    weights : scalar or 1d or 2d np.array
+    weights : scalar or np.ndarray
         if it is a scalar, the value is used to multiply all elements of all arrays in `variable
         <LinearCombination.variable>`; if it is a 1d array, each element is used to multiply all elements in the
-        corresponding array of `variable <LinearCombination.variable>`;  if it is a 2d array, then each array is
+        corresponding array of `variable <LinearCombination.variable>`;  if it is a >=2d array, then each array is
         multiplied elementwise (i.e., the Hadamard Product is taken) with the corresponding array of `variable
         <LinearCombinations.variable>`. All `weights` are applied before any exponentiation (if it is specified).
 
-    exponents : scalar or 1d or 2d np.array
+    exponents : scalar or np.ndarray
         if it is a scalar, the value is used to exponentiate all elements of all arrays in `variable
         <LinearCombination.variable>`; if it is a 1d array, each element is used to exponentiate the elements of the
-        corresponding array of `variable <LinearCombinations.variable>`;  if it is a 2d array, the element of each
+        corresponding array of `variable <LinearCombinations.variable>`;  if it is a >=2d array, the element of each
         array is used to exponentiate the corresponding element of the corresponding array of `variable
         <LinearCombination.variable>`. In either case, all exponents are applied after application of the `weights
         <LinearCombination.weights>` (if any are specified).
@@ -1383,8 +1419,8 @@ class LinearCombination(
         Arguments
         ---------
 
-        variable : 1d or 2d np.array : default class_defaults.variable
-           a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
+        variable : np.ndarray : default class_defaults.variable
+           a single numeric array, or multiple arrays to be combined; if it is >=2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1505,7 +1541,7 @@ class LinearCombination(
            .. technical_note::
               output arg is used for consistency with other derivatives used by BackPropagation, and is ignored.
 
-        covariates : 2d np.array : default class_defaults.variable[1:]
+        covariates : np.ndarray : default class_defaults.variable[1:]
             the input(s) to the LinearCombination function other than the one for which the derivative is being
             computed;  these are used to calculate the Jacobian of the LinearCombination function.
 
@@ -1529,18 +1565,106 @@ class LinearCombination(
         default_var = np.atleast_2d(self.defaults.variable)
         return ctx.convert_python_struct_to_llvm_ir(default_var)
 
-    def _gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
-        scale = self._gen_llvm_load_param(ctx, builder, params, SCALE, index, 1.0)
-        offset = self._gen_llvm_load_param(ctx, builder, params, OFFSET, index, -0.0)
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags: frozenset):
+        # for the frequent case where non-LLVM variable is 2D and value is cast
+        # up to 2D from 1D. arg_out is expected to have one fewer dimension than
+        # arg_in in _gen_llvm_combine_body.
+        if (arg_in.type.pointee.element == arg_out.type.pointee.element) and arg_out.type.pointee.count == 1:
+            arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
 
-        # assume operation does not change dynamically
-        operation = self.parameters.operation.get()
+        self._gen_llvm_combine(builder, ctx=ctx, vi=arg_in, vo=arg_out, params=params)
+        return builder
+
+    def _gen_llvm_combine_body(self, builder, ctx, vi, vo, val, pow_f, comb_op, params, vo_idx):
+        ptro = builder.gep(vo, [ctx.int32_ty(0), *vo_idx])
+
+        if isinstance(ptro.type.pointee, pnlvm.ir.ArrayType):
+            # Recursion on output array dimensions stops when pointing to scalar
+            with pnlvm.helpers.array_ptr_loop(builder, ptro, f"combine_axis{len(vo_idx)}") as (b, idx):
+                self._gen_llvm_combine_body(b, ctx, vi, vo, val, pow_f, comb_op, params, [*vo_idx, idx])
+
+        else:
+            # val is the base value passed in according to the combination
+            # operation (0 for sum, 1 for product)
+            val_p = builder.alloca(val.type, name="combined_result")
+            builder.store(val, val_p)
+
+            assert isinstance(vi.type.pointee, pnlvm.ir.ArrayType)
+            with pnlvm.helpers.array_ptr_loop(builder, vi, "combine") as (b, idx):
+                # The recursion is on the output, so `vo_idx` corresponds to a
+                # scalar in the output array. This loop is over the input, which
+                # has shape (vi.type.pointee.count, <`vo` shape>) and assumes axis=0.
+                # So, we combine elements [0, `vo_idx`]...[`vi.type.pointee.count-1`, `vo_idx`]
+                # to get the result element (`vo_idx`) in the output.
+                in_idx = [idx, *vo_idx]
+                ptri = b.gep(vi, [ctx.int32_ty(0), *in_idx])
+                in_val = b.load(ptri)
+
+                # lower-dim array specification (ex: exponents [a, b]
+                # and var [[[1, 1]], [[2, 2]]], applying a to [[1, 1]]
+                # and b to [[2, 2]])
+                exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS, idx, 1.0)
+                if (
+                    isinstance(exponent.type, pnlvm.ir.ArrayType)
+                    and len(exponent.type) == 1
+                    and not isinstance(exponent.type.element, pnlvm.ir.ArrayType)
+                ):
+                    exponent = b.extract_value(exponent, [0])
+
+                else:
+                    # variable (input) matching array specification
+                    exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS, in_idx, 1.0)
+
+                # FIXME: Remove this micro-optimization,
+                #        it should be handled by the compiler
+                if not isinstance(exponent, pnlvm.ir.Constant) or exponent.constant != 1.0:
+                    in_val = b.call(pow_f, [in_val, exponent])
+
+                # lower-dim array specification (see exponent above)
+                weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS, idx, 1.0)
+                if (
+                    isinstance(weight.type, pnlvm.ir.ArrayType)
+                    and len(weight.type) == 1
+                    and not isinstance(weight.type.element, pnlvm.ir.ArrayType)
+                ):
+                    weight = b.extract_value(weight, [0])
+
+                else:
+                    # variable (input) matching array specification
+                    weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS, in_idx, 1.0)
+
+                in_val = b.fmul(in_val, weight)
+
+                # val_p points to a temp value that will be put in a specific
+                # element in the result. It's calculated sequentially by
+                # combining each in_val iterated over in this loop
+                val = b.load(val_p)
+                val = getattr(b, comb_op)(val, in_val)
+
+                b.store(val, val_p)
+
+            # value (output) matching
+            scale = self._gen_llvm_load_param(ctx, builder, params, SCALE, vo_idx, 1.0)
+            offset = self._gen_llvm_load_param(ctx, builder, params, OFFSET, vo_idx, -0.0)
+
+            val = builder.load(val_p)
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
+
+            builder.store(val, ptro)
+
+    def _gen_llvm_combine(self, builder, ctx, vi, vo, params):
+        # TODO: Convert 'operation' to runtime param by using StrEnum
+        operation = self.parameters.operation._get_value_for_codegen()
+
         if operation == SUM:
             val = ctx.float_ty(-0.0)
             comb_op = "fadd"
+
         elif operation == PRODUCT:
             val = ctx.float_ty(1.0)
             comb_op = "fmul"
+
         elif operation == CROSS_ENTROPY:
             raise FunctionError(f"LinearCombination Function does not (yet) support CROSS_ENTROPY operation.")
             # FIX: THIS NEEDS TO BE REPLACED TO GENERATE A VECTOR WITH HADAMARD CROSS-ENTROPY OF vi AND vo
@@ -1554,45 +1678,8 @@ class LinearCombination(
         else:
             assert False, "Unknown operation: {}".format(operation)
 
-        val_p = builder.alloca(val.type, name="combined_result")
-        builder.store(val, val_p)
-
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
-
-        with pnlvm.helpers.array_ptr_loop(builder, vi, "combine") as (b, idx):
-            ptri = b.gep(vi, [ctx.int32_ty(0), idx, index])
-            in_val = b.load(ptri)
-
-            exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS,
-                                                 idx, 1.0)
-            # Vector of vectors (even 1-element vectors)
-            if isinstance(exponent.type, pnlvm.ir.ArrayType):
-                assert len(exponent.type) == 1 # FIXME: Add support for matrix weights
-                exponent = b.extract_value(exponent, [0])
-            # FIXME: Remove this micro-optimization,
-            #        it should be handled by the compiler
-            if not isinstance(exponent, pnlvm.ir.Constant) or exponent.constant != 1.0:
-                in_val = b.call(pow_f, [in_val, exponent])
-
-            weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS,
-                                               idx, 1.0)
-            # Vector of vectors (even 1-element vectors)
-            if isinstance(weight.type, pnlvm.ir.ArrayType):
-                assert len(weight.type) == 1 # FIXME: Add support for matrix weights
-                weight = b.extract_value(weight, [0])
-
-            in_val = b.fmul(in_val, weight)
-
-            val = b.load(val_p)
-            val = getattr(b, comb_op)(val, in_val)
-            b.store(val, val_p)
-
-        val = builder.load(val_p)
-        val = builder.fmul(val, scale)
-        val = builder.fadd(val, offset)
-
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        builder.store(val, ptro)
+        self._gen_llvm_combine_body(builder, ctx, vi, vo, val, pow_f, comb_op, params, [])
 
     def _gen_pytorch_fct(self, device, context=None):
         weights = self._get_pytorch_fct_param_value('weights', device, context)
@@ -1641,7 +1728,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
     **operation** = *DOT_PRODUCT*:
 
-        Returns the dot (inner) product of `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>`:
+        Returns the dot (inner) product of `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>` using `numpy.tensordot`. If `matrix <MatrixTransform.matrix>` has more than 2 dimensions,
 
         .. math::
             {variable} \\bullet |matrix|
@@ -1761,7 +1848,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
     variable : 1d array
         contains value to be transformed.
 
-    matrix : 2d array
+    matrix : np.ndarray
         matrix used to transform `variable <MatrixTransform.variable>`.
         Can be specified as any of the following:
             * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
@@ -1780,6 +1867,14 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
     normalize : bool
         determines whether the result of `function <LinearCombination.function>` is normalized, by dividing it by the
         norm of `variable <MatrixTransform.variable>` x the norm of `matrix <MatrixTransform.matrix>`.
+
+    axes : Union[int, Tuple[int, int], DEFAULT]
+        used when `operation` is `DOT_PRODUCT`. Specifies the axes on which
+        `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>`
+        are summed. `DEFAULT` value is 1 when `matrix <MatrixTransform.matrix>`
+        is 2d (standard dot product), and `variable.ndim` when `matrix MatrixTransform.matrix>`
+        is >2d (tensor dot product). The value of `axes <MatrixTransform.axes>`
+        is provided directly to `numpy.tensordot`.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1822,11 +1917,18 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
                     :default value: False
                     :type: bool
+
+                axes
+                    see `axes <MatrixTransform.axes>`
+
+                    :default value: DEFAULT
+                    :type: Union[int, Tuple[int, int], DEFAULT]
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
         matrix = Parameter(None, modulable=True, mdf_name='B')
         operation = Parameter(DOT_PRODUCT, stateful=False)
         normalize = Parameter(False)
+        axes: Union[int, Tuple[int, int], DEFAULT] = DEFAULT
 
     @check_user_specified
     @beartype
@@ -1855,7 +1957,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         )
 
         self.parameters.matrix.set(
-            self.instantiate_matrix(self.parameters.matrix.get()),
+            self.instantiate_matrix(self.parameters.matrix.get(), Context(None)),
             skip_log=True,
         )
 
@@ -1878,7 +1980,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         # proxy for checking whether the owner is a projection
         if hasattr(self.owner, 'receiver'):
             sender = self.defaults.variable
-            sender_len = np.size(np.atleast_2d(self.defaults.variable), 1)
+            sender_len = np.size(np.atleast_2d(self.defaults.variable), -1)
 
             # Check for and validate receiver first, since it may be needed to validate and/or construct the matrix
             # First try to get receiver from specification in params
@@ -1937,23 +2039,21 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                                                                         self.name,
                                                                         self.owner_name))
 
-                        if weight_matrix.ndim != 2:
-                            raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
-                                                format(weight_matrix.ndim, self.name, self.owner_name))
+                        if weight_matrix.ndim > 2:
+                            axes = self._get_axes(sender, weight_matrix, context)
+                            _validate_np_tensordot_args(sender, weight_matrix, axes)
+                        else:
+                            matrix_rows = weight_matrix.shape[0]
+                            matrix_cols = weight_matrix.shape[1]
 
-                        matrix_rows = weight_matrix.shape[0]
-                        matrix_cols = weight_matrix.shape[1]
-
-                        # Check that number of rows equals length of sender vector (variable)
-                        if matrix_rows != sender_len:
-                            raise FunctionError("The number of rows ({}) of the "
-                                                "matrix provided for {} function "
-                                                "of {} does not equal the length "
-                                                "({}) of the sender vector "
-                                                "(variable)".format(matrix_rows,
-                                                                    self.name,
-                                                                    self.owner_name,
-                                                                    sender_len))
+                            # Check that number of rows equals length of sender vector (variable)
+                            if matrix_rows != sender_len:
+                                raise FunctionError(
+                                    'The number of rows ({}) of the matrix provided for {} function of {}'
+                                    ' does not equal the length ({}) of the sender vector (variable)'.format(
+                                        matrix_rows, self.name, self.owner_name, sender_len,
+                                    )
+                                )
 
                     # Auto, full or random connectivity matrix requested (using keyword):
                     # Note:  assume that these will be properly processed by caller
@@ -2069,7 +2169,8 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         if matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
             matrix = np.identity(variable_length)
-        self.parameters.matrix._set(self.instantiate_matrix(matrix), context)
+        matrix = self.instantiate_matrix(matrix, context)
+        self.parameters.matrix._set(matrix, context)
 
     def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification
@@ -2100,31 +2201,32 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                 # receiver = sender
             receiver_len = receiver.shape[0]
 
-            matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
+            matrix = get_matrix(specification, inp=sender, out=receiver, context=context)
 
             # This should never happen (should have been picked up in validate_param or above)
             if matrix is None:
                 raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function "
                                     "that returns one, a matrix specification keyword ({}), or a number (filler)".
                                     format(specification, self.name, self.owner_name, MATRIX_KEYWORD_NAMES))
-            else:
-                return matrix
+            elif matrix.ndim > 2:
+                axes = self._get_axes(sender, matrix, context)
+                _validate_np_tensordot_args(sender, matrix, axes)
+            return matrix
         else:
             return np.array(specification)
 
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Restrict to 1d arrays
-        if self.defaults.variable.ndim != 1:
-            warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(
-                          self, self.owner, self.defaults.variable),
+        if len(pnlvm.helpers.get_array_shape(arg_in)) > 1:
+            warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(self, self.owner, self.defaults.variable),
                           pnlvm.PNLCompilerWarning)
-            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        if self.defaults.value.ndim != 1:
-            warnings.warn("Shape mismatch: {} (in {}) has 2D output: {}".format(
-                          self, self.owner, self.defaults.value),
+            arg_in = pnlvm.helpers.unwrap_2d_array(builder, arg_in)
+
+        if len(pnlvm.helpers.get_array_shape(arg_out)) > 1:
+            warnings.warn("Shape mismatch: {} (in {}) has 2D output: {}".format(self, self.owner, self.defaults.value),
                           pnlvm.PNLCompilerWarning)
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
 
         matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
         normalize = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
@@ -2223,7 +2325,9 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                     #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
                     # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
                     matrix = matrix / np.linalg.norm(matrix, axis=0, keepdims=True)
-            result = np.dot(vector, matrix)
+
+            axes = self._get_axes(vector, matrix, context)
+            result = np.tensordot(vector, matrix, axes=axes)
 
         elif operation == L0:
             if normalize:
@@ -2236,21 +2340,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
     @staticmethod
     def keyword(obj, keyword):
-
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        rows = None
-        cols = None
-        # use of variable attribute here should be ok because it's using it as a format/type
-        if isinstance(obj, MappingProjection):
-            if isinstance(obj.sender.defaults.value, numbers.Number):
-                rows = 1
-            else:
-                rows = len(obj.sender.defaults.value)
-            if isinstance(obj.receiver.defaults.variable, numbers.Number):
-                cols = 1
-            else:
-                cols = obj.receiver.socket_width
-        matrix = get_matrix(keyword, rows, cols)
+        matrix = get_matrix(keyword, obj.sender.socket_shape, obj.receiver.socket_shape)
 
         if matrix is None:
             raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
@@ -2285,6 +2375,16 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
             return np.array_equal(matrix, identity_matrix)
         except TypeError:
             return matrix == identity_matrix
+
+    # not implemented as a parameter getter in order to not cause confusion with the real value
+    def _get_axes(self, variable, matrix, context):
+        axes = self.parameters.axes._get(context)
+        if axes == DEFAULT:
+            if matrix.ndim <= 2:
+                axes = 1
+            else:
+                axes = variable.ndim
+        return axes
 
 # def is_matrix_spec(m):
 #     if m is None:
@@ -2366,11 +2466,10 @@ class MatrixMemory(TransformFunction): #
         #                                   function_parameter_name='operation',
         #                                   primary=True,
         #                                   stateful=True)
-        scores_metric = Parameter(DOT_PRODUCT, stateful=False)
-        normalize_memories = Parameter(True,
-                                       # getter = _normalize_memories_getter,
-                                       # setter = _normalize_memories_setter
-                                       )
+        scores_function = Parameter(MatrixTransform, stateful=False)
+        scores_function_matrix = FunctionParameter(None, function_name='scores_function', function_parameter_name='matrix')
+        scores_metric = FunctionParameter(DOT_PRODUCT, function_name='scores_function', function_parameter_name='operation', stateful=False)
+        normalize_memories = FunctionParameter(True, function_name='scores_function', function_parameter_name='normalize')
         # EM2 BREADCRUMB: MAKE THIS FunctionParameter??
         # normalize_memories = FunctionParameter(True,
         #                                        function_name='scores_function',
@@ -2408,11 +2507,6 @@ class MatrixMemory(TransformFunction): #
                  owner=None,
                  prefs:Optional[ValidPrefSet] = None):
 
-        self.scores_function = MatrixTransform(default_variable=default_variable[0], # MatrixTransform only uses query
-                                               operation=scores_metric,
-                                               normalize=normalize_memories,
-                                               matrix=memory.T)
-
         decay_rate = decay_rate or 0.0
         if decay_rate == AUTO:
             decay_rate = 1 / len(memory)
@@ -2420,7 +2514,8 @@ class MatrixMemory(TransformFunction): #
         super().__init__(
             default_variable=default_variable,
             memory=memory,
-            # scores_function=scores_function,
+            scores_function_matrix=memory.T,
+            scores_metric=scores_metric,
             normalize_memories=normalize_memories,
             decay_rate=decay_rate,
             storage_prob=storage_prob,
@@ -2451,6 +2546,9 @@ class MatrixMemory(TransformFunction): #
             raise FunctionError(f"The length of the 3rd item of variable for '{self.name}' should 1 "
                                 f"(index of weakest entry in memory), but got {len(variable[2])}.")
         return variable
+
+    def _parse_scores_function_variable(self, variable, context=None):  # noqa U100
+        return variable[0]  # MatrixTransform only uses query
 
     def _function(self,
                  variable:Optional[Union[list, np.array]]=None,
@@ -2516,25 +2614,11 @@ class MatrixMemory(TransformFunction): #
 
         # If this is an initialization run, just return query and zeros for score and norms
         if self.is_initializing:
-            scores_template = norms_template = np.zeros(len(memory))
+            scores_template = np.zeros(len(memory))
+            norms_template = np.zeros(len(memory))
             return scores_template, norms_template
 
-        try:
-            scores = self.scores_function(query, context)
-        except ParameterNoValueError:
-            # IMPLEMENTATION NOTE:
-            #   This is needed since _comput_scores() is called before _access_memory(),
-            #   so there are not yet entries in self.scores_function for matrix or normalize in the execution context;
-            #   therefore, call to self.scores_function() above raises the ParameterNoValueError.
-            self.scores_function.parameters.matrix._set(self.memory.T, context)
-            self.scores_function.parameters.normalize._set(self.normalize_memories, context)
-            # # For assignment to score_function (by way of setters)
-            # # EM2 BREADCRUMB: NOT CLEAR WHY, GIVEN SETTERS IT IS NOT ALREADY BEING SET
-            # #                 (ARE THEY GETTING ASSIGNED IN CALL TO EXECUTE?
-            # self.parameters.memory._set(memory, context)
-            # self.parameters.normalize_memories._set(self.normalize_memories, context)
-            scores = self.scores_function(query, context)
-
+        scores = self.scores_function(query, context)
         norms = np.linalg.norm(memory, axis=1)
 
         return scores, norms
@@ -2701,17 +2785,17 @@ class CombineMeans(TransformFunction):  # --------------------------------------
             Notes:
             * WEIGHTS and EXPONENTS can be:
                 - 1D: each array in variable is scaled by the corresponding element of WEIGHTS or EXPONENTS
-                - 2D: each array in variable is scaled by (Hadamard-wise) corresponding array of WEIGHTS or EXPONENTS
+                - >=2D: each array in variable is scaled by (Hadamard-wise) corresponding array of WEIGHTS or EXPONENTS
         Initialization arguments:
          - variable (value, np.ndarray or list): values to be combined;
-             can be a list of lists, or a 1D or 2D np.array;  a scalar is always returned
+             can be a list of lists, or an array;  a scalar is always returned
              if it is a list, it must be a list of numbers, lists, or np.arrays
              if WEIGHTS or EXPONENTS are specified, their length along the outermost dimension (axis 0)
                  must equal the number of items in the variable
          - params (dict) can include:
-             + WEIGHTS (list of numbers or 1D np.array): multiplies each item of variable before combining them
+             + WEIGHTS (list of numbers or array): multiplies each item of variable before combining them
                   (default: [1,1])
-             + EXPONENTS (list of numbers or 1D np.array): exponentiates each item of variable before combining them
+             + EXPONENTS (list of numbers or array): exponentiates each item of variable before combining them
                   (default: [1,1])
              + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
              + SCALE (value): multiples the result (after combining elements; default: 1)
@@ -2725,20 +2809,20 @@ class CombineMeans(TransformFunction):  # --------------------------------------
     Arguments
     ---------
 
-    variable : 1d or 2d np.array : default class_defaults.variable
-        specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
+    variable : np.ndarray : default class_defaults.variable
+        specifies a template for the arrays to be combined.  If it is >=2d, all items must have the same length.
 
-    weights : 1d or 2d np.array : default None
+    weights : np.ndarray : default None
         specifies values used to multiply the elements of each array in `variable  <CombineMeans.variable>`.
         If it is 1d, its length must equal the number of items in `variable <CombineMeans.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
         and there must be the same number of items as there are in `variable <CombineMeans.variable>`
         (see `weights <CombineMeans.weights>` for details)
 
-    exponents : 1d or 2d np.array : default None
+    exponents : np.ndarray : default None
         specifies values used to exponentiate the elements of each array in `variable  <CombineMeans.variable>`.
         If it is 1d, its length must equal the number of items in `variable <CombineMeans.variable>`;
-        if it is 2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
+        if it is >=2d, the length of each item must be the same as those in `variable <CombineMeans.variable>`,
         and there must be the same number of items as there are in `variable <CombineMeans.variable>`
         (see `exponents <CombineMeans.exponents>` for details)
 
@@ -2771,22 +2855,22 @@ class CombineMeans(TransformFunction):  # --------------------------------------
     Attributes
     ----------
 
-    variable : 1d or 2d np.array
+    variable : np.ndarray
         contains the arrays to be combined by `function <CombineMeans>`.  If it is 1d, the array is simply
         linearly transformed by and `scale <CombineMeans.scale>` and `offset <CombineMeans.scale>`.
-        If it is 2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
+        If it is >=2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
         specified by `weights <CombineMeans.weights>` and/or `exponents <CombineMeans.exponents>`
         and then combined as specified by `operation <CombineMeans.operation>`.
 
-    weights : 1d or 2d np.array : default NOne
+    weights : np.ndarray : default None
         if it is 1d, each element is used to multiply all elements in the corresponding array of
-        `variable <CombineMeans.variable>`;    if it is 2d, then each array is multiplied elementwise
+        `variable <CombineMeans.variable>`;    if it is >=2d, then each array is multiplied elementwise
         (i.e., the Hadamard Product is taken) with the corresponding array of `variable <CombineMeanss.variable>`.
         All :keyword:`weights` are applied before any exponentiation (if it is specified).
 
-    exponents : 1d or 2d np.array : default None
+    exponents : np.ndarray : default None
         if it is 1d, each element is used to exponentiate the elements of the corresponding array of
-        `variable <CombineMeans.variable>`;  if it is 2d, the element of each array is used to exponentiate
+        `variable <CombineMeans.variable>`;  if it is >=2d, the element of each array is used to exponentiate
         the corresponding element of the corresponding array of `variable <CombineMeans.variable>`.
         In either case, exponentiating is applied after application of the `weights <CombineMeans.weights>`
         (if any are specified).
@@ -3006,8 +3090,8 @@ class CombineMeans(TransformFunction):  # --------------------------------------
         Arguments
         ---------
 
-        variable : 1d or 2d np.array : default class_defaults.variable
-           a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
+        variable : np.ndarray : default class_defaults.variable
+           a single numeric array, or multiple arrays to be combined; if it is >=2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -3239,8 +3323,8 @@ class PredictionErrorDeltaFunction(TransformFunction):
 
         Arguments
         ----------
-        variable : 2d np.array : default class_defaults.variable
-            a 2d array representing the sample and target values to be used to
+        variable : np.ndarray : default class_defaults.variable
+            an array representing the sample and target values to be used to
             calculate the temporal difference delta values. Both arrays must
             have the same length
 

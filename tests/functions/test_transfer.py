@@ -515,13 +515,14 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
     np.testing.assert_allclose(res, expected, **tolerance)
 
 
+# Python 3.10 includes NONE and ALL in the listing.
+# Python 3.11+ lists only non-aliased members.
+_unique_costs = [cf for cf in pnl.CostFunctions if cf != pnl.CostFunctions.NONE and cf != pnl.CostFunctions.ALL]
+
 def combine_costs(costs):
     return functools.reduce(lambda x, y: x | y, costs, pnl.CostFunctions.NONE)
 
-
-@pytest.mark.parametrize("cost_functions",
-                         map(combine_costs, pytest.helpers.power_set(cf for cf in pnl.CostFunctions if
-                                                                     cf != pnl.CostFunctions.NONE and cf != pnl.CostFunctions.ALL)))
+@pytest.mark.parametrize("cost_functions", [combine_costs(x) for x in pytest.helpers.power_set(_unique_costs)])
 @pytest.mark.benchmark
 @pytest.mark.function
 def test_transfer_with_costs(cost_functions, func_mode, benchmark):
@@ -530,6 +531,7 @@ def test_transfer_with_costs(cost_functions, func_mode, benchmark):
     def check(cost_function, if_enabled, if_disabled, observed):
         if cost_function in cost_functions:
             np.testing.assert_allclose(observed, if_enabled)
+
         else:
             assert np.array_equal(observed, if_disabled)
 

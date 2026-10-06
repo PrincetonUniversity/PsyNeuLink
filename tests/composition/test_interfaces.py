@@ -238,7 +238,7 @@ class TestConnectCompositionsViaCIMS:
 
         sched = Scheduler(composition=outer_composition)
         output = outer_composition.run(
-            inputs={inner_composition_1: [[[5.0], [50.0]]]},
+            inputs={inner_composition_1: [[[5.0]], [[50.0]]]},
             scheduler=sched,
             execution_mode=comp_mode
         )

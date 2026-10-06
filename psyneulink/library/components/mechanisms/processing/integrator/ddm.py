@@ -502,7 +502,7 @@ class DDM(ProcessingMechanism):
                is carried out.
         COMMENT
 
-    value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
+    value : np.ndarray[array(float64),array(float64),array(float64),array(float64)]
         result of executing DDM `function <DDM.function>`;  has six items, that are assigned based on the `function
         <DDM.function>` attribute.  The first two items are always assigned the values of `DECISION_VARIABLE
         <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` (though their interpretation depends on the
@@ -1053,7 +1053,7 @@ class DDM(ProcessingMechanism):
             + NON_DECISION_TIME (float)
             + NOISE (float)
         - context (str)
-        Returns the following values in self.value (2D np.array) and in
+        Returns the following values in self.value (>=2D np.array) and in
             the value of the corresponding outputPort in the self.output_ports dict:
             - decision variable (float)
             - mean error rate (float)
@@ -1119,19 +1119,16 @@ class DDM(ProcessingMechanism):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state,
-                                  variable, m_val, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, m_val, *, tags:frozenset):
 
-        if isinstance(self.function, IntegratorFunction):
+        function = self.parameters.function._get_value_for_codegen()
+        if isinstance(function, IntegratorFunction):
             # Integrator based DDM works like other mechanisms
-            return super()._gen_llvm_invoke_function(ctx, builder, function,
-                                                     params, state, variable,
-                                                     m_val, tags=tags)
+            return super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, m_val, tags=tags)
 
-        elif isinstance(self.function, DriftDiffusionAnalytical):
-            mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function,
-                                                                params, state, variable,
-                                                                None, tags=tags)
+        elif isinstance(function, DriftDiffusionAnalytical):
+            mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, None, tags=tags)
+
             # The order and number of returned values is different for DDA
             for res_idx, idx in enumerate((self.RESPONSE_TIME_INDEX,
                                            self.PROBABILITY_LOWER_THRESHOLD_INDEX,
@@ -1146,12 +1143,8 @@ class DDM(ProcessingMechanism):
                 builder.store(builder.load(src), dst)
 
             # Handle upper threshold probability (1 - Lower Threshold)
-            src = builder.gep(m_val, [ctx.int32_ty(0),
-                                      ctx.int32_ty(self.PROBABILITY_LOWER_THRESHOLD_INDEX),
-                                      ctx.int32_ty(0)])
-            dst = builder.gep(m_val, [ctx.int32_ty(0),
-                                      ctx.int32_ty(self.PROBABILITY_UPPER_THRESHOLD_INDEX),
-                                      ctx.int32_ty(0)])
+            src = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(self.PROBABILITY_LOWER_THRESHOLD_INDEX), ctx.int32_ty(0)])
+            dst = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(self.PROBABILITY_UPPER_THRESHOLD_INDEX), ctx.int32_ty(0)])
             prob_lower_thr = builder.load(src)
             prob_upper_thr = builder.fsub(prob_lower_thr.type(1), prob_lower_thr)
             builder.store(prob_upper_thr, dst)
@@ -1159,28 +1152,32 @@ class DDM(ProcessingMechanism):
             # Store threshold as decision variable output
             # this will be used by the mechanism to return the right decision
             threshold_ptr = ctx.get_param_or_state_ptr(builder,
-                                                       self.function,
+                                                       self.parameters.function._get_value_for_codegen(),
                                                        THRESHOLD,
                                                        param_struct_ptr=params)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
-            decision_ptr = builder.gep(m_val, [ctx.int32_ty(0),
-                                               ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
-                                               ctx.int32_ty(0)])
+            decision_ptr = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(self.DECISION_VARIABLE_INDEX), ctx.int32_ty(0)])
             builder.store(threshold, decision_ptr)
+
         else:
             assert False, "Unknown mode in compiled DDM!"
 
         return m_val, builder
 
-    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
-                                      m_val, ip_output, *, tags:frozenset):
+    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in, m_val, ip_output, *, tags:frozenset):
 
-        mf_out, builder = super()._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
-                                                                m_params, m_state, m_in, m_val,
-                                                                ip_output, tags=tags)
+        mf_out, builder = super()._gen_llvm_mechanism_functions(ctx,
+                                                                builder,
+                                                                m_base_params,
+                                                                m_params,
+                                                                m_state,
+                                                                m_in,
+                                                                m_val,
+                                                                ip_output,
+                                                                tags=tags)
         assert mf_out is m_val
 
-        if isinstance(self.function, DriftDiffusionAnalytical):
+        if isinstance(self.parameters.function._get_value_for_codegen(), DriftDiffusionAnalytical):
             random_state = ctx.get_random_state_ptr(builder, self, m_state, m_params)
             random_f = ctx.get_uniform_dist_function_by_state(random_state)
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee, name="random_out")
@@ -1252,14 +1249,15 @@ class DDM(ProcessingMechanism):
         # Setup pointers to internal function
         f_base_params, f_state = ctx.get_param_or_state_ptr(builder,
                                                             self,
-                                                            "function",
+                                                            self.parameters.function,
                                                             param_struct_ptr=m_base_params,
                                                             state_struct_ptr=m_state)
 
         # Find the single numeric entry in previous_value.
         # This exists only if the 'function' is 'integrator' (and therefore has
         # "previous_value" parameter.
-        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self.function, "previous_value", state_struct_ptr=f_state)
+        function = self.parameters.function._get_value_for_codegen()
+        prev_val_ptr = ctx.get_param_or_state_ptr(builder, function, "previous_value", state_struct_ptr=f_state)
         if prev_val_ptr is None:
             return ctx.bool_ty(1)
 
@@ -1272,19 +1270,15 @@ class DDM(ProcessingMechanism):
         prev_val = builder.call(llvm_fabs, [prev_val])
 
         # Get functions params and apply modulation
-        f_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
-                                                               builder,
+        f_params, builder = self._gen_llvm_param_ports_for_obj(ctx, builder,
                                                                m_base_params,
                                                                m_state,
                                                                m_in,
-                                                               obj=self.function,
+                                                               obj=function,
                                                                params_in=f_base_params)
 
         # Get threshold value
-        threshold_ptr = ctx.get_param_or_state_ptr(builder,
-                                                   self.function,
-                                                   THRESHOLD,
-                                                   param_struct_ptr=f_params)
+        threshold_ptr = ctx.get_param_or_state_ptr(builder, function, THRESHOLD, param_struct_ptr=f_params)
 
         threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
         is_prev_greater_or_equal = builder.fcmp_ordered('>=', prev_val, threshold)

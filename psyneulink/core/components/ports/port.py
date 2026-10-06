@@ -799,7 +799,7 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
-    VALUE, VARIABLE, WEIGHT
+    VALUE, VARIABLE, WEIGHT, INPUT_PORT
 from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1453,7 +1453,12 @@ class Port_Base(Port):
                     # creates a projection with value length 2, so variable becomes [0, 0, 0, 0]
                     if variable.ndim == 1:
                         variable = np.atleast_2d(variable)
-                    self.defaults.variable = np.append(variable, np.atleast_2d(projection.defaults.value), axis=0)
+                    try:
+                        self.defaults.variable = np.append(variable, np.atleast_2d(projection.defaults.value), axis=0)
+                    except ValueError:
+                        self.defaults.variable = convert_all_elements_to_np_array(
+                            [x for x in variable] + [np.atleast_2d(projection.defaults.value)]
+                        )
 
                 # assign identical default variable to function if it can be modified
                 if self.function._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
@@ -2105,7 +2110,22 @@ class Port_Base(Port):
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
             if hasattr(self, DEFAULT_INPUT) and self.default_input == DEFAULT_VARIABLE:
-                return copy_parameter_value(self.defaults.variable)
+                variable = copy_parameter_value(self.defaults.variable)
+                # TransformFunction changes the shape from variable ->
+                # value in some way. Assume that when default_input
+                # given, the variable is reshapable to the right
+                # value shape
+                if isinstance(self.function, TransformFunction):
+                    try:
+                        variable = np.reshape(variable, self.defaults.value.shape)
+                    except ValueError as e:
+                        raise PortError(
+                            f"{self}: When default_input is used, the Port's default"
+                            " variable must be numpy-reshapable to its default value."
+                            f"\n\tdefault variable: {self.defaults.variable}"
+                            f"\n\tdefault value: {self.defaults.value}"
+                        ) from e
+                return variable
 
             variable = self._get_variable_from_projections(context)
 
@@ -2305,16 +2325,17 @@ class Port_Base(Port):
     def _get_input_struct_type(self, ctx):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
-        func_input_type = ctx.get_input_struct_type(self.function)
+        function = self.parameters.function._get_value_for_codegen()
+        func_input_type = ctx.get_input_struct_type(function)
 
         # Not all ports have path_afferents property.
         len_path_afferents = len(self._get_all_afferents()) - len(self.mod_afferents)
 
-        # Check that either all inputs or none are delivered by projections.
+        # Check that either all inputs are none or delivered by projections.
         if len_path_afferents > 0:
             assert len(func_input_type) == len_path_afferents, \
                 f"{self.name} shape mismatch: {func_input_type}\nport:\n\t{self.defaults.variable}" \
-                f"\n\tfunc: {self.function.defaults.variable}\npath_afferents: {len(self.path_afferents)}."
+                f"\n\tfunc: {function.defaults.variable}\npath_afferents: {len(self.path_afferents)}."
 
         if len(self.mod_afferents) == 0:
             # Not need to wrap inputs of non-modulated ports inside mechanisms
@@ -2322,17 +2343,20 @@ class Port_Base(Port):
             return func_input_type
 
         input_types = [func_input_type]
+
         # Add modulation
         for mod in self.mod_afferents:
             input_types.append(ctx.get_output_struct_type(mod))
+
         return pnlvm.ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        port_f = ctx.import_llvm_function(self.function)
+        function = self.parameters.function._get_value_for_codegen()
+        port_f = ctx.import_llvm_function(function)
 
         base_params, f_state = ctx.get_param_or_state_ptr(builder,
                                                           self,
-                                                          "function",
+                                                          self.parameters.function,
                                                           param_struct_ptr=params,
                                                           state_struct_ptr=state)
 
@@ -2340,9 +2364,9 @@ class Port_Base(Port):
             # Create a local copy of the function parameters only if
             # there are modulating projections of type other than OVERRIDE.
             # LLVM is not eliminating the redundant copy.
-            f_params = builder.alloca(port_f.args[0].type.pointee,
-                                      name="modulated_port_params")
+            f_params = builder.alloca(port_f.args[0].type.pointee, name="modulated_port_params")
             builder.store(builder.load(base_params), f_params)
+
         else:
             f_params = base_params
 
@@ -2355,16 +2379,18 @@ class Port_Base(Port):
             # Modulatory projections are ordered after that
 
             # Get the modulation value
-            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0),
-                                             ctx.int32_ty(idx + 1)])
+            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1)])
 
             # Get name of the modulated parameter
             if afferent.sender.modulation == MULTIPLICATIVE:
-                name = self.function.parameters.multiplicative_param.source.name
+                name = function.parameters.multiplicative_param.source.name
+
             elif afferent.sender.modulation == ADDITIVE:
-                name = self.function.parameters.additive_param.source.name
+                name = function.parameters.additive_param.source.name
+
             elif afferent.sender.modulation == DISABLE:
                 name = None
+
             elif afferent.sender.modulation == OVERRIDE:
                 assert f_mod_ptr.type == arg_out.type, \
                     "Shape mismatch: Value of '{}' for '{}' ({}) " \
@@ -2377,17 +2403,18 @@ class Port_Base(Port):
                 # Directly store the value in the output array
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
+
             else:
                 assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
 
             # Replace base param with the modulation value
             if name is not None:
-                f_mod_param_ptr = pnlvm.helpers.get_param_ptr(builder, self.function, f_params, name)
+                f_mod_param_ptr = pnlvm.helpers.get_param_ptr(builder, function, f_params, name)
 
                 if f_mod_param_ptr.type != f_mod_ptr.type:
                     warnings.warn("Shape mismatch: Modulation vs. modulated parameter: {} vs. {}".format(
-                                  afferent.defaults.value,
-                                  getattr(self.function.parameters, name).get(None)),
+                                      afferent.defaults.value,
+                                      getattr(function.parameters, name).default_value),
                                   category=pnlvm.PNLCompilerWarning)
 
                     # The below steps can convert all the way from 2D single element
@@ -2409,6 +2436,7 @@ class Port_Base(Port):
         # Extract the data part of input
         if len(self.mod_afferents) == 0:
             f_input = arg_in
+
         else:
             f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
@@ -2461,7 +2489,7 @@ def _instantiate_port_list(owner,
         - OUTPUT_PORT
         (note: this is not a list, even if port_types is, since it is about the attribute to which the
                ports will be assigned)
-    - reference_value (2D np.array): set of 1D np.ndarrays used as default values and
+    - reference_value (>=2D np.array): set of 1D ([N-1]D) np.ndarrays used as default values and
         for compatibility testing in instantiation of Port(s):
         - INPUT_PORT: self.defaults.variable
         - OUTPUT_PORT: self.value
@@ -3342,9 +3370,31 @@ def _parse_port_spec(port_type=None,
             port_dict[VARIABLE] = port_dict[VALUE]
         else:
             port_dict[VARIABLE] = port_dict[REFERENCE_VALUE]
+        # TODO: remove this in favor of below
+        # reference value should match port value after dimension
+        # reduction from function
+        if port_dict[VARIABLE] is not None and port_type.componentType == INPUT_PORT:
+            port_dict[VARIABLE] = [port_dict[VARIABLE]]
 
     if is_numeric(port_dict[VARIABLE]):
         port_dict[VARIABLE] = convert_all_elements_to_np_array(port_dict[VARIABLE])
+
+        # if only a variable is specified, make sure it is one dim higher than reference, for combination functions
+        # ideally this would check for the function instead of InputPort, but that info may not be available at this point
+        if port_type.componentType == INPUT_PORT:
+            try:
+                reference_value_ndim = port_dict[REFERENCE_VALUE].ndim
+            except AttributeError:
+                pass
+            else:
+                if port_dict[VARIABLE].ndim <= reference_value_ndim:
+                    # adds extra wrapper dimensions to port_dict[VARIABLE] to be one higher than port_dict[REFERENCE_VALUE]
+                    # port_dict[VARIABLE].reshape(
+                    #     (1,) * (reference_value_ndim - port_dict[VARIABLE].ndim + 1) + port_dict[VARIABLE].shape
+                    # )
+                    port_dict[VARIABLE] = np.expand_dims(
+                        port_dict[VARIABLE], tuple(range(reference_value_ndim - port_dict[VARIABLE].ndim + 1))
+                    )
 
     # get the Port's value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not

@@ -1420,8 +1420,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for current_exec_set in self.execution_sets:
             for component in current_exec_set:
                 mech_input_ty = ctx.get_input_struct_type(component.mechanism)
-                variable = builder.alloca(mech_input_ty)
-                z_values[component] = builder.alloca(mech_input_ty.elements[0].elements[0])
+                variable = builder.alloca(mech_input_ty, name="mech_input")
+                z_values[component] = builder.alloca(mech_input_ty.elements[0].elements[0], name="zvalue")
                 builder.store(z_values[component].type.pointee(None),z_values[component])
 
                 if (NodeRole.INPUT in self.composition.get_roles_by_node(component.mechanism)
@@ -1475,7 +1475,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # 3) compute errors
         loss_fn = ctx.import_llvm_function(loss)
-        total_loss = builder.alloca(ctx.float_ty)
+        total_loss = builder.alloca(ctx.float_ty, name="total_loss")
         builder.store(total_loss.type.pointee(0), total_loss)
 
         error_dict = {}
@@ -1486,7 +1486,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 node_z_value = z_values[node]
                 activation_func_derivative = node._gen_llvm_execute_derivative_func(ctx, builder, state, params, node_z_value)
-                error_val = builder.alloca(z_values[node].type.pointee)
+                error_val = builder.alloca(z_values[node].type.pointee, name="error_val")
                 error_dict[node] = error_val
 
                 if NodeRole.OUTPUT in self.composition.get_roles_by_node(node.mechanism):
@@ -2283,14 +2283,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 # We should be able to stack now, since the ragged structure is only on input ports
                 v = torch.stack([torch.stack(b) for b in v])
 
-            if isinstance(self.input_ports[i]._pnl_function, TransformFunction):
-                # Add input port dimension back to account for input port dimension reduction, we should have shape
-                # (batch, sequence, input_port, ... variable dimensions ) or
-                # (batch, sequence, input_port, projection, ... variable dimensions ...) if execute_input_ports is invoked
-                # after collect_afferents.
-                if len(v.shape) == 3:
-                    v = v[:, :, None, ...]
-
             res.append(self.input_ports[i].function(v))
 
         try:
@@ -2307,7 +2299,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
     def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None)->torch.Tensor:
         """Execute Mechanism's _gen_pytorch version of function on variable.
-        Enforce result to be 2d, and assign to self.output
+        Enforce result to be >=2d, and assign to self.output
         """
 
         # If mechanism has an integrator_function and integrator_mode is True,
@@ -2327,7 +2319,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         return self.output
 
     def execute_function(self, function, variable, fct_has_mult_args=False):
-        """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
+        """Execute _gen_pytorch_fct on variable, enforce result to be >=2d, and return it.
         If fct_has_mult_args is True, treat each item in variable as an arg to the function
         If False, compute function for each item in variable and return results in a list
         """
@@ -2473,7 +2465,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         fun = ctx.import_llvm_function(self.mechanism.function, tags=frozenset({"derivative"}))
         fun_input_ty = fun.args[2].type.pointee
 
-        mech_input = builder.alloca(fun_input_ty)
+        mech_input = builder.alloca(fun_input_ty, name="derivative_function_input")
         mech_input_ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(builder.load(arg_in), mech_input_ptr)
 

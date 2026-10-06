@@ -316,7 +316,7 @@ def _live_worker_count(client):
     if client is None:
         return None
     try:
-        return len(client.scheduler_info()["workers"])
+        return len(client.nthreads())
     except Exception:
         return None
 
@@ -394,33 +394,40 @@ def _dask_client(options):
     return client, _close
 
 
+def _worker_pec(pec_factory, data, worker_cores, fit_id):
+    """Return the ``(pec, inputs)`` this worker built for ``fit_id``, building them the first time.
+
+    Call with ``_PEC_EVALUATION_LOCK`` held.
+    """
+    try:
+        from dask.distributed import get_worker
+        worker = get_worker()
+        cache = getattr(worker, "_pec_cache", None)
+    except (ImportError, ValueError):
+        worker = None
+        cache = _PEC_FALLBACK_CACHE.get("pec")
+
+    # cache is (fit_id, pec, inputs) or None; rebuild when absent or from another fit.
+    if cache is None or cache[0] != fit_id:
+        from psyneulink.core.globals.threads import set_num_threads
+        if worker_cores is not None:
+            set_num_threads(worker_cores)
+        pec, inputs = pec_factory(data)
+        cache = (fit_id, pec, inputs)
+        if worker is not None:
+            worker._pec_cache = cache
+        else:
+            _PEC_FALLBACK_CACHE["pec"] = cache
+    return cache[1], cache[2]
+
+
 def _dask_evaluate_loglik(pec_factory, param_values, data, worker_cores, fit_id):
     """One candidate -> one scalar log-likelihood, on a Dask worker.
 
     Rebuilds and caches ``(pec, inputs)`` from ``pec_factory`` once per ``fit_id``.
     """
     with _PEC_EVALUATION_LOCK:
-        try:
-            from dask.distributed import get_worker
-            worker = get_worker()
-            cache = getattr(worker, "_pec_cache", None)
-        except (ImportError, ValueError):
-            worker = None
-            cache = _PEC_FALLBACK_CACHE.get("pec")
-
-        # cache is (fit_id, pec, inputs) or None; rebuild when absent or from another fit.
-        if cache is None or cache[0] != fit_id:
-            from psyneulink.core.globals.threads import set_num_threads
-            if worker_cores is not None:
-                set_num_threads(worker_cores)
-            pec, inputs = pec_factory(data)
-            cache = (fit_id, pec, inputs)
-            if worker is not None:
-                worker._pec_cache = cache
-            else:
-                _PEC_FALLBACK_CACHE["pec"] = cache
-
-        _, pec, inputs = cache
+        pec, inputs = _worker_pec(pec_factory, data, worker_cores, fit_id)
         return float(pec.log_likelihood(*param_values, inputs=inputs))
 
 
@@ -574,6 +581,8 @@ class PECOptimizationFunction(OptimizationFunction):
             as the initial_seed passed to PEC at construction. Additional desired keyword arguments can be passed to the
             sampler via the optuna_kwargs argument.
             - optuna.study.Study: Pass an optuna study to use optuna for optimization.
+            - None: No search. The function can then only score parameter values it is given, which is how a
+            ParameterEstimationComposition specified without an optimization_function is built.
 
     optuna_kwargs :
         A dictionary of keyword arguments to pass to the optuna sampler. This is only used if method is a class of
@@ -768,7 +777,7 @@ class PECOptimizationFunction(OptimizationFunction):
     @beartype
     def __init__(
         self,
-        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler], optuna.study.Study],
+        method: Optional[Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler], optuna.study.Study]],
         optuna_kwargs: Optional[Mapping] = None,
         objective_function: Optional[Callable] = None,
         search_space=None,
@@ -936,6 +945,9 @@ class PECOptimizationFunction(OptimizationFunction):
         # _pec_objective_function. Very confusing!
         self._pec_objective_function = objective_function
 
+        # Set by the PEC when likelihood_estimator="neural"; the likelihood is then computed without simulating.
+        self._neural_log_likelihood = None
+
         # Are we in data fitting mode, or generic optimization. This is set automatically by the PEC when
         # PECOptimizationFunction is passed to it. It only really determines whether some cosmetic
         # things.
@@ -981,6 +993,13 @@ class PECOptimizationFunction(OptimizationFunction):
             search_termination_function=search_termination_function,
             aggregation_function=None,
         )
+
+    def set_neural_likelihood(self, log_likelihood):
+        """Score with a trained `NeuralLikelihood` instead of by simulating.
+
+        ``log_likelihood(*values)`` is the log-likelihood of the data at the values being fitted.
+        """
+        self._neural_log_likelihood = log_likelihood
 
     def set_pec_objective_function(self, objective_function: Callable):
         """
@@ -1075,6 +1094,9 @@ class PECOptimizationFunction(OptimizationFunction):
         then feeds the results self._pec_objective_func. This cannot be invoked until the PECOptimizationFunction
         (self) has been assigned to an OptimizationControlMechanism.
         """
+
+        if self._neural_log_likelihood is not None:
+            return self._neural_log_likelihood
 
         # Opt-in: route the whole objective (simulate + likelihood) through the
         # batched Triton simulator, computing a histogram log-likelihood on the
@@ -2280,7 +2302,7 @@ class PECOptimizationFunction(OptimizationFunction):
         batch = self._distributed_options.get("max_concurrent_evaluations")
         if batch is None:
             try:
-                batch = len(client.scheduler_info()["workers"])
+                batch = len(client.nthreads())
             except Exception:
                 batch = 0
             batch = max(batch, 1)
@@ -2479,6 +2501,14 @@ class PECOptimizationFunction(OptimizationFunction):
                 "OptimizationControlMechanism. See the documentation for the "
                 "ParameterEstimationControlMechanism for more information."
             )
+
+        if self._neural_log_likelihood is not None:
+            if return_sim_data:
+                raise ValueError(
+                    "return_sim_data is not available with a neural likelihood: the "
+                    "estimator scores the data directly, so no simulations are run."
+                )
+            return float(self._neural_log_likelihood(*args))
 
         # Reuse the compiled batched likelihood path for fixed-parameter
         # evaluations as well as optimizer evaluations.  This is important for

@@ -21,11 +21,12 @@ runs:
       env:
         RUNNER_OS: ${{ runner.os }}
         HOMEBREW_NO_AUTO_UPDATE: 1
-      # Composited actions can't use step conditionals.
+      # Composited actions can't use step conditionals. Use bash case to diverge based on OS.
+      # Linux: make sure xdg-open is installed, graphviz needs it.
       run: |
         case "$RUNNER_OS" in
           macOS*) brew install graphviz ;;
-          Linux*) sudo apt-get update && sudo apt-get install -y --no-install-recommends graphviz ;;
+          Linux*) sudo apt-get update && sudo apt-get install -y --no-install-recommends graphviz xdg-utils;;
           Windows*) choco install --no-progress -y graphviz --version=2.38.0.20190211 ;;
           *) echo "Unsupported OS"; exit 1 ;;
         esac

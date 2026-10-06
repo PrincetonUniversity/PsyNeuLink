@@ -1671,6 +1671,29 @@ class TestAbsoluteTime:
     reason=gsc_unavailable_message
 )
 class TestGraphStructureConditions:
+    @pytest.mark.composition
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
+    @pytest.mark.parametrize(
+        "source_condition",
+        [None, pnl.Always, lambda: pnl.AtPass(1)],
+        ids=["implicit_always", "explicit_always", "delayed"],
+    )
+    def test_structural_condition_preserves_runtime_predicate(self, comp_mode, source_condition):
+        source = pnl.ProcessingMechanism(name="ordering source")
+        target = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator, name="counted target")
+        comp = pnl.Composition(nodes=[source, target])
+        if source_condition is not None:
+            comp.scheduler.add_condition(source, source_condition())
+        comp.scheduler.add_condition(source, pnl.AddEdgeTo(target))
+
+        result = comp.run(inputs={source: [[1.0]], target: [[2.0]]}, execution_mode=comp_mode)
+
+        # The structural edge must preserve the runtime condition on source
+        # and the implicit EveryNCalls(source, 1) condition on target. If the
+        # latter becomes Always, the delayed case integrates twice and returns 4.
+        np.testing.assert_allclose(result, [[1.0], [2.0]])
+        np.testing.assert_allclose(target.parameters.value.get(comp), [[2.0]])
+
     @pytest.mark.parametrize('add_method', ['add_graph_edge', 'add_condition_AddEdgeTo'])
     @pytest.mark.parametrize('remove_method', ['remove_graph_edge', 'add_condition_RemoveEdgeFrom'])
     def test_add_graph_structure_conditions(self, add_method, remove_method):

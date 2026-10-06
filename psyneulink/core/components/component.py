@@ -515,13 +515,15 @@ import warnings
 import weakref
 from abc import ABCMeta
 from collections.abc import Iterable
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
+from typing import TYPE_CHECKING
 
 import dill
 import graph_scheduler
 import numpy as np
+from numpy.typing import ArrayLike
 
-from psyneulink._typing import Iterable, Union
+from psyneulink._typing import Iterable, List, Set, Union
 from psyneulink import _debugger
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
@@ -577,13 +579,17 @@ from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category, _get_auto_name_prefix, _PNL_INHERENT_PREFIX
 from psyneulink.core.globals.sampleiterator import SampleIterator
+from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import (
+    ArrayShape,
     ContentAddressableList,
     _get_cached_function_signature,
+    array_shapes_equal,
     call_with_pruned_args,
     contains_type,
     convert_all_elements_to_np_array,
     convert_to_np_array,
+    convert_to_tensor,
     get_all_explicit_arguments,
     get_deepcopy_with_shared,
     is_instance_or_subclass,
@@ -595,10 +601,27 @@ from psyneulink.core.globals.utilities import (
     parse_valid_identifier,
     safe_equals,
     safe_len,
+    shape,
     try_extract_0d_array_item,
 )
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
+
+
+if TYPE_CHECKING:
+    from torch import Tensor
+    from psyneulink.core.compositions.composition import Composition
+
+
+try:
+    import torch
+except (ImportError, RuntimeError) as e:
+    if 'torch' not in str(e):
+        raise
+    torch_available = False
+else:
+    torch_available = True
+
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
@@ -671,6 +694,26 @@ class DefaultsFlexibility(Enum):
     FLEXIBLE = 0
     RIGID = 1
     INCREASE_DIMENSION = 2
+
+
+class NDimUnsupportedStatus(Enum):
+    """
+    Used to indicate how much support there is for a Component using >2d values.
+    See `Component._ndim_unsupported` and warning in `Component.__init__`
+
+    Attributes:
+        NONE
+            no known issues with any Parameter
+
+        MATRIX
+            depends on 2D matrices
+
+        ALL
+            core functionality depends on at least some Parameters being <=2D
+    """
+    NONE = auto()
+    MATRIX = auto()
+    ALL = auto()
 
 
 parameter_keywords = set()
@@ -901,7 +944,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     Attributes
     ----------
 
-    variable : 2d np.array
+    variable : np.ndarray
         see `variable <Component_Variable>`
 
     input_shapes : Union[int, Iterable[Union[int, tuple]]]
@@ -910,7 +953,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     function : Function, function or method
         see `function <Component_Function>`
 
-    value : 2d np.array
+    value : np.ndarray
         see `value <Component_Value>`
 
     log : Log
@@ -991,6 +1034,22 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     deprecated_constructor_args = {
         'size': 'input_shapes',
     }
+
+    _ndim_unsupported: Union[NDimUnsupportedStatus, Iterable[str]] = NDimUnsupportedStatus.NONE
+    """
+        indicator of known problems with using values of more than two dimensions.
+        An iterable of strings contains the names of specific Parameters that
+        still must be at most two dimensions.
+        This and the warning in __init__ can be removed if/when support is added for all.
+    """
+
+    _ndim_container_parameters: Set[str] = set()
+    """
+        names of any Parameters that contain one or more elements whose values
+        are not supported in arbitrary dimensions
+        (example: `ContentAddressableMemory.memory`, which stores multiple items
+        of the same shape as its `value <ContentAddressableMemory.value>`)
+    """
 
     # helper attributes for MDF model spec
     _model_spec_id_parameters = 'parameters'
@@ -1349,6 +1408,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # Delete the _user_specified_args attribute, we don't need it anymore
         del self._user_specified_args
 
+        self._check_dimension_compatibility()
+
         _debugger.step(
             _debugger.BreakpointCategory.END_OF_INIT,
             lambda: {"component": self})
@@ -1418,11 +1479,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _get_compilation_state(self):
         # FIXME: MAGIC LIST, Use stateful tag for this
-        whitelist = {"previous_time", "previous_value", "previous_v",
-                     "previous_w", "random_state",
+        whitelist = {"previous_time", "previous_value", "previous_v", "previous_w", "random_state",
                      "input_ports", "output_ports",
-                     "adjustment_cost", "intensity_cost", "duration_cost",
-                     "intensity"}
+                     "adjustment_cost", "intensity_cost", "duration_cost", "intensity"}
 
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
@@ -1436,29 +1495,34 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             whitelist.update({"value", "num_executions_before_finished", "num_executions", "is_finished_flag"})
 
             # If both the mechanism and its function use random_state.
-            # its DDM with integrator function.
+            # it's DDM with integrator function.
             # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 whitelist.remove('random_state')
 
-            # Drop combination function params from RTM if not needed
-            if getattr(self.parameters, 'has_recurrent_input_port', False):
-                blacklist.add('combination_function')
+            # ?TransferMechanism:
+            # * drop combination function if not used
+            if hasattr(self.parameters, 'combination_function'):
+                if not self.parameters.has_recurrent_input_port._get_value_for_codegen():
+                    blacklist.add('combination_function')
 
-            # Drop integrator function if integrator_mode is not enabled
-            if not getattr(self, 'integrator_mode', False):
-                blacklist.add('integrator_function')
+            # ?TransferMechanism
+            # * drop integrator function if not used
+            if hasattr(self.parameters, 'integrator_function'):
+                if not self.parameters.integrator_mode._get_value_for_codegen():
+                    blacklist.add('integrator_function')
 
-        else:
+        elif self.componentCategory == kw.FUNCTION_COMPONENT_CATEGORY:
             # OneHot:
             # * runtime abs_val and indicator are only used in deterministic mode.
             # * random_state and seed are only used in RANDOM tie resolution.
             if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
-                if self.mode != kw.DETERMINISTIC:
-                    if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                mode = self.parameters.mode._get_value_for_codegen()
+                if mode != kw.DETERMINISTIC:
+                    if mode not in {kw.PROB, kw.PROB_INDICATOR}:
                         whitelist.remove('random_state')
 
-                elif self.tie != kw.RANDOM:
+                elif self.parameters.tie._get_value_for_codegen() != kw.RANDOM:
                     whitelist.remove('random_state')
 
             # Dropout:
@@ -1474,22 +1538,24 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # TransferWithCosts:
             # * drop unused cost functions
             elif componentName == kw.TRANSFER_WITH_COSTS_FUNCTION:
-                if self.enabled_cost_functions.INTENSITY not in self.enabled_cost_functions:
+                enabled_cost_functions = self.parameters.enabled_cost_functions._get_value_for_codegen()
+                if enabled_cost_functions.INTENSITY not in enabled_cost_functions:
                     blacklist.add('intensity_cost_fct')
 
-                if self.enabled_cost_functions.ADJUSTMENT not in self.enabled_cost_functions:
+                if enabled_cost_functions.ADJUSTMENT not in enabled_cost_functions:
                     blacklist.add('adjustment_cost_fct')
 
-                if self.enabled_cost_functions.DURATION not in self.enabled_cost_functions:
+                if enabled_cost_functions.DURATION not in enabled_cost_functions:
                     blacklist.add('duration_cost_fct')
 
-            # Compositions need to track number of executions
-            if hasattr(self, 'nodes'):
-                whitelist.add("num_executions")
-
-            # Matrices of learnable projections are stateful
+            # Matrices of functions of learnable projections are stateful
             if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
                 whitelist.add('matrix')
+
+        elif hasattr(self, 'nodes'):
+            # Compositions need to track number of executions
+            whitelist.add("num_executions")
+
 
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
@@ -1570,21 +1636,24 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      # autodiff specific types
                      "pytorch_representation", "optimizer", "synch_projection_matrices_with_torch",
                      # duplicate
-                     "allocation_samples", "control_allocation_search_space",
+                     "allocation_samples",
+                     # Used at compile time
+                     "enabled_cost_functions", "control_allocation_search_space", "has_recurrent_input_port",
+                     "loss", "metric", "max_entries", "per_item", "integrator_mode",
                      # not used in computation
                      "auto", "hetero", "cost", "costs",
                      "control_signal", "competition",
-                     "has_recurrent_input_port", "enable_learning",
+                     "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
                      "output_type", "range", "internal_only",
                      "require_projection_in_composition", "default_input",
                      "shadow_inputs", "compute_reconfiguration_cost",
                      "reconfiguration_cost", "net_outcome", "outcome",
-                     "enabled_cost_functions", "control_signal_costs",
+                     "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
                      "search_statefulness", "initial_seed", "combine",
-                     "random_variables", "smoothing_factor", "per_item",
-                     "key_size", "val_size", "max_entries", "random_draw",
+                     "random_variables", "smoothing_factor",
+                     "key_size", "val_size", "random_draw",
                      "randomization_dimension", "save_values", "save_samples",
                      "max_iterations", "duplicate_keys",
                      "search_termination_function", "state_feature_function",
@@ -1607,8 +1676,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
                      # LCAMechanism
                      "mask",
-                     # LossMechanism
-                     "loss", "metric",
+                     # MatrixTransform
+                     "axes",
                      }
 
         # Mechanism's need few extra entries:
@@ -1620,18 +1689,23 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
 
             # If both the mechanism and its function use random_state.
-            # its DDM with integrator function.
-            # The mechanism's random_state or seed are not used
+            # it's DDM with integrator function.
+            # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
-                blacklist.add("seed")
+                blacklist.add('seed')
 
-            # Drop combination function params from RTM if not needed
-            if getattr(self.parameters, 'has_recurrent_input_port', False):
-                blacklist.add('combination_function')
+            # ?TransferMechanism:
+            # * drop combination function if not used
+            if hasattr(self.parameters, 'combination_function'):
+                if not self.parameters.has_recurrent_input_port._get_value_for_codegen():
+                    blacklist.add('combination_function')
 
-            # Drop integrator function if integrator_mode is not enabled
-            if not getattr(self, 'integrator_mode', False):
-                blacklist.add('integrator_function')
+            # ?TransferMechanism
+            # * drop integrator function if not used
+            if hasattr(self.parameters, 'integrator_function'):
+                if not self.parameters.integrator_mode._get_value_for_codegen():
+                    blacklist.add('integrator_function')
+
 
         else:
             # "execute_until_finished is only used by Mechanisms
@@ -1644,12 +1718,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # * runtime abs_val and indicator are only used in deterministic mode.
             # * random_state and seed are only used in RANDOM tie resolution.
             if (componentName := getattr(self, 'componentName', None)) == kw.ONE_HOT_FUNCTION:
-                if self.mode != kw.DETERMINISTIC:
+                mode = self.parameters.mode._get_value_for_codegen()
+                if mode != kw.DETERMINISTIC:
                     blacklist.update(['abs_val', 'indicator'])
-                    if self.mode not in {kw.PROB, kw.PROB_INDICATOR}:
+                    if mode not in {kw.PROB, kw.PROB_INDICATOR}:
                         blacklist.add('seed')
 
-                elif self.tie != kw.RANDOM:
+                elif self.parameters.tie._get_value_for_codegen() != kw.RANDOM:
                     blacklist.add('seed')
 
             # Dropout:
@@ -1660,16 +1735,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # TransferWithCosts:
             # * drop unused cost functions
             elif componentName == kw.TRANSFER_WITH_COSTS_FUNCTION:
-                if self.enabled_cost_functions.INTENSITY not in self.enabled_cost_functions:
+                enabled_cost_functions = self.parameters.enabled_cost_functions._get_value_for_codegen()
+                if enabled_cost_functions.INTENSITY not in enabled_cost_functions:
                     blacklist.add('intensity_cost_fct')
 
-                if self.enabled_cost_functions.ADJUSTMENT not in self.enabled_cost_functions:
+                if enabled_cost_functions.ADJUSTMENT not in enabled_cost_functions:
                     blacklist.add('adjustment_cost_fct')
 
-                if self.enabled_cost_functions.DURATION not in self.enabled_cost_functions:
+                if enabled_cost_functions.DURATION not in enabled_cost_functions:
                     blacklist.add('duration_cost_fct')
 
-            # Matrices of learnable projections are stateful
+            # Matrices of functions of learnable projections are stateful
             if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
                 blacklist.add('matrix')
 
@@ -3482,6 +3558,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             raise ComponentError(f"Resetting {self.name} is not allowed because this Component is not stateful. "
                                  "(It does not have an accumulator to reset).")
 
+    def _parse_execute_output(self, variable, value):
+        return value
+
     @handle_external_context()
     def execute(self, variable=None, context=None, runtime_params=None):
         """Executes Component's `function <Component_Function>`.  See Component-specific execute method for details.
@@ -3499,6 +3578,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 variable = convert_all_elements_to_np_array(variable)
 
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
+        value = self._parse_execute_output(variable, value)
         self.parameters.value._set(value, context=context)
 
         return value
@@ -3558,6 +3638,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return self.parameters.is_finished_flag._get(context)
 
     def _parse_param_port_sources(self):
+        # parameter ports may be created for objects that aren't instantiated yet.
+        # in this case, an operator.attrgetter object referencing the source Parameter is stored.
+        # try to resolve those here.
         if hasattr(self, '_parameter_ports'):
             for param_port in self._parameter_ports:
                 try:
@@ -4426,6 +4509,300 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         for obj in self._parameter_components:
             obj._remove_from_composition(composition)
 
+    # TODO: consider if we may need to deal with arbitrarily nested ragged
+    # arrays, or just in the first dim
+    def _input_is_compatible_with(self, inp: ArrayLike, target: ArrayLike) -> bool:
+        """
+        Determines whether array **inp** is acceptable when an array **target**
+        is expected (**inp** can be "reasonably"/"safely" be reshaped to fit
+        **target**).
+
+        Currently decides by whether the result arrays after standard
+        `np.squeeze` have the same shape.
+
+        Args:
+            inp (ArrayLike): prospective input array
+            target (ArrayLike): expected input array
+
+        Returns:
+            bool: True if **inp** is acceptable when **target** is expected,
+                False otherwise
+        """
+        inp_squeezed = np.squeeze(inp)
+        target_squeezed = np.squeeze(target)
+        return array_shapes_equal(inp_squeezed, target_squeezed)
+
+    def _reshape_irregular_input_array(self, inp: ArrayLike, match: ArrayLike, match_itemwise: bool) -> Union[ArrayLike, None]:
+        """
+        Attempts to make **inp** match the shape of input template **match**
+        (or if **match_itemwise**=True items of **inp** to items in **match**)
+        only if they are compatible as determined by
+        `Component._input_is_compatible_with`.
+
+        Args:
+            inp (ArrayLike): potential input
+            match (ArrayLike): desired input template
+            match_itemwise (bool):
+                if True, match items of **inp** to items of **match**, otherwise
+                match **inp** to **match**
+
+        Returns:
+            Union[ArrayLike, None]:
+                **inp** in the shape of **match** if compatible, otherwise None
+        """
+        reshaped_inputs = []
+
+        try:
+            iter(inp)
+        except TypeError:
+            inp = [inp]
+
+        if match_itemwise:
+            if safe_len(inp) != safe_len(match):
+                return None
+
+        for i, item in enumerate(inp):
+            if match_itemwise:
+                try:
+                    match_item = match[i]
+                except IndexError:
+                    return None
+            else:
+                match_item = match
+
+            if array_shapes_equal(item, match_item):
+                reshaped_inputs.append(item)
+            else:
+                if not self._input_is_compatible_with(item, match_item):
+                    # input_item doesn't differ from external_input by
+                    # only wrapper dimensions
+                    return None
+
+                try:
+                    reshaped_inputs.append(np.reshape(item, match_item.shape))
+                except ValueError:
+                    return None
+        else:
+            return reshaped_inputs
+
+    def parse_input_array(
+        self,
+        inp: Union[List, np.ndarray] = None,
+        composition=ConnectionInfo.ALL,
+        as_sequence: bool = False,
+        as_tensor: bool = False,
+    ) -> Union[np.ndarray, 'Tensor']:
+        """
+        Attempts to produce valid input to this Component from the given
+        **inp**, to allow more flexible input. This may involve
+        reshaping, broadcasting, or changing the dimension of **inp** to
+        match this object's `Component.default_external_input` if
+        necessary. If **inp** is not provided,
+        `Component.default_external_input` will be used.
+
+        Args:
+            inp (Union[List, np.ndarray], optional): The input to parse
+                for use with this Component, targeting
+                `Component.default_external_input`. Defaults to None.
+            composition (`Composition`, optional): The `Composition`
+                this `Component` will be executed in, if any.
+                Defaults to ConnectionInfo.ALL.
+            as_sequence (bool, optional): If True, **inp** will be
+                interpreted and returned as a sequence of inputs,
+                instead of a single input. Defaults to False.
+            as_tensor (bool, optional):
+                If True, **inp** and return value will be converted to
+                `torch.Tensor`
+
+        Raises:
+            ComponentError: If compatible input cannot be produced from **inp**
+
+        Returns:
+            Union[`numpy.ndarray`, `torch.Tensor`]
+        """
+        if as_tensor:
+            if not torch_available:
+                raise RuntimeError('as_tensor=True requires torch module')
+            inp = convert_to_tensor(inp)
+            squeeze = torch.squeeze
+        else:
+            inp = convert_all_elements_to_np_array(inp)
+            squeeze = np.squeeze
+
+        try:
+            inp_squeezed = squeeze(inp)
+        except TypeError:
+            inp_squeezed = inp
+
+        inp_is_sequence = False
+
+        external_input = self.default_external_input(composition)
+        res = None
+
+        # expected to be a ragged tensor (failed to be squeezed above)
+        if isinstance(inp, list):
+            res = self._reshape_irregular_input_array(inp, external_input, match_itemwise=False)
+        # no argument, default
+        elif inp.ndim == 0 and inp.item() is None:
+            res = copy_parameter_value(external_input)
+        elif array_shapes_equal(inp, external_input):
+            res = inp
+        elif (
+            # Single scalar (alone or in list), so must be single value
+            # for single trial
+            inp_squeezed.ndim == 0
+            # 1 trial's worth of input for >1 input items
+            or self._input_is_compatible_with(inp, external_input)
+        ):
+            try:
+                res = np.reshape(inp, external_input.shape)
+            except ValueError:
+                pass
+        # check for one or more trials worth of inputs
+        else:
+            # each item is an input, and inp represents multiple trials
+            # of inputs
+            res = self._reshape_irregular_input_array(inp, external_input, match_itemwise=False)
+            if res is not None:
+                inp_is_sequence = True
+
+            # single trial input for multiple ragged input_ports
+            if res is None:
+                res = self._reshape_irregular_input_array(inp, external_input, match_itemwise=True)
+
+            # multiple trial input for multiple ragged input_ports
+            if res is None:
+                reshaped_inputs = []
+                for trial_item in inp:
+                    parsed_trial_item = self._reshape_irregular_input_array(
+                        trial_item, external_input, match_itemwise=True
+                    )
+
+                    if parsed_trial_item is None:
+                        break
+                    else:
+                        reshaped_inputs.append(parsed_trial_item)
+                else:
+                    res = reshaped_inputs
+                    inp_is_sequence = True
+
+        if res is None:
+            def _shape_type_strs(arr, ragged_shape):
+                try:
+                    is_np_shape = arr.shape == ragged_shape
+                except AttributeError:
+                    is_np_shape = False
+
+                if is_np_shape:
+                    return 'np.shape', 'np.zeros'
+                else:
+                    return 'pnl.shape', 'pnl.zeros'
+
+            obj_str = str(self)
+            if getattr(self, 'owner', None) is not None:
+                obj_str = f'{obj_str} of {self.owner}'
+
+            # shape is equivalent to np.shape if not ragged
+            inp_ragged_shape = shape(inp)
+            external_input_ragged_shape = shape(external_input)
+
+            inp_shape_type, _ = _shape_type_strs(inp, inp_ragged_shape)
+            expected_shape_type, expected_zeros_fct_name = _shape_type_strs(
+                external_input, external_input_ragged_shape
+            )
+
+            if external_input.shape == external_input_ragged_shape:
+                valid_sequence_shape_str = "'(<num inputs>, {0})'".format(
+                    ', '.join(str(x) for x in external_input.shape)
+                )
+            else:
+                valid_sequence_shape_str = f"'tuple({external_input_ragged_shape} for _ in range(<num inputs>))'"
+
+            raise ComponentError(
+                f"Invalid input to {obj_str}. Got {inp_shape_type} '{inp_ragged_shape}': {inp}"
+                f"\nExpecting {expected_shape_type} '{external_input_ragged_shape}' for a single input or {valid_sequence_shape_str} for a sequence."
+                f'\nTry `{expected_zeros_fct_name}({external_input_ragged_shape})` for an example input.'
+            )
+
+        if as_sequence and not inp_is_sequence:
+            # can't use np.expand_dims because of ragged arrays
+            res = [res]
+
+        if as_tensor:
+            res = convert_to_tensor(res)
+        else:
+            res = convert_all_elements_to_np_array(res)
+
+        return res
+
+    def default_external_input(
+        self, composition: Union['Composition', ConnectionInfo] = ConnectionInfo.ALL  # noqa: U100
+    ) -> Union[np.ndarray, None]:
+        """
+        Returns an array (or None) that will be used as input to
+        `Component.execute` if no input is given. **composition** is used to
+        determine what incoming `Projection`\\ s are active, if applicable.
+
+        Args:
+            composition (Union[`Composition`, `ConnectionInfo`], optional):
+                The `Composition` this `Component` will be executed in, if any.
+                Defaults to ConnectionInfo.ALL.
+
+        Returns:
+            Union[`np.ndarray`, None]:
+        """
+        return copy_parameter_value(self.defaults.variable)
+
+    def external_input_shape(
+        self, composition: Union['Composition', ConnectionInfo] = ConnectionInfo.ALL
+    ) -> Union[ArrayShape, None]:
+        """
+        Returns a numpy shape-like tuple (see `shape <psyneulink.core.globals.utilities.shape>`)
+        (or None) corresponding to this `Component`\\ 's
+        `default_external_input`. This can serve as a template for passing
+        correctly shaped input into this Component. This could be created, for
+        example, by
+        `pnl.zeros(my_component.external_input_shape(my_composition))`.
+
+        Args:
+            composition (`Composition`, optional): The `Composition`
+                this `Component` will be executed in, if any.
+                Defaults to ConnectionInfo.ALL.
+
+        Returns:
+            Union[ArrayShape, None]
+        """
+        inp = self.default_external_input(composition)
+        if inp is None:
+            return None
+        else:
+            return shape(inp)
+
+    def _check_dimension_compatibility(self):
+        if self._ndim_unsupported is NDimUnsupportedStatus.NONE:
+            return
+
+        if self._ndim_unsupported is NDimUnsupportedStatus.ALL:
+            ndim_check_params = self.parameters
+        elif self._ndim_unsupported is NDimUnsupportedStatus.MATRIX:
+            ndim_check_params = [self.parameters.matrix]
+        else:
+            ndim_check_params = [getattr(self.parameters, name) for name in self._ndim_unsupported]
+
+        max_dim = 2
+        for param in ndim_check_params:
+            pstr = param.name
+            p_max_dim = max_dim
+            if param.name in self._ndim_container_parameters:
+                p_max_dim += 1
+                pstr = f'{pstr} containing elements'
+            if is_array_like(param.default_value) and param.default_value.ndim > p_max_dim:
+                warnings.warn(
+                    f'{self} was created with {pstr} of more than {p_max_dim} dimensions ({param.default_value.ndim}).'
+                    f' This is not currently supported for {type(self).__name__}.'
+                    ' It is likely that there will be unexpected behavior or errors.'
+                )
+
     @property
     def logged_items(self):
         """Dictionary of all items that have entries in the log, and their currently assigned `ContextFlags`\\s
@@ -4509,6 +4886,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     @handle_external_context()
     def _update_parameter_components(self, context=None):
+        self._parse_param_port_sources()
+
         # store all Components in Parameters to be used in
         # _dependent_components for _initialize_from_context
         for p in self.parameters:

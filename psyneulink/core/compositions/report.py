@@ -1321,7 +1321,7 @@ class Report:
         node : Composition or Mechanism
             node for which report is being requested
 
-        input_val : 2d array : default None
+        input_val : np.ndarray : default None
             the `input_value <Mechanism_Base.input_value>` of the `Mechanism` or `external_input_values
             <Composition.external_input_values>` of the `Composition` for which execution is being reported;
             if it is not specified, it is resolved by calling the node's get_input_values() method.
@@ -1330,7 +1330,7 @@ class Report:
             specifies whether to report the values of the `Parameters` of the `Node <Composition_Nodes>` being executed
             together with its input and output.
 
-        output_val : 2d array : default None
+        output_val : np.ndarray : default None
             the `output_values <Mechanism_Base.output_value>` of the `Mechanism` or `external_output_values
             <Composition.external_output_values>` of the `Composition` for which execution is being reported.
 

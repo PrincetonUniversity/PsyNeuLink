@@ -412,7 +412,7 @@ input. All of the Mechanism's InputPorts (including its primary InputPort <Input
 .. _Mechanism_Variable_and_InputPorts:
 
 The `value <InputPort.value>` of each InputPort for a Mechanism is assigned to a different item of the Mechanism's
-`variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as to a corresponding item of its `input_values
+`variable <Mechanism_Base.variable>` attribute (a np.ndarray), as well as to a corresponding item of its `input_values
 <Mechanism_Base.input_values>` attribute (a list).  The `variable <Mechanism_Base.variable>` provides the input to the
 Mechanism's `function <Mechanism_Base.function>`, while its `input_values <Mechanism_Base.input_values>` provides a
 convenient way of accessing the value of its individual items.  Because there is a one-to-one correspondence between
@@ -1083,6 +1083,7 @@ import warnings
 from collections import defaultdict, OrderedDict, UserDict, UserList
 from inspect import isclass
 from numbers import Number
+from typing import TYPE_CHECKING
 
 import numpy as np
 from beartype import beartype
@@ -1119,11 +1120,26 @@ from psyneulink.core.globals.parameters import (
 )
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.core.globals.utilities import \
-    ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric, convert_to_list, is_numeric, parse_valid_identifier, safe_len
+from psyneulink.core.globals.socket import ConnectionInfo
+from psyneulink.core.globals.utilities import (
+    ContentAddressableList,
+    append_type_to_name,
+    convert_all_elements_to_np_array,
+    convert_to_list,
+    convert_to_np_array,
+    is_numeric,
+    iscompatible,
+    kwCompatibilityNumeric,
+    parse_valid_identifier,
+    safe_len,
+    shape,
+)
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.scheduling.time import TimeScale
+
+if TYPE_CHECKING:
+    from psyneulink.core.compositions.composition import Composition
+
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -1269,7 +1285,7 @@ class Mechanism_Base(Mechanism):
     ----------
 
     variable : at least 2d array
-        used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
+        used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a np.ndarray,
         with each item of axis 0 corresponding to a `value <InputPort.value>` of one of the Mechanism's `InputPorts
         <InputPort>` (in the order they are listed in its `input_ports <Mechanism_Base.input_ports>` attribute), and
         the first item (i.e., item 0) corresponding to the `value <InputPort.value>` of the `primary InputPort
@@ -1291,7 +1307,7 @@ class Mechanism_Base(Mechanism):
         each item in the list corresponds to the `value <InputPort.value>` of one of the Mechanism's `InputPorts
         <Mechanism_InputPorts>` listed in its `input_ports <Mechanism_Base.input_ports>` attribute.  The value of
         each item is the same as the corresponding item in the Mechanism's `variable <Mechanism_Base.variable>`
-        attribute.  The latter is a 2d np.array; the `input_values <Mechanism_Base.input_values>` attribute provides
+        attribute.  The latter is a np.ndarray; the `input_values <Mechanism_Base.input_values>` attribute provides
         this information in a simpler list format.
 
     input_labels_dict : dict
@@ -1308,13 +1324,6 @@ class Mechanism_Base(Mechanism):
         `internal_only <InputPort.internal_only>`;  these receive `inputs from a Composition
         <Composition_Execution_Inputs>` if the Mechanism is one of its `INPUT` `Nodes <Composition_Nodes>`.
 
-    external_input_shape : List[List or 1d np.array]
-        list of the `input_shape <InputPort.input_shape>`\\s of the Mechanism's external `input_ports
-        <Mechanism_Base.input_ports>` (i.e., excluding any `InputPorts <InputPort>` designated as `internal_only
-        <InputPort.internal_only>`), that shows the shape of the inputs expected for the Mechanism.  Each item
-        corresponds to an expected `path_afferent Projection <Port_Base.path_afferents>`, and its shape is
-        the expected `value <Projection_Base.value>` of that `Projection`.
-
     external_input_variables : List[List or 1d np.array]
         list of the `variable <InputPort.variable>`\\s of the Mechanism's `external_input_ports
         <Mechanism_Base.external_input_ports>`.
@@ -1323,7 +1332,7 @@ class Mechanism_Base(Mechanism):
         list of the `value <InputPort.value>`\\s of the Mechanism's `external_input_ports
         <Mechanism_Base.external_input_ports>`.
 
-    default_external_inputs : List[1d np.array]
+    default_external_port_inputs : List[1d np.array]
         list of the `default_input <InputPort.default_input>`\\s of the Mechanism's `external_input_ports
         <Mechanism_Base.external_input_ports>`.
 
@@ -1351,10 +1360,10 @@ class Mechanism_Base(Mechanism):
         contains the parameters for the Mechanism's `function <Mechanism_Base.function>`.  The key of each entry is the
         name of a parameter of the function, and its value is the parameter's value.
 
-    value : 2d np.array [array(float64)]
+    value : np.ndarray [array(float64)]
         result of the Mechanism's `execute` method, which is usually (but not always) the `value <Function_Base.value>`
         of it `function <Mechanism_Base.function>` (it is not if the Mechanism implements any auxiliary function(s)
-        after calling its primary function). It is always at least a 2d np.array, with the items of axis 0 corresponding
+        after calling its primary function). It is always at least a np.ndarray, with the items of axis 0 corresponding
         to the values referenced by the corresponding `index <OutputPort.index>` attribute of the Mechanism's
         `OutputPorts <OutputPort>`.  The first item is generally referenced by the Mechanism's `primary OutputPort
         <OutputPort_Primary>` (i.e., the one in the its `output_port <Mechanism_Base.output_port>` attribute), as well
@@ -1913,7 +1922,10 @@ class Mechanism_Base(Mechanism):
             if isinstance(parsed_input_port_spec, dict):
                 try:
                     mech_variable_item = parsed_input_port_spec[VALUE]
-                    if parsed_input_port_spec[VARIABLE] is None:
+                    if (
+                        parsed_input_port_spec[VARIABLE] is None
+                        and not input_port_variable_was_specified  # don't unset True from another port
+                    ):
                         input_port_variable_was_specified = False
                 except KeyError:
                     pass
@@ -1948,7 +1960,7 @@ class Mechanism_Base(Mechanism):
     # ------------------------------------------------------------------------------------------------------------------
 
     def _validate_variable(self, variable, context=None):
-        """Convert variable to 2D np.array: one 1D value for each InputPort
+        """Convert variable to >=2D np.array: one 1D ([N-1]D) value for each InputPort
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
         # Simple value variable:                                         0 -> [array([0])]
@@ -2235,6 +2247,8 @@ class Mechanism_Base(Mechanism):
         except AttributeError:
             pass
 
+        self._instantiate_parameter_ports(context=context)
+
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
@@ -2388,6 +2402,27 @@ class Mechanism_Base(Mechanism):
             raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reset.")
 
+    def _parse_execute_output(self, variable, value):
+        value = convert_all_elements_to_np_array(value)
+
+        # comparisons below of .shape and shape are to avoid
+        # dimension increases for ragged arrays. We treat 1d ragged
+        # arrays as 2d, because we assume subarrays are ndim >= 1
+
+        # Intended specifically to handle case of matching a combination
+        # function's output dimension to input dimension. Consider
+        # adding an option to allow user to bypass this step.
+        if variable.ndim == value.ndim + 1 and value.shape == shape(value):
+            value = np.expand_dims(value, 0)
+
+        if (
+            value.ndim == 0
+            or (value.ndim == 1 and value.shape == shape(value))
+        ):
+            value = convert_to_np_array(value, dimension=2)
+
+        return value
+
     # when called externally, ContextFlags.PROCESSING is not set. Maintain this behavior here
     # even though it will not update input ports for example
     @handle_external_context(execution_phase=ContextFlags.IDLE)
@@ -2475,39 +2510,22 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod == INIT_EXECUTE_METHOD_ONLY:
-                return_value = self._execute(variable=copy_parameter_value(self.defaults.variable),
+                variable = copy_parameter_value(self.defaults.variable)
+                return_value = self._execute(variable=variable,
                                              context=context,
                                              runtime_params=runtime_params)
                 if context.source is ContextFlags.COMMAND_LINE:
                     return_value = copy_parameter_value(return_value)
 
-                # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
-                #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
-                #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-                if (isinstance(return_value, list) and
-                    (all(isinstance(item, np.ndarray) for item in return_value) and
-                        all(
-                                all(item.shape[i]==return_value[0].shape[0]
-                                    for i in range(len(item.shape)))
-                                for item in return_value))):
-
-                    return return_value
-                else:
-                    converted_to_2d = convert_to_np_array(return_value, dimension=2)
-                # If return_value is a list of heterogenous elements, return as is
-                #     (satisfies requirement that return_value be an array of possibly multidimensional values)
-                if converted_to_2d.dtype == object:
-                    return return_value
-                # Otherwise, return value converted to 2d np.array
-                else:
-                    return converted_to_2d
+                return self._parse_execute_output(variable, return_value)
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod == INIT_FUNCTION_METHOD_ONLY:
-                return_value = super()._execute(variable=copy_parameter_value(self.defaults.variable),
+                variable = copy_parameter_value(self.defaults.variable)
+                return_value = super()._execute(variable=variable,
                                                 context=context,
                                                 runtime_params=runtime_params)
-                return convert_to_np_array(return_value, dimension=2)
+                return self._parse_execute_output(variable, return_value)
 
         # SET UP RUNTIME PARAMS if any
 
@@ -2583,26 +2601,7 @@ class Mechanism_Base(Mechanism):
                                       runtime_params=runtime_params,
                                       context=context)
 
-                # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
-                #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
-                #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-                if (isinstance(value, list) and
-                    (all(isinstance(item, np.ndarray) for item in value) and
-                        all(
-                                all(item.shape[i]==value[0].shape[0]
-                                    for i in range(len(item.shape)))
-                                for item in value))):
-                    pass
-                else:
-                    converted_to_2d = convert_to_np_array(value, dimension=2)
-                    # If return_value is a list of heterogenous elements, return as is
-                    #     (satisfies requirement that return_value be an array of possibly multidimensional values)
-                    if converted_to_2d.dtype == object:
-                        pass
-                    # Otherwise, return value converted to 2d np.array
-                    else:
-                        # return converted_to_2d
-                        value = converted_to_2d
+                value = self._parse_execute_output(variable, value)
 
                 self.parameters.value._set(value, context=context)
 
@@ -2681,6 +2680,8 @@ class Mechanism_Base(Mechanism):
             num_inputs = np.size(input, 0)
         else:
             num_inputs = 0
+        input = convert_all_elements_to_np_array(input)
+
         num_input_ports = len(self.input_ports)
         if num_inputs != num_input_ports:
             # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
@@ -2693,10 +2694,18 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError(f"Number of inputs ({num_inputs}) to {self.name} does not match "
                                      f"its number of input_ports ({num_input_ports}).")
         for input_item, input_port in zip(input, self.input_ports):
-            if input_port.default_input_shape.size == np.array(input_item).size:
+            port_single_input_template = np.asarray([input_port.socket_template])
+            input_item_arr = convert_all_elements_to_np_array(input_item)
+            if (
+                input_port.socket_shape == input_item_arr.shape
+                or input_item_arr.shape == port_single_input_template.shape
+                or input_item_arr.squeeze().shape == port_single_input_template.squeeze().shape
+            ):
                 from psyneulink.core.compositions.composition import RunError
                 # Assign input_item as input_port.variable
-                input_port.parameters.variable._set(np.atleast_2d(input_item), context)
+                variable = np.broadcast_to(input_item_arr, port_single_input_template.shape)
+                # variable = np.asarray([input_item_arr])
+                input_port.parameters.variable._set(variable, context)
 
                 # Call input_port._execute with newly assigned variable and assign result to input_port.value
                 base_error_msg = f"Input to '{self.name}' ({input_item}) is incompatible " \
@@ -2711,8 +2720,9 @@ class Mechanism_Base(Mechanism):
                 else:
                     input_port.parameters.value._set(value, context)
             else:
+                composition = context.composition or ConnectionInfo.ALL
                 raise MechanismError(f"Shape ({input_item.shape}) of input ({input_item}) does not match "
-                                     f"required shape ({input_port.default_input_shape.shape}) for input "
+                                     f"required shape ({input_port.default_external_input(composition).shape}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
         # Return values of input_ports for use as variable of Mechanism
@@ -2952,7 +2962,7 @@ class Mechanism_Base(Mechanism):
         return (port_state_init, *mech_state_init)
 
     def _get_output_struct_type(self, ctx):
-        output_type_list = (ctx.get_output_struct_type(port) for port in self.output_ports)
+        output_type_list = (ctx.get_output_struct_type(port) for port in self.parameters.output_ports._get_value_for_codegen())
         return pnlvm.ir.LiteralStructType(output_type_list)
 
     def _get_input_struct_type(self, ctx):
@@ -2961,7 +2971,7 @@ class Mechanism_Base(Mechanism):
             struct_ty = ctx.get_input_struct_type(p)
             return struct_ty.elements[0] if len(p.mod_afferents) > 0 else struct_ty
 
-        input_type_list = [_get_data_part_of_input_struct(port) for port in self.input_ports]
+        input_type_list = [_get_data_part_of_input_struct(port) for port in self.parameters.input_ports._get_value_for_codegen()]
 
 
         # Get modulatory inputs
@@ -2976,10 +2986,13 @@ class Mechanism_Base(Mechanism):
 
         return pnlvm.ir.LiteralStructType(input_type_list)
 
-    def _gen_llvm_ports(self, ctx, builder, ports, group,
-                        get_output_ptr, get_input_data_ptr,
-                        mech_params, mech_state, mech_input):
-        group_ports = getattr(self, group)
+    def _gen_llvm_ports(self, ctx, builder, ports, group, get_output_ptr, get_input_data_ptr, mech_params, mech_state, mech_input):
+        if group == '_parameter_ports':
+            group_ports = self._parameter_ports
+
+        else:
+            group_ports = getattr(self.parameters, group)._get_value_for_codegen()
+
         ports_param, ports_state = ctx.get_param_or_state_ptr(builder,
                                                               self,
                                                               group,
@@ -3025,7 +3038,7 @@ class Mechanism_Base(Mechanism):
                                                p_function.args[2].type,
                                                "input",
                                                self._parameter_ports,
-                                               self.output_ports)
+                                               self.parameters.output_ports._get_value_for_codegen())
 
             else:
                 # Port input structure is: (data, [modulations]),
@@ -3041,7 +3054,7 @@ class Mechanism_Base(Mechanism):
                 for idx, p_mod in enumerate(port.mod_afferents):
                     mech_mod_afferent_idx = mod_afferents.index(p_mod)
                     mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
-                                                          ctx.int32_ty(len(self.input_ports)),
+                                                          ctx.int32_ty(len(self.parameters.input_ports._get_value_for_codegen())),
                                                           ctx.int32_ty(mech_mod_afferent_idx)])
                     mod_out_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
                     afferent_val = builder.load(mod_in_ptr)
@@ -3052,16 +3065,18 @@ class Mechanism_Base(Mechanism):
         return builder
 
     def _gen_llvm_input_ports(self, ctx, builder, mech_params, mech_state, mech_input):
-        # Allocate temporary storage. We rely on the fact that series
-        # of InputPort results should match the main function input.
+        # We rely on the fact that series of InputPort results should match the main function input.
         ip_output_list = []
-        for port in self.input_ports:
+        input_ports = self.parameters.input_ports._get_value_for_codegen()
+
+        for port in input_ports:
             ip_function = ctx.import_llvm_function(port)
             ip_output_list.append(ip_function.args[3].type.pointee)
 
         # Check if all elements are the same. Function argument will be array type if yes.
         if len(set(ip_output_list)) == 1:
             ip_output_type = pnlvm.ir.ArrayType(ip_output_list[0], len(ip_output_list))
+
         else:
             ip_output_type = pnlvm.ir.LiteralStructType(ip_output_list)
 
@@ -3077,7 +3092,7 @@ class Mechanism_Base(Mechanism):
 
         builder = self._gen_llvm_ports(ctx,
                                        builder,
-                                       self.input_ports,
+                                       input_ports,
                                        "input_ports",
                                        _get_input_port_value_ptr,
                                        _get_input_port_variable_ptr,
@@ -3119,13 +3134,13 @@ class Mechanism_Base(Mechanism):
             # subcomponent, or a list of subcomponents
             if p in mutable_parameters:
                 if recursive:
-                    nested_obj = getattr(obj.parameters, p).get()
+                    nested_component = getattr(obj.parameters, p)._get_value_for_codegen()
                     nested_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
                                                                                 builder,
                                                                                 mech_params,
                                                                                 mech_state,
                                                                                 mech_input,
-                                                                                obj=nested_obj,
+                                                                                obj=nested_component,
                                                                                 params_in=src,
                                                                                 params_out=dst,
                                                                                 recursive=True)
@@ -3133,11 +3148,12 @@ class Mechanism_Base(Mechanism):
 
                 continue
 
-            # Get corresponding parameter port
             if (parameter := getattr(obj.parameters, p, None)) not in self._parameter_ports:
+                # Copy values that do not have a parameter port
                 builder = pnlvm.helpers.memcpy(builder, dst, src)
 
             else:
+                # Run parameter port on the base value
                 assert self._parameter_ports[parameter].source == parameter, \
                     "Unexpected parameter ({}) {} source {}".format(p, parameter, self._parameter_ports[parameter].source)
 
@@ -3180,6 +3196,10 @@ class Mechanism_Base(Mechanism):
         for spec in canonical_port_spec:
             param_name, indices = spec
 
+            function = self.parameters.function._get_value_for_codegen()
+            if "integrator_function" in self.llvm_param_ids:
+                integrator_function = self.parameters.integrator_function._get_value_for_codegen()
+
             # "value" is not always stored in mechanism parameters,
             # use the location of the freshly calculated result instead
             if param_name == VALUE:
@@ -3193,29 +3213,28 @@ class Mechanism_Base(Mechanism):
             elif param_name in self.llvm_state_ids:
                 base = ctx.get_param_or_state_ptr(builder, self, param_name, state_struct_ptr=mech_state)
 
-            elif param_name in self.function.llvm_state_ids or param_name in self.function.llvm_param_ids:
+            elif param_name in function.llvm_state_ids or param_name in function.llvm_param_ids:
                 func_params, func_state = ctx.get_param_or_state_ptr(builder,
                                                                      self,
-                                                                     "function",
+                                                                     self.parameters.function,
                                                                      param_struct_ptr=mech_params,
                                                                      state_struct_ptr=mech_state)
                 base = ctx.get_param_or_state_ptr(builder,
-                                                  self.function,
+                                                  function,
                                                   param_name,
                                                   param_struct_ptr=func_params,
                                                   state_struct_ptr=func_state)
 
-            elif "integrator_function" in self.llvm_param_ids and (param_name in self.integrator_function.llvm_state_ids or
-                                                                   param_name in self.integrator_function.llvm_param_ids):
-                assert "integrator_function" in self.llvm_param_ids
+            elif "integrator_function" in self.llvm_param_ids and (param_name in integrator_function.llvm_state_ids or
+                                                                   param_name in integrator_function.llvm_param_ids):
 
                 integrator_func_params, integrator_func_state = ctx.get_param_or_state_ptr(builder,
                                                                                            self,
-                                                                                           "integrator_function",
+                                                                                           self.parameters.integrator_function,
                                                                                            param_struct_ptr=mech_params,
                                                                                            state_struct_ptr=mech_state)
                 base = ctx.get_param_or_state_ptr(builder,
-                                                  self.integrator_function,
+                                                  integrator_function,
                                                   param_name,
                                                   param_struct_ptr=integrator_func_params,
                                                   state_struct_ptr=integrator_func_state)
@@ -3228,11 +3247,11 @@ class Mechanism_Base(Mechanism):
 
             # Workaround:
             # "num_executions" are kept as int64, we need to convert the value
-            # to float first port inputs are also expected to be 1d arrays
+            # to float first. Port inputs are also expected to be 1d arrays
             if param_name == "num_executions":
                 count = builder.load(indexed)
                 count_fp = builder.uitofp(count, ctx.float_ty)
-                indexed = builder.alloca(pnlvm.ir.ArrayType(count_fp.type, 1))
+                indexed = builder.alloca(pnlvm.ir.ArrayType(count_fp.type, 1), name="float_num_executions")
                 ptr = builder.gep(indexed, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(count_fp, ptr)
 
@@ -3246,10 +3265,11 @@ class Mechanism_Base(Mechanism):
 
         if all(t == types[0] for t in types):
             aggregate_type = pnlvm.ir.ArrayType(types[0], len(types))
+
         else:
             aggregate_type = pnlvm.ir.LiteralStructType(types)
 
-        aggregate_storage = builder.alloca(aggregate_type)
+        aggregate_storage = builder.alloca(aggregate_type, name="aggregate_storage")
         for idx, location in enumerate(parsed):
             out_ptr = builder.gep(aggregate_storage, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             data = builder.load(location)
@@ -3259,6 +3279,8 @@ class Mechanism_Base(Mechanism):
 
 
     def _gen_llvm_output_ports(self, ctx, builder, value, mech_params, mech_state, mech_in, mech_out):
+        output_ports = self.parameters.output_ports._get_value_for_codegen()
+
         def _get_output_port_value_ptr(b, i):
             ptr = b.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
             return b, ptr
@@ -3270,12 +3292,12 @@ class Mechanism_Base(Mechanism):
                                                             mech_params,
                                                             mech_state,
                                                             value,
-                                                            self.output_ports[i])
+                                                            output_ports[i])
             return b, ptr
 
         builder = self._gen_llvm_ports(ctx,
                                        builder,
-                                       self.output_ports,
+                                       output_ports,
                                        "output_ports",
                                        _get_output_port_value_ptr,
                                        _get_output_port_variable_ptr,
@@ -3284,12 +3306,12 @@ class Mechanism_Base(Mechanism):
                                        mech_in)
         return builder
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, f_params, f_state,
-                                  variable, out, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, f_params, f_state, variable, out, *, tags:frozenset):
 
         fun = ctx.import_llvm_function(function, tags=tags)
         if out is None:
             f_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
+
         else:
             f_out = out
 
@@ -3315,7 +3337,7 @@ class Mechanism_Base(Mechanism):
         # Default mechanism runs only the main function
         f_base_params, f_state = ctx.get_param_or_state_ptr(builder,
                                                             self,
-                                                            "function",
+                                                            self.parameters.function,
                                                             param_struct_ptr=m_base_params,
                                                             state_struct_ptr=m_state)
         f_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
@@ -3323,11 +3345,12 @@ class Mechanism_Base(Mechanism):
                                                                m_base_params,
                                                                m_state,
                                                                m_in,
-                                                               obj=self.function,
+                                                               obj=self.parameters.function._get_value_for_codegen(),
                                                                params_in=f_base_params,
                                                                recursive=True)
 
-        return self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output, m_val, tags=tags)
+        func = self.parameters.function._get_value_for_codegen()
+        return self._gen_llvm_invoke_function(ctx, builder, func, f_params, f_state, ip_output, m_val, tags=tags)
 
     def _gen_llvm_function_internal(self, ctx, builder, m_params, m_state, arg_in, arg_out, m_base_params, *, tags:frozenset):
 
@@ -3336,10 +3359,15 @@ class Mechanism_Base(Mechanism):
         # This will move history items around to make space for a new entry
         mech_val_ptr = ctx.get_state_space(builder, self, m_state, VALUE)
 
-        value, builder = self._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
-                                                            m_params, m_state, arg_in,
+        value, builder = self._gen_llvm_mechanism_functions(ctx,
+                                                            builder,
+                                                            m_base_params,
+                                                            m_params,
+                                                            m_state,
+                                                            arg_in,
                                                             mech_val_ptr,
-                                                            ip_output, tags=tags)
+                                                            ip_output,
+                                                            tags=tags)
 
 
         if mech_val_ptr.type.pointee == value.type.pointee:
@@ -3357,15 +3385,18 @@ class Mechanism_Base(Mechanism):
             num_exec_time_ptr = builder.gep(num_executions_ptr,
                                             [ctx.int32_ty(0), ctx.int32_ty(scale.value)],
                                             name="num_executions_{}_ptr".format(scale))
+
             new_val = builder.load(num_exec_time_ptr)
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
         # OutputPorts that read num_executions_before_finished should see the
         # execution count from the iteration that just completed.
-        is_finished_count_ptr = ctx.get_param_or_state_ptr(
-            builder, self, "num_executions_before_finished", state_struct_ptr=m_state
-        )
+        is_finished_count_ptr = ctx.get_param_or_state_ptr(builder,
+                                                           self,
+                                                           self.parameters.num_executions_before_finished,
+                                                           state_struct_ptr=m_state)
+
         is_finished_count = builder.load(is_finished_count_ptr)
         is_finished_count = builder.fadd(is_finished_count, is_finished_count.type(1))
         builder.store(is_finished_count, is_finished_count_ptr)
@@ -3388,30 +3419,30 @@ class Mechanism_Base(Mechanism):
         # Composition.execute, so do not apply modulation.
         has_reinitializers_ptr = ctx.get_param_or_state_ptr(builder,
                                                             self,
-                                                            "has_initializers",
+                                                            self.parameters.has_initializers,
                                                             param_struct_ptr=m_base_params)
         has_initializers = builder.load(has_reinitializers_ptr)
         not_initializers = builder.fcmp_ordered("==", has_initializers, has_initializers.type(0))
         with builder.if_then(not_initializers):
             builder.ret_void()
 
-        if hasattr(self, "integrator_function") and getattr(self, "integrator_mode", False):
-            reinit_int_func = ctx.import_llvm_function(self.integrator_function, tags=tags)
+        if "integrator_function" in self.parameters and self.parameters.integrator_mode._get_value_for_codegen():
+            reinit_int_func = ctx.import_llvm_function(self.parameters.integrator_function._get_value_for_codegen(), tags=tags)
             reinit_int_in = builder.alloca(reinit_int_func.args[2].type.pointee, name="integrator_reinit_in")
             reinit_int_out = builder.alloca(reinit_int_func.args[3].type.pointee, name="integrator_reinit_out")
 
             reinit_int_base_params, reinit_int_state = ctx.get_param_or_state_ptr(builder,
-                                                                                      self,
-                                                                                      "integrator_function",
-                                                                                      param_struct_ptr=m_base_params,
-                                                                                      state_struct_ptr=m_state)
+                                                                                  self,
+                                                                                  self.parameters.integrator_function,
+                                                                                  param_struct_ptr=m_base_params,
+                                                                                  state_struct_ptr=m_state)
             reinit_int_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
-                                                                              builder,
-                                                                              m_base_params,
-                                                                              m_state,
-                                                                              m_arg_in,
-                                                                              obj=self.integrator_function,
-                                                                              params_in=reinit_int_base_params)
+                                                                            builder,
+                                                                            m_base_params,
+                                                                            m_state,
+                                                                            m_arg_in,
+                                                                            obj=self.parameters.integrator_function._get_value_for_codegen(),
+                                                                            params_in=reinit_int_base_params)
 
             builder.call(reinit_int_func, [reinit_int_params, reinit_int_state, reinit_int_in, reinit_int_out])
 
@@ -3425,13 +3456,13 @@ class Mechanism_Base(Mechanism):
             reinit_in = None
 
 
-        reinit_func = ctx.import_llvm_function(self.function, tags=func_tags)
+        reinit_func = ctx.import_llvm_function(self.parameters.function._get_value_for_codegen(), tags=func_tags)
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in") if reinit_in is None else reinit_in
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
 
         reinit_base_params, reinit_state = ctx.get_param_or_state_ptr(builder,
                                                                       self,
-                                                                      "function",
+                                                                      self.parameters.function,
                                                                       param_struct_ptr=m_base_params,
                                                                       state_struct_ptr=m_state)
         reinit_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
@@ -3439,7 +3470,7 @@ class Mechanism_Base(Mechanism):
                                                                     m_base_params,
                                                                     m_state,
                                                                     m_arg_in,
-                                                                    obj=self.function,
+                                                                    obj=self.parameters.function._get_value_for_codegen(),
                                                                     params_in=reinit_base_params)
 
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
@@ -3543,20 +3574,13 @@ class Mechanism_Base(Mechanism):
         max_reached = builder.fcmp_ordered(">=", is_finished_count, is_finished_max)
 
         # Check if execute until finished mode is enabled
-        exec_until_fin_ptr = ctx.get_param_or_state_ptr(builder, self, "execute_until_finished", param_struct_ptr=params)
+        exec_until_fin_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.execute_until_finished, param_struct_ptr=params)
         exec_until_fin = builder.load(exec_until_fin_ptr)
         exec_until_off = builder.fcmp_ordered("==", exec_until_fin, exec_until_fin.type(0))
 
         # Combine conditions
         is_finished = builder.or_(is_finished_cond, max_reached)
         iter_end = builder.or_(is_finished, exec_until_off)
-
-        # Check if in integrator mode
-        if hasattr(self, "integrator_mode"):
-            int_mode_ptr = ctx.get_param_or_state_ptr(builder, self, "integrator_mode", param_struct_ptr=params)
-            int_mode = builder.load(int_mode_ptr)
-            int_mode_off = builder.fcmp_ordered("==", int_mode, int_mode.type(0))
-            iter_end = builder.or_(iter_end, int_mode_off)
 
         with builder.if_then(iter_end):
             new_flag = builder.uitofp(is_finished, current_flag.type)
@@ -4001,7 +4025,7 @@ class Mechanism_Base(Mechanism):
                     old_variable = self.defaults.variable.tolist()
                 else:
                     old_variable = self.defaults.variable
-                old_variable.extend(added_variable)
+                old_variable.append(added_variable)
                 self.defaults.variable = convert_to_np_array(old_variable)
             instantiated_input_ports = _instantiate_input_ports(self,
                                                                   input_ports,
@@ -4250,26 +4274,31 @@ class Mechanism_Base(Mechanism):
         except (TypeError, AttributeError):
             return None
 
-    @property
-    def external_input_shape(self):
-        """Alias for _default_external_input_shape"""
-        return self._default_external_input_shape
+    def default_external_input(
+        self, composition: Union['Composition', ConnectionInfo] = ConnectionInfo.ALL
+    ) -> Union[np.ndarray, None]:
+        """
+        Returns an array (or None) that will be used as input to
+        `Mechanism_Base.execute` if no input is given. **composition** is used
+        to determine what incoming `Projection`\\ s are active, if applicable.
+        This excludes `InputPort`\\ s that have `internal_only`=True.
 
-    @property
-    def _default_external_input_shape(self):
+        Args:
+            composition (Union[`Composition`, `ConnectionInfo`], optional):
+                The `Composition` this `Mechanism_Base` will be executed in, if any.
+                Defaults to ConnectionInfo.ALL.
+
+        Returns:
+            Union[`np.ndarray`, None]:
+        """
         try:
             shape = []
             for input_port in self.input_ports:
-                if input_port.internal_only or input_port.default_input:
+                if input_port.internal_only:
                     continue
-                if input_port._input_shape_template == VARIABLE:
-                    shape.append(input_port.defaults.variable)
-                elif input_port._input_shape_template == VALUE:
-                    shape.append(input_port.defaults.value)
-                else:
-                    assert False, f"PROGRAM ERROR: bad changes_shape in attempt to assign " \
-                                  f"default_external_input_shape for '{input_port.name}' of '{self.name}."
-            return shape
+
+                shape.append(input_port.default_external_input(composition))
+            return convert_all_elements_to_np_array(shape)
         except (TypeError, AttributeError):
             return None
 
@@ -4282,7 +4311,7 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
-    def default_external_inputs(self):
+    def default_external_port_inputs(self):
         try:
             return [input_port.default_input for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):

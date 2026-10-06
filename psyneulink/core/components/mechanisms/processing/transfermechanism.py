@@ -326,7 +326,7 @@ There are two broad types of termination condition: convergence and boundary ter
 
 *Convergence termination* -- execution terminates based on the difference between the TransferMechanism's current
 `value <Mechanism_Base.value>` and its previous_value. This is implemented by specifying `termination_measure
-<TransferMechanism.termination_measure>` with a function that accepts a 2d array with *two items* (1d arrays) as its
+<TransferMechanism.termination_measure>` with a function that accepts a >=2d array with *two items* (1d arrays) as its
 argument, and returns a scalar (the default for a TransferMechanism is the `Distance` Function with `MAX_ABS_DIFF`
 as its metric).  After each execution, the function is passed the Mechanism's current
 `value <Mechanism_Base.value>` as well as its previous_value, and the scalar returned is compared to
@@ -334,7 +334,7 @@ as its metric).  After each execution, the function is passed the Mechanism's cu
 operator specified by  `termination_comparison_op <TransferMechanism.termination_comparison_op>` (which is
 *LESS_THAN_OR_EQUAL* by default).  Execution continues until this returns True. A `Distance` Function with other
 metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function
-that accepts a single argument that is a 2d array with two entries.
+that accepts a single argument that is a >=2d array with two entries.
 
 .. _TransferMechanism_Boundary_Termination:
 
@@ -345,7 +345,7 @@ that accepts a single argument that is a 2d array with two entries.
     *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
     the value specified by the `termination_threshold <TransferMechanism.termination_threshold>` Parameter.  This is
     implemented by specifying `termination_measure <TransferMechanism.termination_measure>` with a function that
-    accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single entry is the
+    accepts a >=2d array with a *single entry* as its argument and returns a scalar.  The single entry is the
     TransferMechanism's current `value <Mechanism_Base.value>` (that is, `previous_value
     <Mechanism_Base.previous_value>` is ignored). After each execution, the function is passed the Mechanism's
     current `value <Mechanism_Base.value>`, and the scalar returned is compared to `termination_threshold
@@ -658,7 +658,7 @@ last True (in this case, where it left off in the preceding example, ``0.257``).
 
 *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
 the value specified by the **threshold** argument.  This is implemented by specifying **termination_measure** with
-a function that accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single
+a function that accepts a >=2d array with a *single entry* as its argument and returns a scalar.  The single
 entry is the TransferMechanism's current `value <Mechanism_Base.value>` (that is, its previous_value
 is ignored). After each execution, the function is passed the Mechanism's current `value <Mechanism_Base.value>`,
 and the scalar returned is compared to **termination_threshold** using the comparison operator specified by
@@ -854,8 +854,19 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter, ParameterNoValueError, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import \
-    all_within_range, is_numeric_scalar, append_type_to_name, convert_all_elements_to_np_array, iscompatible, convert_to_np_array, safe_equals, parse_valid_identifier, safe_len, try_extract_0d_array_item
+from psyneulink.core.globals.utilities import (
+    all_within_range,
+    append_type_to_name,
+    clip,
+    convert_all_elements_to_np_array,
+    convert_to_np_array,
+    is_numeric_scalar,
+    iscompatible,
+    parse_valid_identifier,
+    safe_equals,
+    safe_len,
+    try_extract_0d_array_item,
+)
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -1587,12 +1598,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return current_input
 
-    def _clip_result(self, clip, current_input):
-        if clip is not None:
-            minCapIndices = np.where(current_input < clip[0])
-            maxCapIndices = np.where(current_input > clip[1])
-            current_input[minCapIndices] = np.min(clip)
-            current_input[maxCapIndices] = np.max(clip)
+    def _clip_result(self, bounds, current_input):
+        if bounds is not None:
+            current_input = clip(current_input, bounds[0], bounds[1])
         return current_input
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
@@ -1605,11 +1613,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                obj=self,
                                                                params_in=m_base_params)
 
-        threshold_ptr = ctx.get_param_or_state_ptr(builder, self, "termination_threshold", param_struct_ptr=m_params)
-        current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
+        threshold_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.termination_threshold, param_struct_ptr=m_params)
         measure_ptrs = ctx.get_param_or_state_ptr(builder,
                                                   self,
-                                                  "termination_measure",
+                                                  self.parameters.termination_measure,
                                                   param_struct_ptr=m_base_params,
                                                   state_struct_ptr=m_state)
 
@@ -1617,8 +1624,18 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             # Threshold is not defined, return the old value of finished flag
             assert len(threshold_ptr.type.pointee) == 0
-            is_finished_ptr = ctx.get_param_or_state_ptr(builder, self, "is_finished_flag", state_struct_ptr=m_state)
+            only_check_flag = True
+
+        elif not self.parameters.integrator_mode._get_value_for_codegen():
+            only_check_flag = True
+
+        else:
+            only_check_flag = False
+
+        if only_check_flag:
+            is_finished_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.is_finished_flag, state_struct_ptr=m_state)
             is_finished_flag = builder.load(is_finished_ptr)
+
             return builder.fcmp_ordered("!=", is_finished_flag, is_finished_flag.type(0))
 
         # If modulated, termination threshold is single element array.
@@ -1632,16 +1649,18 @@ class TransferMechanism(ProcessingMechanism_Base):
         is_in_state = "termination_measure" in self.llvm_state_ids
 
         if not is_in_params and not is_in_state:
-
             # This can be any builtin function, but currently only max() is supported
             assert measure_ptrs is None
-            assert self.termination_measure is max
+            assert self.parameters.termination_measure._get_value_for_codegen() is max
             assert self._termination_measure_num_items_expected == 1
 
             # Get inside of the structure
+            current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
             value = builder.gep(current_mech_value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
             first_val = builder.load(builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)]))
             builder.store(first_val, cmp_val_ptr)
+
             with pnlvm.helpers.array_ptr_loop(builder, value, "max_loop") as (b, idx):
                 test_val = b.load(b.gep(value, [ctx.int32_ty(0), idx]))
                 max_val = b.load(cmp_val_ptr)
@@ -1651,18 +1670,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 b.store(max_val, cmp_val_ptr)
 
         elif is_in_params and is_in_state:
-
-            expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
-            got = np.empty_like(self.termination_measure.defaults.variable)
-            if expected.shape != got.shape:
-                warnings.warn("Shape mismatch: Termination measure input: "
-                              "{} should be {}.".format(self.termination_measure.defaults.variable, expected.shape),
-                              pnlvm.PNLCompilerWarning)
-
-                # FIXME: HACK: the distance function is not initialized
-                self.termination_measure.defaults.variable = expected
-
-            func = ctx.import_llvm_function(self.termination_measure)
+            # Components are present in both, so this is a termination measure function
+            func = ctx.import_llvm_function(self.parameters.termination_measure._get_value_for_codegen())
             func_params, func_state = measure_ptrs
             func_in = builder.alloca(func.args[2].type.pointee, name="termination_func_in")
 
@@ -1670,18 +1679,16 @@ class TransferMechanism(ProcessingMechanism_Base):
             func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
             func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
-            # Remove second dimension from 'value' and 'previous_value'
-            current_ptr = builder.gep(current_mech_value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
             prev_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state, history=1)
-            prev_ptr = builder.gep(prev_mech_value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-            builder.store(builder.load(current_ptr), func_in_current_ptr)
-            builder.store(builder.load(prev_ptr), func_in_prev_ptr)
+            builder.store(builder.load(current_mech_value_ptr), func_in_current_ptr)
+            builder.store(builder.load(prev_mech_value_ptr), func_in_prev_ptr)
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
 
         elif is_in_params and not is_in_state:
-
+            # Base param only means an index to the num_executions array
             num_executions_array_ptr = ctx.get_param_or_state_ptr(builder, self, "num_executions", state_struct_ptr=m_state)
             index = pnlvm.helpers.load_extract_scalar_array_one(builder, measure_ptrs)
             elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), index])
@@ -1689,10 +1696,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             builder.store(elem_val, cmp_val_ptr)
 
         else:
-            assert False, f"Not Supported: {self.termination_measure}."
+            assert False, "Not Supported: {}".format(self.parameters.termination_measure._get_value_for_codegen())
 
+        # Parameter values for comparison_op ('<', ...) can be used directly
+        cmp_str = self.parameters.termination_comparison_op._get_value_for_codegen()
         cmp_val = builder.load(cmp_val_ptr)
-        cmp_str = self.parameters.termination_comparison_op.get(None)
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
     def _gen_llvm_mechanism_functions(self,
@@ -1707,10 +1715,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                                       *,
                                       tags:frozenset):
 
-        if self.integrator_mode:
+        if self.parameters.integrator_mode._get_value_for_codegen():
+            integrator_function = self.parameters.integrator_function._get_value_for_codegen()
             if_base_params, if_state = ctx.get_param_or_state_ptr(builder,
                                                                   self,
-                                                                  "integrator_function",
+                                                                  self.parameters.integrator_function,
                                                                   param_struct_ptr=m_base_params,
                                                                   state_struct_ptr=m_state)
 
@@ -1719,12 +1728,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                     m_base_params,
                                                                     m_state,
                                                                     m_in,
-                                                                    obj=self.integrator_function,
+                                                                    obj=integrator_function,
                                                                     params_in=if_base_params,
                                                                     recursive=True)
             mf_in, builder = self._gen_llvm_invoke_function(ctx,
                                                             builder,
-                                                            self.integrator_function,
+                                                            integrator_function,
                                                             if_params,
                                                             if_state,
                                                             ip_out,
@@ -1733,9 +1742,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             mf_in = ip_out
 
+        main_function = self.parameters.function._get_value_for_codegen()
         mf_base_params, mf_state = ctx.get_param_or_state_ptr(builder,
                                                               self,
-                                                              "function",
+                                                              self.parameters.function,
                                                               param_struct_ptr=m_base_params,
                                                               state_struct_ptr=m_state)
         mf_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
@@ -1743,12 +1753,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                 m_base_params,
                                                                 m_state,
                                                                 m_in,
-                                                                obj=self.function,
+                                                                obj=main_function,
                                                                 params_in=mf_base_params,
                                                                 recursive=True)
         mf_out, builder = self._gen_llvm_invoke_function(ctx,
                                                          builder,
-                                                         self.function,
+                                                         main_function,
                                                          mf_params,
                                                          mf_state,
                                                          mf_in,

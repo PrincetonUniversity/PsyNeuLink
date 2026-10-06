@@ -264,7 +264,7 @@ def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
 
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
-    I = Functions.AdaptiveIntegrator(rate=[.1, .2, .3])
+    I = Functions.AdaptiveIntegrator(name="I", rate=[.1, .2, .3])
     I.defaults.variable = np.array([0, 0, 0])
 
 

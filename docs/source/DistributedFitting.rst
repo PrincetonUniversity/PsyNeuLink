@@ -13,7 +13,7 @@ execution, and a single scalar objective.
 
 .. _Distributed_Fitting_Enabling:
 
-Enabling distributed fitting
+Enabling Distributed Fitting
 ----------------------------
 
 Pass ``distributed=True`` and a ``pec_factory`` to the `PECOptimizationFunction`, or
@@ -56,6 +56,9 @@ the fit starts: ``srun`` tasks minus two with the launcher (see
 
 Any optuna sampler or study and ``differential_evolution`` are supported.
 
+The same ``pec_factory`` and ``distributed_options`` can distribute the simulations used to train a
+:ref:`neural likelihood <NeuralLikelihood>`.
+
 
 .. _Distributed_Fitting_Running:
 
@@ -95,7 +98,7 @@ one-node cluster automatically, with no launcher; ``n_workers`` in
     python study.py
 
 
-Using an existing cluster
+Using an Existing Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you already run your own Dask cluster -- for example in a notebook or outside

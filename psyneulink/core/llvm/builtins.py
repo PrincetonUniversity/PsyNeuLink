@@ -1216,7 +1216,7 @@ def _setup_rand_lemire_int32(ctx, state_ty, gen_int32):
         builder.ret_void()
 
     # Apply rejection sampling
-    leftover_ptr = builder.alloca(leftover.type)
+    leftover_ptr = builder.alloca(leftover.type, name="leftover")
     builder.store(leftover, leftover_ptr)
 
     rand_range_64 = builder.zext(rand_range, ir.IntType(64))

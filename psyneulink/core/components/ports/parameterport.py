@@ -447,34 +447,40 @@ class ParameterPortList(ContentAddressableList):
                 return self.parameter_mapping[final_source]
             except KeyError as e:
                 try:
-                    raise ParameterPortError(
-                        f'No ParameterPort corresponds to {key._owner._owner}'
-                        f'.parameters.{key.name}'
-                    ) from None
+                    key_component = key._owner._owner
+                    key_name = key.name
                 except AttributeError:
-                    raise e from None
+                    # this probably shouldn't be reached because key should be a Parameter here
+                    raise e
+                else:
+                    raise ParameterPortError(
+                        f'No ParameterPort corresponds to {key_component}.parameters.{key_name}'
+                    ) from e
 
         try:
             return super().__getitem__(key)
-        except TypeError as e:
-            # ContentAddressableList throws TypeError when key/index lookup fails
+        except TypeError:
+            # this situation happens when collecting parameter ports in _gen_llvm_param_ports_for_obj
+            raise
+        except KeyError as e:
             names = self._get_possible_port_names(key)
             possible_ports = set()
             for name in names:
                 try:
                     r = super().__getitem__(name)
                     possible_ports.add(r)
-                except TypeError:
+                except (KeyError, TypeError):
+                    # ContentAddressableList can also throw TypeError when key/index lookup fails
                     pass
             if len(possible_ports) == 0:
-                raise e from None
+                raise e
             elif len(possible_ports) == 1:
                 res = next(iter(possible_ports))
             else:
                 raise ParameterPortError(
                     f'Multiple ParameterPorts for {key} exist. Did you want'
                     f' {gen_friendly_comma_str(sorted([p.name for p in possible_ports]))}?'
-                ) from None
+                ) from e
 
         if res is not None:
             self.parameter_mapping[key] = res
@@ -997,12 +1003,12 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
     """
 
     # TBI / IMPLEMENT: use specs to implement ParameterPorts below
-
-    owner._parameter_ports = ParameterPortList(
-        component_type=ParameterPort,
-        name=owner.name + '.parameter_ports',
-        owner=owner,
-    )
+    if getattr(owner, '_parameter_ports', None) is None:
+        owner._parameter_ports = ParameterPortList(
+            component_type=ParameterPort,
+            name=owner.name + '.parameter_ports',
+            owner=owner,
+        )
 
     # Check that all ParameterPorts for owner have not been explicitly suppressed
     try:
@@ -1021,6 +1027,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
             isinstance(parameter, (ParameterAlias, SharedParameter))
             or parameter.name in owner.exclude_from_parameter_ports
             or not parameter.modulable
+            or parameter in owner.parameter_ports
         )
 
     def _enumerate_parameter_ports(obj, prev_objs, port_collection):
@@ -1369,6 +1376,8 @@ def _is_legal_param_value(owner, value):
     # Assignment of ParameterPort for Component objects, function or method are not currently supported
     if isinstance(value, (types.FunctionType, types.MethodType, Component)):
         return False
+
+    return False
 
 
 def _get_parameter_port(sender_owner, sender_type, param_name, component):

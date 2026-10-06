@@ -105,10 +105,10 @@ class TestTransferMechanismInputs:
                      "Input to 'T' (['one' 'two' 'three' 'four']) is incompatible with its corresponding InputPort (T[InputPort-0]):",
                      id="strings"),
         pytest.param([1, 2, 3, 4, 5],
-                     "Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((4,)) for input to InputPort 'InputPort-0' of T.",
+                     "Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((1, 4)) for input to InputPort 'InputPort-0' of T.",
                      id="long"),
         pytest.param([1, 2, 3],
-                     "Shape ((3,)) of input ([1 2 3]) does not match required shape ((4,)) for input to InputPort 'InputPort-0' of T.",
+                     "Shape ((3,)) of input ([1 2 3]) does not match required shape ((1, 4)) for input to InputPort 'InputPort-0' of T.",
                      id="short"),
     ])
     def test_transfer_mech_incompatible_inputs(self, variable, error):

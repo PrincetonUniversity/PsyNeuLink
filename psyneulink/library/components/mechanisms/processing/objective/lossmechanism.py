@@ -204,7 +204,7 @@ class LossMechanism(#ModulatoryMechanism_Base,
     output_ports : ContentAddressableList[OutputPort]
         contains, by default, only the *OUTCOME* (primary) OutputPort of the LossMechanism.
 
-    output_values : 2d np.array
+    output_values : np.ndarray
         contains one item that is the value of the *OUTCOME* OutputPort.
 
 

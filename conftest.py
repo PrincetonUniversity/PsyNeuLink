@@ -24,6 +24,15 @@ else:
     # Check that torch is usable if installed
     assert torch_available, "Torch module is available, but not usable by PNL"
 
+try:
+    # find_spec raises rather than returning None when the parent package is the missing one,
+    # which is the usual case here: builds that do not install the extra have no dask at all.
+    dask_available = importlib.util.find_spec('dask.distributed') is not None
+except ModuleNotFoundError:
+    dask_available = False
+
+sbi_available = importlib.util.find_spec('sbi') is not None
+
 # def pytest_addoption(parser):
 #     parser.addoption(
 #         '--pnl-seed',
@@ -148,6 +157,12 @@ def pytest_runtest_setup(item):
 
     if 'pytorch' in item.keywords and not torch_available:
         pytest.skip('pytorch not available')
+
+    if 'dask' in item.keywords and not dask_available:
+        pytest.skip('dask not available')
+
+    if 'nle' in item.keywords and not sbi_available:
+        pytest.skip('sbi not available')
 
     doctest.ELLIPSIS_MARKER = "[...]"
 

@@ -2868,9 +2868,7 @@ class TestNestedNoLearning:
 
         # -----------------------------------------------------------------
 
-        xor_autodiff = AutodiffComposition(
-            learning_rate=learning_rate,
-        )
+        xor_autodiff = AutodiffComposition(learning_rate=learning_rate)
 
         xor_autodiff.add_node(xor_in)
         xor_autodiff.add_node(xor_hid)
@@ -2887,15 +2885,20 @@ class TestNestedNoLearning:
         parentComposition = pnl.Composition()
         parentComposition.add_node(xor_autodiff)
 
-        input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
         learning_context = Context()
-        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
-        result1 = np.array(xor_autodiff.learning_results).flatten()
-        np.testing.assert_allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
-        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
+        xor_autodiff.learn(inputs=input_dict,
+                           execution_mode=autodiff_mode,
+                           epochs=num_epochs,
+                           context=learning_context,
+                           patience=patience,
+                           min_delta=min_delta)
 
+        result1 = np.array(xor_autodiff.learning_results).ravel()
+        np.testing.assert_allclose(result1, np.array(xor_targets).ravel(), atol=0.1)
+
+        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
         np.testing.assert_allclose(result2, [[0]], atol=0.1)
 
     @pytest.mark.parametrize(
@@ -3965,17 +3968,20 @@ class TestNestedLearning:
             for j in range(len(autodiff_results[i])):
                 np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
-    def test_nested_autodiff_learning_with_input_func(self):
+    @pytest.mark.parametrize('input_dim', [2, 3, 4])
+    def test_nested_autodiff_learning_with_input_func(self, input_dim):
         """Note: this uses the same Composition and results as test_learning/test_identicalness_of_input_types"""
+        input_dim_shape = (1,) * input_dim
+
         xor_in_func = TransferMechanism(name='xor_in',
-                                        default_variable=np.zeros(2))
+                                        default_variable=np.zeros(input_dim_shape[1:] + (2,)))
 
         xor_hid_func = TransferMechanism(name='xor_hid',
-                                         default_variable=np.zeros(10),
+                                         default_variable=np.zeros(input_dim_shape[1:] + (10,)),
                                          function=Logistic())
 
         xor_out_func = TransferMechanism(name='xor_out',
-                                         default_variable=np.zeros(1),
+                                         default_variable=np.zeros(input_dim_shape[1:] + (1,)),
                                          function=Logistic())
 
         nested = AutodiffComposition([xor_hid_func], learning_rate=.001, name='nested')
@@ -4008,7 +4014,13 @@ class TestNestedLearning:
         xor_func.learn(inputs=get_inputs_auto_diff, execution_mode=pnl.ExecutionMode.PyTorch)
 
         results = xor_func.results
-        np.testing.assert_allclose(results, [[[0.62245933]],[[0.62813197]],[[0.6282438]],[[0.6341436]]])
+        np.testing.assert_allclose(
+            results,
+            [
+                np.broadcast_to(x, input_dim_shape)
+                for x in [[[0.62245933]], [[0.62813197]], [[0.6282438]], [[0.6341436]]]
+            ]
+        )
 
     # def test_nested_with_diff_learning_rates(self, nodes_for_testing_nested_comps, execute_learning):
     #     nodes = nodes_for_testing_nested_comps(1, 0, 1)
@@ -4630,7 +4642,10 @@ class TestMiscTrainingFunctionality:
            autodiff_mode is not pnl.ExecutionMode.PyTorch and \
            optimizer_type == 'sgd' and \
            learning_rate == 10:
-            expected = [[[0.9918830394744873]], [[0.9982172846794128]], [[0.9978305697441101]], [[0.9994590878486633]]]
+            # macos: [[[0.99188304]], [[0.9982174]], [[0.99783057]], [[0.9994591]]]
+            # linux: [[[0.99188304]], [[0.9982173]], [[0.99783057]], [[0.9994591]]]
+            # the expected value for the second element is between the two above
+            expected = [[[0.99188304]], [[0.99821735]], [[0.99783057]], [[0.9994591]]]
 
         # FIXME: LLVM version is broken with learning rate == 1.5
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:

@@ -1,3 +1,4 @@
+import re
 import numpy as np
 import psyneulink as pnl
 import pytest
@@ -91,6 +92,25 @@ class TestParameterPorts:
             A.parameter_ports['slope'].efferents = ['test']
         assert 'ParameterPorts are not allowed to have \'efferents\' ' \
                '(assignment attempted for TransferMechanism-0[slope]).' in str(error.value)
+
+    @pytest.mark.parametrize(
+        'mech_type, mech_kwargs, param',
+        [
+            *(
+                (
+                    pnl.ExternalMemoryMechanism,
+                    {'field_type': pnl.FieldType.KEY, 'field_shape': 2, 'field_memory': [[0, 0]]},
+                    p,
+                )
+                for p in ['matrix', 'decay_rate']
+            ),
+        ],
+    )
+    def test_created_after_function(self, mech_type, mech_kwargs, param):
+        m = mech_type(**mech_kwargs)
+        param = getattr(m.parameters, param, param)
+        assert param in m.parameter_ports
+
 
 class TestConfigurableParameters:
     def test_configurable_params(self):
@@ -228,11 +248,15 @@ class TestParameterPortList:
 
     def test_duplicate_sources(self, transfer_mech):
         assert transfer_mech.parameter_ports['offset-function'].source is transfer_mech.function.parameters.offset
+        assert transfer_mech.parameter_ports[transfer_mech.function.parameters.offset].source is transfer_mech.function.parameters.offset
+
         assert transfer_mech.parameter_ports['offset-integrator_function'].source is transfer_mech.integrator_function.parameters.offset
+        assert transfer_mech.parameter_ports[transfer_mech.integrator_function.parameters.offset].source is transfer_mech.integrator_function.parameters.offset
 
     def test_sharedparameter_different_name(self, transfer_mech):
         assert transfer_mech.parameter_ports['integration_rate'] is transfer_mech.parameter_ports['rate']
         assert transfer_mech.parameter_ports['integration_rate'].source is transfer_mech.integrator_function.parameters.rate
+        assert transfer_mech.parameter_ports[transfer_mech.integrator_function.parameters.rate].source is transfer_mech.integrator_function.parameters.rate
 
     def test_alias_unique(self):
         mech = pnl.LCAMechanism()
@@ -245,6 +269,7 @@ class TestParameterPortList:
         assert mech.parameter_ports['leak-function'].source is mech.function.parameters.leak
         assert mech.parameter_ports['leak-integrator_function'] is mech.parameter_ports['integration_rate']
         assert mech.parameter_ports['leak-integrator_function'].source is mech.integrator_function.parameters.rate
+        assert mech.parameter_ports[mech.integrator_function.parameters.rate].source is mech.integrator_function.parameters.rate
 
     def test_alias_duplicate_base_access_fails(self):
         mech = pnl.LCAMechanism(function=pnl.ReLU)
@@ -268,3 +293,21 @@ class TestParameterPortList:
 
         assert m.parameter_ports['seed-function'].source is m.function.parameters.seed
         assert m.parameter_ports['seed-function-selection_function'].source is m.function.selection_function.parameters.seed
+
+    @pytest.mark.parametrize('param_name', ['termination_comparison_op', 'function'])
+    @pytest.mark.parametrize(
+        'param_as_str, err_type, err_msg_fmt',
+        [
+            (True, KeyError, r"'{param_name}' is not in {component.name}.parameter_ports"),
+            (False, pnl.ParameterPortError, r'No ParameterPort corresponds to {component}.parameters.{param_name}'),
+        ],
+        ids=lambda x: '' if isinstance(x, str) else x  # test ids are complicated with format strs, aren't needed
+    )
+    def test_error_if_no_port(self, transfer_mech, param_name, param_as_str, err_type, err_msg_fmt):
+        parameter = param_name
+        if not param_as_str:
+            parameter = getattr(transfer_mech.parameters, param_name)
+
+        err_msg = re.escape(err_msg_fmt.format(component=transfer_mech, param_name=param_name))
+        with pytest.raises(err_type, match=err_msg):
+            transfer_mech.parameter_ports[parameter]

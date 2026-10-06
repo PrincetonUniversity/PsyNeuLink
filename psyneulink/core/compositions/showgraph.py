@@ -3044,9 +3044,16 @@ class ShowGraph:
             name = item.name + '\n(' + item.__class__.__name__ + ')'
 
         if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
-            input_str = "in ({})".format(",".join(str(input_port.socket_width)
+            # keeps message consistency with old socket_width
+            def _fmt_port_socket_shape(p: Port) -> str:
+                shape = p.socket_shape
+                if len(shape) == 1:
+                    shape = shape[0]
+                return str(shape)
+
+            input_str = "in ({})".format(",".join(_fmt_port_socket_shape(input_port)
                                                   for input_port in item.input_ports))
-            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_port.value)))
+            output_str = "out ({})".format(",".join(_fmt_port_socket_shape(output_port)
                                                     for output_port in item.output_ports))
             return f"{output_str}\n{name}\n{input_str}"
         if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
