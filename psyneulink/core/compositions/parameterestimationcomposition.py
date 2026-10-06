@@ -1143,9 +1143,8 @@ class ParameterEstimationComposition(Composition):
         settings["estep_options"] = copy.deepcopy(settings["estep_options"])
         # Validation accepts any whole number, 3.0 included, but it counts iterations.
         settings["max_iterations"] = int(settings["max_iterations"])
-        # Each setting is valid on its own, but not in every combination.  No Parameter can see
-        # another as it is assigned, so combinations are checked here, where a fit reads them
-        # together -- which is also the last point at which any of them could still be changed.
+        # Combinations of settings are checked here, where the fit reads them together: each
+        # Parameter is validated on its own when it is set.
         sampling = settings["sampler"] is not None
         if settings["sampler_options"] is not None and not sampling:
             raise ParameterEstimationCompositionError(
@@ -1278,10 +1277,8 @@ class ParameterEstimationComposition(Composition):
     def _sample_hierarchical(self, provider, options, context):
         """Sample the joint posterior over the group and every participant.
 
-        Every participant is held in this process at once: one evaluation of the posterior needs
-        all of them, so unlike EM there is no point at which a participant can be fitted on its
-        own. Their models are built here for the same reason the EM path builds them, and their
-        estimators are then what the sampler differentiates.
+        Every participant's model is held in this process at once, since one evaluation of the
+        posterior needs all of them.
         """
         provider.warn_if_costly_in_process()
         config = NUTSConfig(**dict(options["sampler_options"] or {}))
@@ -1302,8 +1299,7 @@ class ParameterEstimationComposition(Composition):
         self.optimized_parameter_values = dict(
             zip(provider.fit_param_names, self.fit_results.group_parameters["value"].to_numpy())
         )
-        # A sampled fit has no single best value to report: the draws are the result, and the
-        # highest density among them is a property of where the sampler happened to go.
+        # A sampled fit has no single best value: the draws are the result.
         self.optimal_value = None
         self.parameters.results._set(
             self.fit_results.subject_parameters.to_numpy(), context
@@ -1639,7 +1635,7 @@ class ParameterEstimationComposition(Composition):
         -------
 
         ``(likelihood, outcomes, trial_features, parameter_index)``: ``trial_features`` is None
-        unless the estimator was trained with per-trial conditioning, and ``parameter_index[t, k]``
+        unless the estimator was trained with trial features, and ``parameter_index[t, k]``
         is the position, among the values fitted, of the value the model's k-th parameter takes
         on trial t.
         """

@@ -225,28 +225,24 @@ sampler, so intervals come out of the draws themselves::
     )
     results = pec.run()
 
-Two things follow from how it works, and both are requirements rather than preferences.
-
 **Every participant's model must be scored by a trained estimator** (see
 :ref:`Neural Likelihoods <NeuralLikelihood>`). The sampler needs the gradient of the score
-with respect to the parameters, which simulating a model does not give; a fit whose
-participants are scored by simulation is refused rather than run. It also needs tens of
-thousands of evaluations where EM needs hundreds, which is affordable only because an
+with respect to the parameters, which simulating a model does not give. It also needs tens
+of thousands of evaluations where EM needs hundreds, which is affordable only because an
 evaluation is one network call.
 
 **The fit runs in one process.** A single evaluation of the posterior involves every
-participant at once, so unlike EM there is no point at which one participant can be fitted
-apart from the rest, and ``distributed=True`` is refused. Participants sharing one estimator
-object are scored in a single call, so a factory that loads the artifact once and reuses it
-is markedly faster than one that loads it again for each participant.
+participant at once, so, unlike EM, participants cannot be fitted on separate workers.
+Participants sharing one estimator object are scored in a single call, so a factory that
+loads the estimator once and reuses it is markedly faster than one that loads it again for
+each participant.
 
 Read ``results.convergence`` and ``results.diagnostics`` before the estimates. ``r_hat``
 above about 1.01, or ``ess`` in the low hundreds, means the draws do not yet describe the
 posterior; any divergences at all mean the sampler could not follow it somewhere, and the
 draws are biased in a direction it cannot report. Raising ``target_accept`` is the usual
-response to divergences, and more draws to the rest. Hierarchical posteriors mix more slowly
-than the number of parameters suggests, so expect to need more draws than for a fit of the
-same size that is not hierarchical.
+response to divergences, and more draws to the rest. A hierarchical posterior usually needs
+more draws than one with as many parameters that is not hierarchical.
 
 
 .. _Hierarchical_Fitting_Running:
@@ -321,8 +317,6 @@ Limitations
 * A parameter the data barely constrain is shrunk toward the group mean. The point estimate
   alone does not distinguish that from a well-estimated parameter; ``subject_posteriors``
   reports the spread that does.
-* Sampling requires a trained estimator for every participant, and runs in one process; see
-  :ref:`Hierarchical_Fitting_Sampling`.
 * ``depends_on`` is not supported together with hierarchical fitting.
 * The group model is an intercept only; group-level predictors are not yet available.
 

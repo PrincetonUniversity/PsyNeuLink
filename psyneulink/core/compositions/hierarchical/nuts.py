@@ -265,7 +265,7 @@ class SubjectTerms:
         the value the model's k-th parameter takes on trial t.
 
     trial_features : torch.Tensor or None
-        Per-trial conditioning, when the estimator was trained with any.
+        The trials' features, when the estimator was trained with any.
     """
 
     likelihood: object
