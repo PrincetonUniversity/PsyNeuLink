@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Hierarchical Fitting &mdash; PsyNeuLink 0.20.2.0+167.g72dde34bc documentation</title>
+  <title>Hierarchical Fitting &mdash; PsyNeuLink 0.20.2.0+259.g2d52d6d4e documentation</title>
   
 
   
@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="EMComposition" href="EMComposition.html" />
+    <link rel="next" title="Neural Likelihoods" href="NeuralLikelihood.html" />
     <link rel="prev" title="Distributed Fitting" href="DistributedFitting.html" /> 
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.20.2.0+167
+                  0.20.2.0+259
                 </div>
               
             
@@ -277,7 +277,9 @@ callable that builds one participant’s model from their rows:</p>
 </pre></div>
 </div>
 <p>The factory specifies no <code class="docutils literal notranslate"><span class="pre">optimization_function</span></code>: the fit only asks each participant’s model
-to score the parameter values EM chooses, and never has it search for its own.</p>
+to score the parameter values EM chooses, and never has it search for its own. A participant’s
+model can compute its likelihood with a trained estimator, by specifying
+<code class="docutils literal notranslate"><span class="pre">likelihood_estimator=&quot;neural&quot;</span></code>; see <a class="reference internal" href="NeuralLikelihood.html#neurallikelihood"><span class="std std-ref">Neural Likelihoods</span></a>.</p>
 <p>A <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> cannot be copied, so each participant’s model is built rather than cloned.
 The factory lives in <code class="docutils literal notranslate"><span class="pre">distributed_options</span></code>, the same key distributed maximum-likelihood
 fitting uses (see <a class="reference internal" href="DistributedFitting.html#distributedfitting"><span class="std std-ref">Distributed Fitting</span></a>). Compiling each participant’s model, as the
@@ -447,7 +449,7 @@ requires the same extra as distributed maximum-likelihood fitting, installed wit
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="EMComposition.html" class="btn btn-neutral float-right" title="EMComposition" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="NeuralLikelihood.html" class="btn btn-neutral float-right" title="Neural Likelihoods" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="DistributedFitting.html" class="btn btn-neutral" title="Distributed Fitting" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
@@ -511,7 +513,7 @@ requires the same extra as distributed maximum-likelihood fitting, installed wit
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=81b3343c"></script>
+         <script src="_static/documentation_options.js?v=39a63608"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

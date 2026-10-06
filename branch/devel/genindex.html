@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0.20.2.0+167.g72dde34bc documentation</title>
+  <title>Index &mdash; PsyNeuLink 0.20.2.0+259.g2d52d6d4e documentation</title>
   
 
   
@@ -98,7 +98,7 @@
               
               
                 <div class="version">
-                  0.20.2.0+167
+                  0.20.2.0+259
                 </div>
               
             
@@ -815,14 +815,14 @@
 </li>
       <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._instantiate_loss_mechanisms">_instantiate_loss_mechanisms() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_objective_mechanism">_instantiate_objective_mechanism() (psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism method)</a>
 
       <ul>
         <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._instantiate_objective_mechanism">(psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_output_ports">_instantiate_output_ports() (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base method)</a>
 
       <ul>
@@ -912,6 +912,8 @@
 </li>
       </ul></li>
       <li><a href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode._LLVMExec">_LLVMExec (psyneulink.core.llvm.__init__.ExecutionMode attribute)</a>
+</li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition._load_neural_likelihood">_load_neural_likelihood() (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition method)</a>
 </li>
       <li><a href="Log.html#psyneulink.core.globals.log.Log._log_value">_log_value() (psyneulink.core.globals.log.Log method)</a>
 </li>
@@ -1137,6 +1139,8 @@
 </li>
       <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition._run_hierarchical">_run_hierarchical() (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition method)</a>
 </li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition._score_with_neural_likelihood">_score_with_neural_likelihood() (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition method)</a>
+</li>
       <li><a href="CompositionInterfaceMechanism.html#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._sender_is_probe">_sender_is_probe() (psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism method)</a>
 </li>
       <li><a href="Component.html#psyneulink.core.components.component.Component._sender_ports">_sender_ports (psyneulink.core.components.component.Component property)</a>
@@ -1234,6 +1238,8 @@
       <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_input_nodes">_validate_input_nodes() (psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._validate_input_shapes_and_expand_for_all_trials">_validate_input_shapes_and_expand_for_all_trials() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition._validate_likelihood_estimator">_validate_likelihood_estimator() (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition method)</a>
 </li>
       <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._validate_loss_mech_specs">_validate_loss_mech_specs() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
 </li>
@@ -3675,8 +3681,12 @@
 </li>
       <li><a href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun">LLVMRun (psyneulink.core.llvm.__init__.ExecutionMode attribute)</a>
 </li>
-      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.load">load() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
+      <li><a href="NeuralLikelihood.html#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.load">load() (psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood class method)</a>
+
+      <ul>
+        <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.load">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
 </li>
+      </ul></li>
       <li><a href="Log.html#psyneulink.core.globals.log.Log">Log (class in psyneulink.core.globals.log)</a>
 </li>
       <li><a href="Component.html#psyneulink.core.components.component.Component.log">log (psyneulink.core.components.component.Component attribute)</a>
@@ -3687,8 +3697,12 @@
       </ul></li>
       <li><a href="Parameters.html#psyneulink.core.globals.parameters.Parameter.log_condition">log_condition (psyneulink.core.globals.parameters.Parameter attribute)</a>
 </li>
-      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.log_likelihood">log_likelihood() (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition method)</a>
+      <li><a href="NeuralLikelihood.html#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.log_likelihood">log_likelihood() (psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood method)</a>
+
+      <ul>
+        <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.log_likelihood">(psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition method)</a>
 </li>
+      </ul></li>
       <li><a href="Component.html#psyneulink.core.components.component.Component.log_values">log_values() (psyneulink.core.components.component.Component method)</a>
 </li>
       <li><a href="Log.html#psyneulink.core.globals.log.LogCondition">LogCondition (class in psyneulink.core.globals.log)</a>
@@ -3872,6 +3886,8 @@
       <li><a href="MemoryFunctions.html#psyneulink.core.components.functions.stateful.memoryfunctions.MemoryFunction">MemoryFunction (class in psyneulink.core.components.functions.stateful.memoryfunctions)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.Operation.MERGE">MERGE (psyneulink.core.scheduling.condition.Operation attribute)</a>
+</li>
+      <li><a href="NeuralLikelihood.html#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.metadata">metadata (psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood attribute)</a>
 </li>
       <li><a href="Context.html#psyneulink.core.globals.context.ContextFlags.METHOD">METHOD (psyneulink.core.globals.context.ContextFlags attribute)</a>
 </li>
@@ -4300,8 +4316,12 @@
         <li><a href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.network">(psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
       </ul></li>
+      <li><a href="NeuralLikelihood.html#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood">NeuralLikelihood (class in psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="NeuralLikelihood.html#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihoodError">NeuralLikelihoodError</a>
+</li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.Never">Never (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.new_gate">new_gate (psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition attribute)</a>
@@ -6242,8 +6262,12 @@
 </li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.SampleIterator">SampleIterator (class in psyneulink.core.components.functions.optimizationfunctions)</a>
 </li>
-      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.save">save() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
+      <li><a href="NeuralLikelihood.html#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save">save() (psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood method)</a>
+
+      <ul>
+        <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.save">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
 </li>
+      </ul></li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_samples">save_samples (psyneulink.core.components.functions.optimizationfunctions.GaussianProcess attribute)</a>
 
       <ul>
@@ -6305,6 +6329,8 @@
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler">scheduler (psyneulink.core.compositions.composition.Composition property)</a>
 </li>
       <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.SchedulingMode">SchedulingMode (class in psyneulink.core.scheduling.scheduler)</a>
+</li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.scores_by_simulation">scores_by_simulation (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition property)</a>
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.scores_metric">scores_metric (psyneulink.library.compositions.emcomposition.emcomposition.EMComposition attribute)</a>
 </li>
@@ -6734,10 +6760,10 @@
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.Time">Time (class in psyneulink.core.scheduling.time)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.time_constant_v">time_constant_v (psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_v_FitzHughNagumo">time_constant_v_FitzHughNagumo (psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
 </li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.time_constant_w">time_constant_w (psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator attribute)</a>
@@ -6794,6 +6820,8 @@
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.TimeHistoryTree.total_times">total_times (psyneulink.core.scheduling.time.TimeHistoryTree attribute)</a>
 </li>
+      <li><a href="NeuralLikelihood.html#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood">train_neural_likelihood() (in module psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions)</a>
+</li>
       <li><a href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag">training_flag (psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism attribute)</a>
 </li>
       <li><a href="TimerMechanism.html#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory">trajectory (psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism attribute)</a>
@@ -6834,6 +6862,8 @@
         <li><a href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL">(psyneulink.core.scheduling.time.TimeScale attribute)</a>
 </li>
       </ul></li>
+      <li><a href="NeuralLikelihood.html#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.trial_log_prob">trial_log_prob() (psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -7249,7 +7279,7 @@
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=81b3343c"></script>
+         <script src="_static/documentation_options.js?v=39a63608"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
