@@ -140,6 +140,13 @@ settled when the composition is built.
 * ``curvature``
     ``"full"`` (the default) or ``"diagonal"``. See :ref:`Hierarchical_Fitting_Curvature`.
 
+* ``sampler``
+    ``None`` (the default) fits by EM. ``"nuts"`` samples the posterior instead; see
+    :ref:`Hierarchical_Fitting_Sampling`.
+
+* ``sampler_options``
+    Passed to `NUTSConfig`, and accepted only when ``sampler`` is set.
+
 * ``max_iterations``
     Most EM iterations to run. Defaults to ``50``.
 
@@ -192,6 +199,56 @@ The group model itself treats the parameters as independent either way: ``curvat
 each participant is measured, not what the group is allowed to express.
 
 
+.. _Hierarchical_Fitting_Sampling:
+
+Sampling
+--------
+
+EM reports each participant's single best parameter values and summarizes the uncertainty
+around them with a Gaussian placed at that peak. That summary is only as good as the
+assumption behind it. A posterior that is skewed, or pressed against a bound, or has a
+ridge running through it is not a Gaussian, and no amount of fitting makes the reported
+interval right.
+
+``sampler="nuts"`` draws from the posterior instead, with `Pyro <https://pyro.ai>`_'s No-U-Turn
+sampler, so intervals come out of the draws themselves::
+
+    pec = pnl.ParameterEstimationComposition(
+        data=data,
+        fit_method="hierarchical",
+        hierarchical_options={
+            "subject_id": "subject",
+            "sampler": "nuts",
+            "sampler_options": {"draws": 1000, "warmup": 1000, "chains": 4},
+        },
+        distributed_options={"pec_factory": build_participant},
+    )
+    results = pec.run()
+
+Two things follow from how it works, and both are requirements rather than preferences.
+
+**Every participant's model must be scored by a trained estimator** (see
+:ref:`Neural Likelihoods <NeuralLikelihood>`). The sampler needs the gradient of the score
+with respect to the parameters, which simulating a model does not give; a fit whose
+participants are scored by simulation is refused rather than run. It also needs tens of
+thousands of evaluations where EM needs hundreds, which is affordable only because an
+evaluation is one network call.
+
+**The fit runs in one process.** A single evaluation of the posterior involves every
+participant at once, so unlike EM there is no point at which one participant can be fitted
+apart from the rest, and ``distributed=True`` is refused. Participants sharing one estimator
+object are scored in a single call, so a factory that loads the artifact once and reuses it
+is markedly faster than one that loads it again for each participant.
+
+Read ``results.convergence`` and ``results.diagnostics`` before the estimates. ``r_hat``
+above about 1.01, or ``ess`` in the low hundreds, means the draws do not yet describe the
+posterior; any divergences at all mean the sampler could not follow it somewhere, and the
+draws are biased in a direction it cannot report. Raising ``target_accept`` is the usual
+response to divergences, and more draws to the rest. Hierarchical posteriors mix more slowly
+than the number of parameters suggests, so expect to need more draws than for a fit of the
+same size that is not hierarchical.
+
+
 .. _Hierarchical_Fitting_Running:
 
 Running
@@ -224,8 +281,11 @@ is a multi-node batch template.
 Results
 -------
 
-``run()`` returns a `HierarchicalPECResults`, also available afterwards as
-``pec.fit_results``.
+``run()`` returns a `HierarchicalPECResults`, or a `HierarchicalSamplingResults` when a
+sampler was used, also available afterwards as ``pec.fit_results``. The two report the same
+group and participant estimates; a sampled fit reports intervals taken from the draws in
+place of a Gaussian width, and adds the draws and the convergence diagnostics described in
+:ref:`Hierarchical_Fitting_Sampling`.
 
 ``group_parameters`` has one row per parameter: ``mean_z`` and ``sd_z`` are the group
 estimate and spread in the unconstrained space, and ``value`` is that mean mapped into the
@@ -254,13 +314,15 @@ Limitations
 * With ``curvature="diagonal"``, participant uncertainty is the spread of one parameter with the
   others held at the mode rather than integrated out, which errs towards being too tight; see
   :ref:`Hierarchical_Fitting_Curvature`.
-* Participant estimates are posterior modes with a Gaussian approximation around them, not
-  posterior means.
+* EM reports participant estimates as posterior modes with a Gaussian approximation around them,
+  not posterior means.
 * Interval width tracks the quality of the likelihood. A likelihood estimated from too few
   simulations gives intervals that are too narrow, and no amount of fitting corrects that.
 * A parameter the data barely constrain is shrunk toward the group mean. The point estimate
   alone does not distinguish that from a well-estimated parameter; ``subject_posteriors``
   reports the spread that does.
+* Sampling requires a trained estimator for every participant, and runs in one process; see
+  :ref:`Hierarchical_Fitting_Sampling`.
 * ``depends_on`` is not supported together with hierarchical fitting.
 * The group model is an intercept only; group-level predictors are not yet available.
 
@@ -272,4 +334,25 @@ Requirements
 
 Fitting in one process needs nothing beyond PsyNeuLink itself. ``distributed=True``
 requires the same extra as distributed maximum-likelihood fitting, installed with
-``pip install "psyneulink[dask]"``.
+``pip install "psyneulink[dask]"``. Sampling requires the ``nle`` extra, installed with
+``pip install "psyneulink[nle]"``, which includes Pyro.
+
+
+.. _Hierarchical_Fitting_Class_Reference:
+
+Class Reference
+---------------
+
+.. autoclass:: psyneulink.core.compositions.hierarchical.hierarchicalresults.HierarchicalPECResults
+   :members: posterior_variance, sigma
+
+.. autoclass:: psyneulink.core.compositions.hierarchical.hierarchicalresults.HierarchicalSamplingResults
+   :members: sigma, converged
+
+.. autoclass:: psyneulink.core.compositions.hierarchical.nuts.NUTSConfig
+
+.. autoclass:: psyneulink.core.compositions.hierarchical.nuts.NUTSDiagnostics
+
+.. autoexception:: psyneulink.core.compositions.hierarchical.laplaceem.HierarchicalEMWarning
+
+.. autoexception:: psyneulink.core.compositions.hierarchical.nuts.SamplingWarning
