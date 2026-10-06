@@ -13,7 +13,7 @@ from psyneulink.core.compositions.showgraph import (
     ShowGraph,
     ShowGraphError,
     _gv_executable_not_found_error_msg,
-    get_default_showgraph_dir,
+    get_showgraph_dir,
 )
 from psyneulink.library.compositions.autodiffcomposition import torch_available
 
@@ -35,6 +35,7 @@ class EMCompositionShowGraph(_EMCompositionShowGraphBase):
                          active_items,
                          show_controller,
                          output_fmt,
+                         directory,
                          view,
                          context
                          ):
@@ -43,6 +44,7 @@ class EMCompositionShowGraph(_EMCompositionShowGraphBase):
                                      active_items,
                                      show_controller,
                                      'gv',
+                                     directory,
                                      view,
                                      context)
         self._add_emcomposition_ordering_constraints(G)
@@ -55,7 +57,7 @@ class EMCompositionShowGraph(_EMCompositionShowGraphBase):
                 G.render(
                     composition.name.replace(" ", "-"),
                     cleanup=True,
-                    directory=get_default_showgraph_dir().joinpath('PDFS'),
+                    directory=get_showgraph_dir(directory).joinpath('PDFS'),
                     view=view,
                 )
             except ExecutableNotFound as e:
@@ -65,7 +67,7 @@ class EMCompositionShowGraph(_EMCompositionShowGraphBase):
 
         elif output_fmt == 'gif':
             if composition.active_item_rendered or INITIAL_FRAME in active_items:
-                self._generate_gifs(G, active_items, view, context)
+                self._generate_gifs(G, active_items, directory, view, context)
 
         elif output_fmt == 'jupyter':
             return G
