@@ -15072,6 +15072,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_projections_not_in_composition=False,
                    active_items=None,
                    output_fmt='pdf',
+                   view: bool = True,
                    context=None,
                    **kwargs):
         """Patch to ShowGraph method
@@ -15098,6 +15099,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 show_projections_not_in_composition=show_projections_not_in_composition,
                                 active_items=active_items,
                                 output_fmt=output_fmt,
+                                view=view,
                                 context=context)
 
     def _set_up_animation(self, context):
