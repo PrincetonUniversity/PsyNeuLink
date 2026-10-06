@@ -88,9 +88,9 @@ class HierarchicalPECResults:
         One row per iteration.  Each pairs the objective with the group estimate that produced it,
         so the two can be read side by side.
 
-    settings, transform_metadata : dict
-        What the fit was asked to do, and the transform it used, recorded so a result can be
-        interpreted without the code that produced it.
+    settings : dict
+        What the fit was asked to do, recorded so a result can be interpreted without the code
+        that produced it.
     """
 
     fit_param_names: Tuple[str, ...]
@@ -112,7 +112,6 @@ class HierarchicalPECResults:
     subject_converged: np.ndarray
     em_history: pd.DataFrame
 
-    transform_metadata: Dict[str, Any] = field(default_factory=dict)
     settings: Dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -230,11 +229,6 @@ class HierarchicalPECResults:
             converged=bool(em_result.converged),
             subject_converged=np.asarray(em_result.subject_converged, dtype=bool),
             em_history=history,
-            transform_metadata={
-                "kind": type(transform).__name__,
-                "lower": np.asarray(lower).tolist(),
-                "upper": np.asarray(upper).tolist(),
-            },
             settings=dict(settings or {}),
         )
 

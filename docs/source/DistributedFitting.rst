@@ -56,6 +56,9 @@ the fit starts: ``srun`` tasks minus two with the launcher (see
 
 Any optuna sampler or study and ``differential_evolution`` are supported.
 
+The same ``pec_factory`` and ``distributed_options`` can distribute the simulations used to train a
+:ref:`neural likelihood <NeuralLikelihood>`.
+
 
 .. _Distributed_Fitting_Running:
 

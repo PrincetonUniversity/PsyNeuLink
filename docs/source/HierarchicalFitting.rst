@@ -93,7 +93,9 @@ callable that builds one participant's model from their rows::
         return pec, {comp: trial_inputs(len(data))}
 
 The factory specifies no ``optimization_function``: the fit only asks each participant's model
-to score the parameter values EM chooses, and never has it search for its own.
+to score the parameter values EM chooses, and never has it search for its own. A participant's
+model can compute its likelihood with a trained estimator, by specifying
+``likelihood_estimator="neural"``; see :ref:`Neural Likelihoods <NeuralLikelihood>`.
 
 A `Composition` cannot be copied, so each participant's model is built rather than cloned.
 The factory lives in ``distributed_options``, the same key distributed maximum-likelihood
