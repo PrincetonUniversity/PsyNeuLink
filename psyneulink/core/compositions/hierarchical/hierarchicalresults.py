@@ -436,9 +436,8 @@ class HierarchicalSamplingResults:
 def _group_convergence(draws, posterior, names, predictor_names):
     """R-hat and effective sample size for each group-level quantity.
 
-    Only the group quantities: there is one convergence row per parameter the group model has,
-    not one per participant, since a participant's own parameters are read off the group draws
-    rather than sampled separately in any meaningful sense.
+    One row per group mean and group scale; participants' parameters are left out, to keep the
+    table to the quantities a fit is judged by.
     """
     import torch
     from pyro.ops.stats import effective_sample_size, split_gelman_rubin

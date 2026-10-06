@@ -56,7 +56,7 @@ def test_sampler_recovers_the_mean_and_spread(gaussian_draws):
 
 
 def test_sampler_recovers_the_correlation(gaussian_draws):
-    # The part a sampler that treated the parameters as independent would get wrong.
+    # What a sampler that treated the parameters as independent would miss.
     draws, _ = gaussian_draws
     flat = draws.reshape(-1, 3)
     expected = COVARIANCE[0, 1] / np.sqrt(COVARIANCE[0, 0] * COVARIANCE[1, 1])
@@ -154,8 +154,7 @@ def group():
 
 
 def test_posterior_gradient_matches_finite_differences(group):
-    # The sampler is only as right as the gradient it takes of log_prob: a wrong one moves
-    # smoothly to the wrong place, which nothing downstream would reveal.
+    # A wrong gradient would send the sampler to the wrong place without any error.
     terms, *_ = group
     posterior = HierarchicalNeuralPosterior(terms, LOWER, UPPER)
     q = torch.as_tensor(posterior.initial_points(1, seed=3)[0]).requires_grad_(True)
@@ -201,10 +200,8 @@ def test_parameters_stay_inside_the_search_range(group):
 
 
 def test_the_transform_saturates_only_far_outside_a_plausible_fit(group):
-    # Beyond about 37 in unconstrained units the transform rounds to the bound exactly, where
-    # the gradient is zero and the sampler would stop moving. That is recorded here rather than
-    # guarded against: it is unreachable at a group scale any real fit has, and a fit whose
-    # group scale is that large is reported as not converged for other reasons first.
+    # Beyond about 37 in unconstrained units the transform rounds to the bound, where the
+    # gradient is zero. Starting points, and any plausible group scale, stay well inside that.
     terms, *_ = group
     posterior = HierarchicalNeuralPosterior(terms, LOWER, UPPER)
     generator = np.random.default_rng(1)
@@ -229,7 +226,7 @@ def test_participants_sharing_an_estimator_are_scored_together(group):
 
 
 def test_scoring_together_gives_what_scoring_apart_gives():
-    # The batching is an optimization, so it has to be invisible in the answer.
+    # Scoring participants together only saves time; it must not change the result.
     shared_terms, *_ = _make_group(n_subjects=6, seed=2, share_estimator=True)
     separate_terms, *_ = _make_group(n_subjects=6, seed=2, share_estimator=False)
     shared = HierarchicalNeuralPosterior(shared_terms, LOWER, UPPER)
@@ -245,7 +242,7 @@ def test_posterior_rejects_a_design_matrix_of_the_wrong_height(group):
 
 
 def test_sampling_recovers_the_group_it_was_generated_from():
-    """The end the whole module exists for: draws that describe the population."""
+    """Draws for a group simulated from a known population describe that population."""
     terms, beta_z, scale, theta_true = _make_group(n_subjects=25, n_trials=40, seed=4)
     posterior = HierarchicalNeuralPosterior(terms, LOWER, UPPER)
     config = NUTSConfig(draws=250, warmup=250, chains=2, seed=11)

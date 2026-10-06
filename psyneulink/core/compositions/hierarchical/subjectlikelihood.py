@@ -380,8 +380,7 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
         likelihood, outcomes, features, parameter_index = pec.neural_likelihood_terms(inputs)
         return SubjectTerms(
             likelihood=likelihood,
-            # Encoded once here rather than on every evaluation: sampling scores the same trials
-            # tens of thousands of times and they do not change between them.
+            # Encoded once rather than on every evaluation; see encode_outcomes.
             outcomes=likelihood.encode_outcomes(outcomes),
             parameter_index=torch.as_tensor(parameter_index),
             trial_features=(
