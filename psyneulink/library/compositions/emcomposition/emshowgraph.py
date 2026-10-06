@@ -35,6 +35,7 @@ class EMCompositionShowGraph(_EMCompositionShowGraphBase):
                          active_items,
                          show_controller,
                          output_fmt,
+                         view,
                          context
                          ):
         G = super()._generate_output(G,
@@ -42,6 +43,7 @@ class EMCompositionShowGraph(_EMCompositionShowGraphBase):
                                      active_items,
                                      show_controller,
                                      'gv',
+                                     view,
                                      context)
         self._add_emcomposition_ordering_constraints(G)
 
@@ -50,9 +52,12 @@ class EMCompositionShowGraph(_EMCompositionShowGraphBase):
         if output_fmt == 'pdf':
             from graphviz.backend.execute import ExecutableNotFound
             try:
-                G.view(composition.name.replace(" ", "-"),
-                       cleanup=True,
-                       directory=get_default_showgraph_dir().joinpath('PDFS'))
+                G.render(
+                    composition.name.replace(" ", "-"),
+                    cleanup=True,
+                    directory=get_default_showgraph_dir().joinpath('PDFS'),
+                    view=view,
+                )
             except ExecutableNotFound as e:
                 raise ShowGraphError(_gv_executable_not_found_error_msg) from e
             except Exception as e:
@@ -60,7 +65,7 @@ class EMCompositionShowGraph(_EMCompositionShowGraphBase):
 
         elif output_fmt == 'gif':
             if composition.active_item_rendered or INITIAL_FRAME in active_items:
-                self._generate_gifs(G, active_items, context)
+                self._generate_gifs(G, active_items, view, context)
 
         elif output_fmt == 'jupyter':
             return G
