@@ -2627,11 +2627,11 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         # Return the reconstructed combination of previous value and previous time
         prev_value_ptr = ctx.get_param_or_state_ptr(builder, self, PREVIOUS_VALUE, state_struct_ptr=state)
         value_out_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        builder.store(builder.load(prev_value_ptr), value_out_ptr)
+        pnlvm.helpers.memcpy(builder, value_out_ptr, prev_value_ptr)
 
         prev_time_ptr = ctx.get_param_or_state_ptr(builder, self, "previous_time", state_struct_ptr=state)
         time_out_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        builder.store(builder.load(prev_time_ptr), time_out_ptr)
+        pnlvm.helpers.memcpy(builder, time_out_ptr, prev_time_ptr)
 
         return builder
 
@@ -5036,7 +5036,7 @@ class FitzHughNagumoIntegrator(
         # Save state
         for n, sptr in out.items():
             dptr = prev["previous_" + n]
-            builder.store(builder.load(sptr), dptr)
+            pnlvm.helpers.memcpy(builder, dptr, sptr)
 
         return builder
 
