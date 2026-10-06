@@ -3199,6 +3199,7 @@ import warnings
 import weakref
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
+from os import PathLike
 
 import graph_scheduler
 import numpy as np
@@ -15072,6 +15073,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_projections_not_in_composition=False,
                    active_items=None,
                    output_fmt='pdf',
+                   directory: Optional[Union[PathLike, str]] = None,
                    view: bool = True,
                    context=None,
                    **kwargs):
@@ -15099,6 +15101,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 show_projections_not_in_composition=show_projections_not_in_composition,
                                 active_items=active_items,
                                 output_fmt=output_fmt,
+                                directory=directory,
                                 view=view,
                                 context=context)
 
