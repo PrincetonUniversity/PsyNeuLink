@@ -469,6 +469,14 @@ def test_inputs_set_how_many_trials_each_draw_simulates(training_frame):
     assert len(x) == 30 * n_estimates
 
 
+def test_an_input_with_one_value_on_every_trial_is_recorded_as_held(training_frame):
+    # The standard deviation of ten 0.3s is slightly above 0.
+    pec, _ = _ddm_training_pec(training_frame)
+    _, _, layout = nlf._simulate(pec, {pec.nodes[0]: np.full((10, 1), 0.3)},
+                                 np.array([[0.3, 0.6]]), ("rate", "threshold"))
+    assert layout == ((), (0.3,))
+
+
 def test_a_missing_sbi_is_reported_before_anything_is_simulated(monkeypatch):
     built = []
 

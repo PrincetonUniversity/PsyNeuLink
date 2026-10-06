@@ -355,7 +355,9 @@ def _simulate(pec, inputs, thetas, names, seed=0, first_draw=0):
                 # Inputs that vary from trial to trial are what tell trials apart; the rest say
                 # nothing, and are recorded by value.
                 columns = _input_columns(inputs, n_trials, pec.model)
-                used = tuple(int(j) for j in np.flatnonzero(columns.std(axis=0) > 0))
+                # Compared with the first trial: a standard deviation can be slightly above 0 for
+                # identical values.
+                used = tuple(int(j) for j in np.flatnonzero((columns != columns[0]).any(axis=0)))
                 held = [j for j in range(columns.shape[1]) if j not in used]
                 layout = (used, tuple(float(v) for v in columns[0, held]))
                 features = columns[:, list(used)] if used else None
