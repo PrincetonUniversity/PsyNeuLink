@@ -1602,6 +1602,17 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
         else:
             return fallback_value
 
+    def _get_value_for_codegen(self):
+        """Get value for latest context and mark as used in code generation."""
+
+        # Don't allow Parameters with getters. Those are not set directly and it
+        # doesn't help to track them to keep the compile-time values updated.
+        assert self.getter is None, \
+            "Codegen should use only source parameters: {}".format(self.name)
+
+        self._used_in_codegen = True
+        return self._get(self._owner._owner.most_recent_context)
+
     @handle_external_context()
     def get(self, context=None, *, fallback_value=ParameterNoValueError, **kwargs):
         """
@@ -1874,6 +1885,12 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             if not skip_delivery:
                 self._deliver_value(value, context)
 
+        # TODO: Remove this workaround. It prevents compile state purge
+        # for parameters that just update the same value from default to
+        # a specific context.
+        if getattr(self, '_used_in_codegen', False):
+            old_value = self.values.get(execution_id, self.default_value)
+
         value_updated = False
         if not compilation_sync:
             value_for_update = value
@@ -1917,6 +1934,28 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
                     for comp in owner_comps:
                         comp._delete_compilation_data(context, self)
                 self._tracking_compiled_struct = False
+
+        if getattr(self, '_used_in_codegen', False):
+            # TODO: Remove OCM value not matching 'search_space' sample shape workaround
+            # 'transfer_fct' in Stability can be disabled by setting it to None,
+            # which makes it tracked as a runtime parameter, but at the same time needs
+            # to be queried at compile time.
+            if self.name not in {'search_space', 'transfer_fct'}:
+                assert not self._tracking_compiled_struct, \
+                    "param is used both at compile-time and run-time: {}".format(self.name)
+
+            self._used_in_codegen = False
+            if not compilation_sync and value != old_value:
+                # delete cached compiled ids (cached_property)
+                # TODO: convert these to "compiled_cached_property" that gets cleared
+                # with the bellow call
+                del self._owner._owner.llvm_state_ids
+                del self._owner._owner.llvm_param_ids
+
+                # TODO: We can optimize number of flushes if multiple compile-time
+                # parameters get changed before the next run.
+                import psyneulink.core.llvm as pnlvm
+                pnlvm.cleanup()
 
     @handle_external_context()
     def delete(self, context: Optional[Union[Context, Hashable]] = None):

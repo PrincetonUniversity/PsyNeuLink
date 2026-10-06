@@ -209,7 +209,7 @@ class NormalDist(DistributionFunction):
         random_state = ctx.get_random_state_ptr(builder, self, state, params)
         mean_ptr = ctx.get_param_or_state_ptr(builder, self, DIST_MEAN, param_struct_ptr=params)
         std_dev_ptr = ctx.get_param_or_state_ptr(builder, self, STANDARD_DEVIATION, param_struct_ptr=params)
-        ret_val_ptr = builder.alloca(ctx.float_ty)
+        ret_val_ptr = builder.alloca(ctx.float_ty, name="random_ret_val")
         norm_rand_f = ctx.get_normal_dist_function_by_state(random_state)
         builder.call(norm_rand_f, [random_state, ret_val_ptr])
 
@@ -639,7 +639,7 @@ class UniformDist(DistributionFunction):
         random_state = ctx.get_random_state_ptr(builder, self, state, params)
         low_ptr = ctx.get_param_or_state_ptr(builder, self, LOW, param_struct_ptr=params)
         high_ptr = ctx.get_param_or_state_ptr(builder, self, HIGH, param_struct_ptr=params)
-        ret_val_ptr = builder.alloca(ctx.float_ty)
+        ret_val_ptr = builder.alloca(ctx.float_ty, name="random_ret_val")
         norm_rand_f = ctx.get_uniform_dist_function_by_state(random_state)
         builder.call(norm_rand_f, [random_state, ret_val_ptr])
 

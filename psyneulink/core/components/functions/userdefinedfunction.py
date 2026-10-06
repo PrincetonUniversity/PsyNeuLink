@@ -673,11 +673,12 @@ class UserDefinedFunction(Function_Base):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
 
-        srcfile = getsourcefile(self.custom_function)
-        first_line = getsourcelines(self.custom_function)[1]
+        custom_function = self.parameters.custom_function._get_value_for_codegen()
+        srcfile = getsourcefile(custom_function)
+        first_line = getsourcelines(custom_function)[1]
 
         # Check for global and nonlocal vars. We can't compile those.
-        closure_vars = getclosurevars(self.custom_function)
+        closure_vars = getclosurevars(custom_function)
         assert len(closure_vars.nonlocals) == 0, \
             "{}:{}: Compiling functions with non-local variables is not supported!".format(srcfile, first_line)
 
