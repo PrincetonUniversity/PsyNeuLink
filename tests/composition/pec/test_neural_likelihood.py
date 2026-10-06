@@ -790,10 +790,9 @@ def test_a_distributed_hierarchical_fit_scores_the_same_way(trained_artifact):
 # ===========================================================================
 # Sampling the hierarchical posterior
 #
-# What the estimator's gradient is for: fitting that reports the posterior
-# rather than a Gaussian placed at its peak.  The budgets here are far too
-# small for the draws to mean anything; what is checked is that the pieces
-# reach each other and that the fit says so when it has not converged.
+# The budgets here are far too small for the draws to mean anything; what is
+# checked is that the pieces fit together, and that a fit that has not
+# converged says so.
 # ===========================================================================
 def _sample_group(artifact, **hierarchical):
     import functools
@@ -801,10 +800,8 @@ def _sample_group(artifact, **hierarchical):
     options = {
         "subject_id": "subject",
         "sampler": "nuts",
-        # max_tree_depth is capped well below the default: a barely-warmed sampler on an
-        # awkward posterior doubles all the way to the cap on every draw, and one draw would
-        # otherwise cost a thousand network calls. It costs efficiency, which these do not
-        # measure, and nothing else.
+        # max_tree_depth is capped well below the default to keep these runs short: early in
+        # warmup, the sampler can reach the cap on every draw.
         "sampler_options": {
             "draws": 25, "warmup": 25, "chains": 2, "seed": 0, "max_tree_depth": 3,
         },
@@ -855,7 +852,7 @@ def test_a_sampled_fit_reports_whether_it_converged(trained_artifact):
 @pytest.mark.composition
 @pytest.mark.usefixtures("single_threaded_torch")
 def test_a_sampled_fit_reports_no_single_best_value(trained_artifact):
-    # The draws are the result; the highest density among them describes where the sampler went.
+    # The draws are the result; there is no single best value.
     pec, results = _sample_group(trained_artifact)
     assert pec.optimal_value is None
     assert set(pec.optimized_parameter_values) == set(results.fit_param_names)
@@ -868,8 +865,8 @@ def test_sampling_refuses_a_simulated_likelihood(trained_artifact):
     def simulated_participant(data, subject_index=None):
         pec, inputs = _neural_participant_pec(trained_artifact, data, subject_index)
         pec._likelihood_estimator = "kde"
-        # Otherwise it is refused first for a reason every simulated model shares -- scoring that
-        # does not repeat itself -- and the refusal being checked here would never be reached.
+        # Without common random numbers, a model scored by simulation is refused before the
+        # check this test is about.
         pec.controller.parameters.same_seed_for_all_allocations.set(True)
         return pec, inputs
 
