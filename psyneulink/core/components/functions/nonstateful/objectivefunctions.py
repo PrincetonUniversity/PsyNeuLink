@@ -403,7 +403,7 @@ class Stability(ObjectiveFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Dot product
-        dot_out = builder.alloca(arg_in.type.pointee)
+        dot_out = builder.alloca(arg_in.type.pointee, name="dot_out")
         matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
 
         # Convert array pointer to pointer to the fist element
@@ -417,26 +417,37 @@ class Stability(ObjectiveFunction):
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
 
         # Prepare metric function
-        metric_fun = ctx.import_llvm_function(self.metric_fct)
-        metric_in = builder.alloca(metric_fun.args[2].type.pointee)
+        metric_fun = ctx.import_llvm_function(self.parameters.metric_fct._get_value_for_codegen())
+        metric_in = builder.alloca(metric_fun.args[2].type.pointee, name="metric_function_in")
+        metric_in_variable = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        metric_in_transformed = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
         # Transfer Function if configured
-        if self.transfer_fct is not None:
+        if self.parameters.transfer_fct._get_value_for_codegen() is not None:
             #FIXME: implement this
             assert False, "Support for transfer functions is not implemented"
+
         else:
             # Check that transfer_fct is absent from the compiled parameter
             # structure or represented by an empty structure
-            assert "transfer_fct" not in self.llvm_param_ids or ctx.get_param_or_state_ptr(builder, self, "transfer_fct", param_struct_ptr=params).type.pointee.elements == ()
+            transfer_params = ctx.get_param_or_state_ptr(builder,
+                                                         self,
+                                                         self.parameters.transfer_fct,
+                                                         param_struct_ptr=params)
 
-            trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            builder.store(builder.load(dot_out), trans_out)
+            assert transfer_params is None or transfer_params.type.pointee.elements == ()
+
+            builder.store(builder.load(dot_out), metric_in_transformed)
 
         # Copy original variable
-        builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+        builder.store(builder.load(arg_in), metric_in_variable)
 
         # Distance Function
-        metric_params, metric_state = ctx.get_param_or_state_ptr(builder, self, "metric_fct", param_struct_ptr=params, state_struct_ptr=state)
+        metric_params, metric_state = ctx.get_param_or_state_ptr(builder,
+                                                                 self,
+                                                                 self.parameters.metric_fct,
+                                                                 param_struct_ptr=params,
+                                                                 state_struct_ptr=state)
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder
@@ -993,7 +1004,7 @@ class Distance(ObjectiveFunction):
         v1 = pnlvm.helpers.unwrap_2d_array(builder, v1)
         v2 = pnlvm.helpers.unwrap_2d_array(builder, v2)
 
-        acc_ptr = builder.alloca(ctx.float_ty)
+        acc_ptr = builder.alloca(ctx.float_ty, name="accumulator")
         builder.store(acc_ptr.type.pointee(-0.0), acc_ptr)
 
         # Inner functions expect v1/v2 to be pointers to the first element
@@ -1002,19 +1013,22 @@ class Distance(ObjectiveFunction):
                          "v2": builder.gep(v2, [ctx.int32_ty(0), ctx.int32_ty(0)]),
                          "acc": acc_ptr}
 
-        if self.metric == DIFFERENCE or self.metric == NORMED_L0_SIMILARITY:
+        # TODO: Convert to 'metric' runtime parameter by using StrEnum
+        metric = self.parameters.metric._get_value_for_codegen()
+
+        if metric == DIFFERENCE or metric == NORMED_L0_SIMILARITY:
             inner = self.__gen_llvm_sum_difference
 
-        elif self.metric == EUCLIDEAN:
+        elif metric == EUCLIDEAN:
             inner = self.__gen_llvm_sum_diff_squares
 
-        elif self.metric == ENERGY or self.metric == DOT_PRODUCT:
+        elif metric == ENERGY or metric == DOT_PRODUCT:
             inner = self.__gen_llvm_sum_product
 
-        elif self.metric == CROSS_ENTROPY:
+        elif metric == CROSS_ENTROPY:
             inner = self.__gen_llvm_cross_entropy
 
-        elif self.metric in {COSINE, COSINE_SIMILARITY}:
+        elif metric in {COSINE, COSINE_SIMILARITY}:
             del inner_kwargs['acc']
             for loc in 'numer_acc', 'denom1_acc', 'denom2_acc':
                 loc_ptr = builder.alloca(ctx.float_ty, name=loc)
@@ -1023,15 +1037,15 @@ class Distance(ObjectiveFunction):
 
             inner = self.__gen_llvm_cosine
 
-        elif self.metric == MAX_ABS_DIFF:
+        elif metric == MAX_ABS_DIFF:
             del inner_kwargs['acc']
-            max_diff_ptr = builder.alloca(ctx.float_ty)
+            max_diff_ptr = builder.alloca(ctx.float_ty, name="max_diff_ptr")
             builder.store(max_diff_ptr.type.pointee(float("NaN")), max_diff_ptr)
             inner_kwargs['max_diff_ptr'] = max_diff_ptr
 
             inner = self.__gen_llvm_max_diff
 
-        elif self.metric == CORRELATION:
+        elif metric == CORRELATION:
             del inner_kwargs['acc']
             for loc in 'acc_x', 'acc_y', 'acc_xy', 'acc_x2', 'acc_y2':
                 loc_ptr = builder.alloca(ctx.float_ty, name=loc)
@@ -1041,32 +1055,32 @@ class Distance(ObjectiveFunction):
             inner = self.__gen_llvm_pearson
 
         else:
-            assert False, "Unsupported metric: {}".format(self.metric)
+            assert False, "Unsupported metric: {}".format(metric)
 
         input_length = len(v1.type.pointee)
-        with pnlvm.helpers.array_ptr_loop(builder, v1, id=self.metric) as args:
+        with pnlvm.helpers.array_ptr_loop(builder, v1, id=metric) as args:
             inner(*args, **inner_kwargs)
 
         sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
         fabs = ctx.get_builtin("fabs", [ctx.float_ty])
 
-        if self.metric == NORMED_L0_SIMILARITY:
+        if metric == NORMED_L0_SIMILARITY:
             ret = builder.load(acc_ptr)
             ret = builder.fdiv(ret, ret.type(4))
             ret = builder.fsub(ret.type(1), ret)
 
-        elif self.metric == ENERGY:
+        elif metric == ENERGY:
             ret = builder.load(acc_ptr)
             ret = builder.fmul(ret, ret.type(-0.5))
 
-        elif self.metric == EUCLIDEAN:
+        elif metric == EUCLIDEAN:
             ret = builder.load(acc_ptr)
             ret = builder.call(sqrt, [ret])
 
-        elif self.metric == MAX_ABS_DIFF:
+        elif metric == MAX_ABS_DIFF:
             ret = builder.load(max_diff_ptr)
 
-        elif self.metric in {COSINE, COSINE_SIMILARITY}:
+        elif metric in {COSINE, COSINE_SIMILARITY}:
             numer = builder.load(inner_kwargs['numer_acc'])
             denom1 = builder.load(inner_kwargs['denom1_acc'])
             denom1 = builder.call(sqrt, [denom1])
@@ -1078,12 +1092,12 @@ class Distance(ObjectiveFunction):
             ret = builder.call(fabs, [ret])
             ret = builder.fsub(ret.type(1), ret)
 
-        elif self.metric in {DOT_PRODUCT, CROSS_ENTROPY, DIFFERENCE}:
+        elif metric in {DOT_PRODUCT, CROSS_ENTROPY, DIFFERENCE}:
             # these metrics already calculated the result and stored it
             # in the accumulator
             ret = builder.load(acc_ptr)
 
-        elif self.metric == CORRELATION:
+        elif metric == CORRELATION:
             n = ctx.float_ty(input_length)
             acc_xy = builder.load(inner_kwargs['acc_xy'])
             acc_x = builder.load(inner_kwargs['acc_x'])
@@ -1138,7 +1152,7 @@ class Distance(ObjectiveFunction):
             ret = builder.fsub(ret.type(1), ret)
 
         else:
-            assert False, "Unsupported metric: {}".format(self.metric)
+            assert False, "Unsupported metric: {}".format(metric)
 
 
         if arg_out.type.pointee != ret.type:
@@ -1150,11 +1164,11 @@ class Distance(ObjectiveFunction):
         normalize_b = builder.fcmp_ordered("!=", normalize, normalize.type(0))
 
         # MAX_ABS_DIFF, CORRELATION, and COSINE/COSINE_SIMILARITY ignore normalization
-        allow_normalize_b = normalize_b.type(self.metric not in {MAX_ABS_DIFF, CORRELATION, COSINE, COSINE_SIMILARITY})
+        allow_normalize_b = normalize_b.type(metric not in {MAX_ABS_DIFF, CORRELATION, COSINE, COSINE_SIMILARITY})
         normalize_b = builder.and_(normalize_b, allow_normalize_b)
         with builder.if_else(normalize_b) as (then, otherwise):
             with then:
-                norm_factor = input_length ** 2 if self.metric == ENERGY else input_length
+                norm_factor = input_length ** 2 if metric == ENERGY else input_length
                 normalized = builder.fdiv(ret, ret.type(norm_factor), name="normalized")
                 builder.store(normalized, arg_out)
 
@@ -1542,12 +1556,13 @@ class LossFunction(ObjectiveFunction):
         sample_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)], name="input_array_ptr")
         target_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)], name="target_array_ptr")
 
-        accumulator_ptr = builder.alloca(ctx.float_ty)
-        counter_ptr = builder.alloca(ctx.float_ty)
+        accumulator_ptr = builder.alloca(ctx.float_ty, name="accumulator")
+        counter_ptr = builder.alloca(ctx.float_ty, name="counter")
         builder.store(accumulator_ptr.type.pointee(0), accumulator_ptr)
         builder.store(counter_ptr.type.pointee(0), counter_ptr)
 
-        loss = self.parameters.loss.get()
+        # TODO: Convert 'loss' to runtime parameter
+        loss = self.parameters.loss._get_value_for_codegen()
         if loss in {Loss.L0, Loss.L1, Loss.SSE, Loss.MSE, Loss.POISSON_NLL}:
             with pnlvm.helpers.recursive_iterate_arrays(ctx, builder, sample_ptr, target_ptr) as (b, sample_element, target_element):
                 sample = b.load(sample_element)
@@ -1577,6 +1592,7 @@ class LossFunction(ObjectiveFunction):
                 count = builder.load(counter_ptr)
                 norm_result = builder.fdiv(result, count)
                 builder.store(norm_result, arg_out)
+
             with e:
                 builder.store(result, arg_out)
 

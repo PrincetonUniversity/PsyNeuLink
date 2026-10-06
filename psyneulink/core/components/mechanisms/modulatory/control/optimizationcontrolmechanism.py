@@ -1028,7 +1028,9 @@ this includes all Components in the `agent_rep <OptimizationControlMechanism.age
 are specified in the **random_variables** argument of the OptimizationControlMechanism's constructor, then
 randomization is restricted to their values. Randomization over estimates can be further configured using the
 `initial_seed <OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
-<OptimizationControlMechanism.same_seed_for_all_allocations>` attributes. The results of all the estimates for a
+<OptimizationControlMechanism.same_seed_for_all_allocations>` attributes. The `noise_stream_policy
+<OptimizationControlMechanism.noise_stream_policy>` constructor argument determines whether different random
+Components receive distinct seeds within each estimate. The results of all the estimates for a
 given `control_allocation <ControlMechanism.control_allocation>` are aggregated by the `aggregation_function
 <OptimizationFunction.aggregation_function>` of the `OptimizationFunction` assigned to the
 OptimizationControlMechanism's `function <OptimizationControlMechanism>`, and used to compute the `net_outcome
@@ -1091,7 +1093,6 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, Component, ComponentError
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
-from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
@@ -1321,6 +1322,14 @@ class OptimizationControlMechanism(ControlMechanism):
         If it is not specified then then the seed is set to a random value (see `initial_seed
         <OptimizationControlMechanism.initial_seed>` for additional information).
 
+    noise_stream_policy : 'independent' or 'shared_seed' : default 'independent'
+        specifies how seeds are assigned to different `random_variables <OptimizationControlMechanism.random_variables>`
+        within an estimate. The default, 'independent', assigns a distinct seed to each Component and estimate.
+        Use 'shared_seed' to reproduce the legacy behavior of broadcasting the same seed to every Component,
+        which can correlate their random draws. This is a constructor-only setting, separate from
+        `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>`, which controls
+        reuse across candidate allocations.
+
     same_seed_for_all_parameter_combinations :  bool : default False
         specifies whether the random number generator is re-initialized to the same value when estimating each
         `control_allocation <ControlMechanism.control_allocation>` (see `same_seed_for_all_parameter_combinations
@@ -1492,6 +1501,18 @@ class OptimizationControlMechanism(ControlMechanism):
         stability of the estimation process across `control_allocations <ControlMechanism.control_allocation>`, while
         substantial differences indicate instability, which may be helped by increasing `num_estimates
         <OptimizationControlMechanism.num_estimates>`.
+
+    noise_stream_policy : 'independent' or 'shared_seed'
+        determines how the randomization ControlSignal seeds different Components. With 'independent', each estimate
+        is assigned a block of consecutive seeds, with one slot per entry in `random_variables
+        <OptimizationControlMechanism.random_variables>` (in that list's order). The sequence is deterministic for a
+        fixed initial seed and model ordering, and does not depend on worker or thread count. Seeds use the
+        range [0, 2**24), keeping every seed exactly representable in both float32 and float64 execution.
+        With S random Components, there are floor(2**24 / S) distinct blocks; the sequence wraps after
+        that many estimates.
+        This limits distinct seed assignments, not the number of random draws from each seed. A single evaluation
+        cannot request more estimates than there are distinct blocks. Reusing the same seeds
+        across candidate allocations preserves each Component's own stream; it does not couple different Components.
 
     num_trials_per_estimate : int or None
         imposes an exact number of trials to execute in each run of `agent_rep <OptimizationControlMechanism.agent_rep>`
@@ -1766,6 +1787,7 @@ class OptimizationControlMechanism(ControlMechanism):
         random_variables = ALL
         initial_seed = None
         same_seed_for_all_allocations = False
+        noise_stream_policy = Parameter('independent', stateful=False, loggable=False, read_only=True, structural=True)
         num_estimates = None
         num_trials_per_estimate = None
 
@@ -1779,6 +1801,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         saved_samples = None
         saved_values = None
+
+        def _validate_noise_stream_policy(self, value):
+            if value not in ('independent', 'shared_seed'):
+                return "must be 'independent' or 'shared_seed'"
+            return None
 
         def _validate_state_feature_default_spec(self, state_feature_default):
             if not (isinstance(state_feature_default, (InputPort, OutputPort, Mechanism))
@@ -1809,6 +1836,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  return_results: bool = False,
                  data=None,
                  context=None,
+                 noise_stream_policy=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
@@ -1894,6 +1922,7 @@ class OptimizationControlMechanism(ControlMechanism):
             random_variables=random_variables,
             initial_seed=initial_seed,
             same_seed_for_all_allocations=same_seed_for_all_allocations,
+            noise_stream_policy=noise_stream_policy,
             search_statefulness=search_statefulness,
             search_function=search_function,
             search_termination_function=search_termination_function,
@@ -2945,6 +2974,8 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
         """
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
+
         super()._instantiate_output_ports(context)
 
         for control_signal in self.control_signals:
@@ -2970,15 +3001,14 @@ class OptimizationControlMechanism(ControlMechanism):
         return control_allocation
 
     def _create_randomization_control_signal(self, context):
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions, Linear
+        from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+
         num_estimates = self.parameters.num_estimates._get(context)
         num_estimates = try_extract_0d_array_item(num_estimates)
 
         if num_estimates:
             # must be SampleSpec in allocation_samples arg
-
-            # Now we need a sequence of random numbers (less than 2*32), each simulation gets a random 32 bit seed for
-            # mersenne twister.
-            randomization_seed_mod_values = self.gen_new_seed_sequence(context)
 
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
@@ -2997,9 +3027,18 @@ class OptimizationControlMechanism(ControlMechanism):
                 self.parameters.num_estimates._set(None, context)
                 return
 
+            randomization_seed_mod_values = self.gen_new_seed_sequence(context)
+            seed_ports = [variable.parameters.seed.port for variable in self.random_variables]
+            if self.parameters.noise_stream_policy._get(context) == 'independent':
+                # Each estimate receives a block of seeds. Assign a fixed slot in
+                # that block to each random variable, without adding search dimensions.
+                seed_projections = [ControlProjection(receiver=port, function=Linear(intercept=index))
+                                    for index, port in enumerate(seed_ports)]
+            else:
+                seed_projections = seed_ports
+
             randomization_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
-                                                         modulates=[param.parameters.seed.port
-                                                                    for param in self.random_variables],
+                                                         modulates=seed_projections,
                                                          allocation_samples=randomization_seed_mod_values,
                                                          modulation=OVERRIDE,
                                                          cost_options=CostFunctions.NONE,
@@ -3283,16 +3322,20 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _get_evaluate_output_struct_type(self, ctx, tags):
         if "evaluate_type_all_results" in tags:
-            return ctx.get_output_struct_type(self.agent_rep)
+            return ctx.get_output_struct_type(self.parameters.agent_rep._get_value_for_codegen())
+
         assert "evaluate_type_objective" in tags, "Unknown evaluate type: {}".format(tags)
+
         # Returns a scalar that is the predicted net_outcome
         return ctx.float_ty
 
     def _get_evaluate_alloc_struct_type(self, ctx):
-        return pnlvm.ir.ArrayType(ctx.float_ty,
-                                  len(self.parameters.control_allocation_search_space.get()))
+        return pnlvm.ir.ArrayType(ctx.float_ty, len(self.parameters.control_signals._get_value_for_codegen()))
 
     def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
+        # Defer this lookup to avoid resolving transferfunctions during cyclic module initialization.
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
+
         assert "net_outcome" in tags
         args = [ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_state_struct_type(self).as_pointer(),
@@ -3303,22 +3346,21 @@ class OptimizationControlMechanism(ControlMechanism):
         llvm_func = builder.function
         for p in llvm_func.args:
             p.attributes.add('nonnull')
+
         _, state, objective_ptr, arg_out = llvm_func.args
 
-        op_states = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                "output_ports", None)
+        op_states = pnlvm.helpers.get_state_ptr(builder, self, state, "output_ports", None)
 
         # calculate cost function
         total_cost_ptr = builder.alloca(ctx.float_ty, name="total_cost")
         builder.store(total_cost_ptr.type.pointee(-0.0), total_cost_ptr)
 
-        for i, op in enumerate(self.output_ports):
+        for i, op in enumerate(self.parameters.output_ports._get_value_for_codegen()):
             # FIXME Issue #2712: Use port total cost here
             port_cost_ptr = builder.alloca(ctx.float_ty, name="port_{}_total_cost".format(i))
             builder.store(port_cost_ptr.type.pointee(-0.0), port_cost_ptr)
 
-            op_i_state = builder.gep(op_states, [ctx.int32_ty(0),
-                                                 ctx.int32_ty(i)])
+            op_i_state = builder.gep(op_states, [ctx.int32_ty(0), ctx.int32_ty(i)])
 
             # Python uses alias-ed Parameters on Signals, but here we must get
             # the function state values.
@@ -3331,9 +3373,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
             for (flag, param) in costs:
 
-                # The check for enablement is structural and has to be done in Python.
-                # If a cost function is not enabled the cost parameter is None
-                if flag in op.parameters.cost_options.get():
+                # TODO: This should only read the total cost of ports after they
+                # ran their own combination functions
+                op_function = op.parameters.function._get_value_for_codegen()
+                if flag in op_function.parameters.enabled_cost_functions._get_value_for_codegen():
                     cost_ptr = pnlvm.helpers.get_state_ptr(builder, op_func, op_func_state, param.name)
                     cost = pnlvm.helpers.load_extract_scalar_array_one(builder, cost_ptr)
                     port_cost = builder.load(port_cost_ptr)
@@ -3350,7 +3393,8 @@ class OptimizationControlMechanism(ControlMechanism):
             port_cost = builder.select(ltz, port_cost.type(0), port_cost)
 
             # combine is not a PNL function
-            assert self.combine_costs is np.sum
+            assert self.parameters.combine_costs._get_value_for_codegen() is np.sum
+
             total_cost = builder.load(total_cost_ptr)
             total_cost = builder.fadd(total_cost, port_cost)
             builder.store(total_cost, total_cost_ptr)
@@ -3369,7 +3413,8 @@ class OptimizationControlMechanism(ControlMechanism):
         evaluate_f = ctx.import_llvm_function(self, tags=tags - {"alloc_range"})
 
         args = [*evaluate_f.type.pointee.args[:2],
-                ctx.int32_ty, ctx.int32_ty,
+                ctx.int32_ty,
+                ctx.int32_ty,
                 *evaluate_f.type.pointee.args[3:]]
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate_range")
         llvm_func = builder.function
@@ -3379,28 +3424,29 @@ class OptimizationControlMechanism(ControlMechanism):
             if isinstance(p.type, (pnlvm.ir.PointerType)):
                 p.attributes.add('nonnull')
 
-        nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition,
-                                                   params, "nodes")
+        nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition, params, "nodes")
         controller_idx = self.composition._get_node_index(self)
-        controller_params = builder.gep(nodes_params,
-                                        [ctx.int32_ty(0), ctx.int32_ty(controller_idx)])
+        controller_params = builder.gep(nodes_params, [ctx.int32_ty(0), ctx.int32_ty(controller_idx)])
         num_trials_per_estimate_ptr = ctx.get_param_or_state_ptr(builder,
                                                                  self,
-                                                                 "num_trials_per_estimate",
+                                                                 self.parameters.num_trials_per_estimate,
                                                                  param_struct_ptr=controller_params)
-        func_params = pnlvm.helpers.get_param_ptr(builder, self,
-                                                  controller_params, "function")
-        search_space = pnlvm.helpers.get_param_ptr(builder, self.function,
-                                                   func_params, "search_space")
+        func_params = pnlvm.helpers.get_param_ptr(builder, self, controller_params, "function")
+        search_space = ctx.get_param_or_state_ptr(builder,
+                                                  self.parameters.function._get_value_for_codegen(),
+                                                  self.parameters.function._get_value_for_codegen().parameters.search_space,
+                                                  param_struct_ptr=func_params)
 
         allocation = builder.alloca(evaluate_f.args[2].type.pointee, name="allocation")
         with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "alloc_loop") as (b, idx):
 
             if "evaluate_type_objective" in tags:
                 out_idx = idx
+
             elif "evaluate_type_all_results" in tags:
                 num_trials_per_estimate = builder.load(num_trials_per_estimate_ptr)
                 out_idx = builder.mul(idx, builder.trunc(num_trials_per_estimate, idx.type))
+
             else:
                 assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
@@ -3414,12 +3460,14 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _gen_llvm_evaluate_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags=frozenset()):
         assert "evaluate" in tags
-        args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
-                ctx.get_state_struct_type(self.agent_rep).as_pointer(),
+        agent_rep = self.parameters.agent_rep._get_value_for_codegen()
+
+        args = [ctx.get_param_struct_type(agent_rep).as_pointer(),
+                ctx.get_state_struct_type(agent_rep).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 self._get_evaluate_output_struct_type(ctx, tags=tags).as_pointer(),
-                ctx.get_input_struct_type(self.agent_rep).as_pointer(),
-                ctx.get_data_struct_type(self.agent_rep).as_pointer(),
+                ctx.get_input_struct_type(agent_rep).as_pointer(),
+                ctx.get_data_struct_type(agent_rep).as_pointer(),
                 ctx.int32_ty.as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
@@ -3431,88 +3479,85 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if "const_params" in debug_env:
             comp_params = builder.alloca(comp_params.type.pointee, name="const_params_loc")
-            const_params = comp_params.type.pointee(self.agent_rep._get_param_initializer(None))
+            const_params = comp_params.type.pointee(agent_rep._get_param_initializer(None))
             builder.store(const_params, comp_params)
 
         # Create a simulation copy of composition state
         comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
         if "const_state" in debug_env:
-            const_state = self.agent_rep._get_state_initializer(None)
+            const_state = agent_rep._get_state_initializer(None)
             builder.store(comp_state.type.pointee(const_state), comp_state)
+
         else:
             builder = pnlvm.helpers.memcpy(builder, comp_state, base_comp_state)
 
         # Create a simulation copy of composition data
         comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
         if "const_data" in debug_env:
-            const_data = self.agent_rep._get_data_initializer(None)
+            const_data = agent_rep._get_data_initializer(None)
             builder.store(comp_data.type.pointee(const_data), comp_data)
+
         else:
             builder = pnlvm.helpers.memcpy(builder, comp_data, base_comp_data)
 
         # Evaluate is called on composition controller
         assert self.composition.controller is self
-        assert self.composition is self.agent_rep
-        nodes_states = pnlvm.helpers.get_state_ptr(builder, self.composition,
-                                                   comp_state, "nodes")
-        nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition,
-                                                   comp_params, "nodes")
+        assert self.composition is agent_rep
+        nodes_states = pnlvm.helpers.get_state_ptr(builder, self.composition, comp_state, "nodes")
+        nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition, comp_params, "nodes")
 
         controller_idx = self.composition._get_node_index(self)
-        controller_state = builder.gep(nodes_states, [ctx.int32_ty(0),
-                                                      ctx.int32_ty(controller_idx)])
-        controller_params = builder.gep(nodes_params, [ctx.int32_ty(0),
-                                                       ctx.int32_ty(controller_idx)])
+        controller_state = builder.gep(nodes_states, [ctx.int32_ty(0), ctx.int32_ty(controller_idx)])
+        controller_params = builder.gep(nodes_params, [ctx.int32_ty(0), ctx.int32_ty(controller_idx)])
 
         # Apply allocation sample to simulation data
-        assert len(self.output_ports) == len(allocation_sample.type.pointee)
-        controller_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                                 ctx.int32_ty(controller_idx)])
+        assert len(self.parameters.output_ports._get_value_for_codegen()) == len(allocation_sample.type.pointee)
+        controller_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(controller_idx)])
         all_op_params, all_op_states = ctx.get_param_or_state_ptr(builder,
                                                                   self,
-                                                                  "output_ports",
+                                                                  self.parameters.output_ports,
                                                                   param_struct_ptr=controller_params,
                                                                   state_struct_ptr=controller_state)
-        for i, op in enumerate(self.output_ports):
+        for i, op in enumerate(self.parameters.output_ports._get_value_for_codegen()):
             op_idx = ctx.int32_ty(i)
 
             op_f = ctx.import_llvm_function(op, tags=frozenset({"simulation"}))
             op_state = builder.gep(all_op_states, [ctx.int32_ty(0), op_idx])
             op_params = builder.gep(all_op_params, [ctx.int32_ty(0), op_idx])
-            op_in = builder.alloca(op_f.args[2].type.pointee)
+            op_in = builder.alloca(op_f.args[2].type.pointee, name="output_port_function_input")
             op_out = builder.gep(controller_out, [ctx.int32_ty(0), op_idx])
 
             # FIXME: Allocation samples are generated as scalars but
             #        output ports consume 1d arrays
             sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), op_idx])
             sample_dst = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
             builder.store(builder.load(sample_ptr), sample_dst)
-            builder.call(op_f, [op_params, op_state, op_in, op_out])
 
+            builder.call(op_f, [op_params, op_state, op_in, op_out])
 
         # Get simulation function
         agent_tags = {"run", "simulation"}
         if "evaluate_type_all_results" in tags:
             agent_tags.add("simulation_results")
-        sim_f = ctx.import_llvm_function(self.agent_rep, tags=frozenset(agent_tags))
+
+        sim_f = ctx.import_llvm_function(agent_rep, tags=frozenset(agent_tags))
 
         if "const_input" in debug_env:
             comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
             if not debug_env["const_input"]:
-                input_init = [[os.defaults.variable.tolist()] for os in self.agent_rep.input_CIM.input_ports]
+                input_init = [[os.defaults.variable.tolist()] for os in agent_rep.input_CIM.input_ports]
                 print("Setting default input: ", input_init)
+
             else:
                 input_init = ast.literal_eval(debug_env["const_input"])
                 print("Setting user input in evaluate: ", input_init)
 
             builder.store(comp_input.type.pointee(input_init), comp_input)
 
-
         # Determine simulation counts
         num_trials_per_estimate_ptr = ctx.get_param_or_state_ptr(builder,
                                                                  self,
-                                                                 "num_trials_per_estimate",
+                                                                 self.parameters.num_trials_per_estimate,
                                                                  param_struct_ptr=controller_params)
 
         num_trials_per_estimate = builder.load(num_trials_per_estimate_ptr, "num_trials_per_estimate")
@@ -3532,8 +3577,10 @@ class OptimizationControlMechanism(ControlMechanism):
         # Simulations don't store output unless we run parameter fitting
         if 'evaluate_type_objective' in tags:
             comp_output = sim_f.args[4].type(None)
+
         elif 'evaluate_type_all_results' in tags:
             comp_output = arg_out
+
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
@@ -3541,25 +3588,27 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if "evaluate_type_objective" in tags:
             # Extract objective mechanism value
+            objective_mechanism = self.parameters.objective_mechanism._get_value_for_codegen()
 
-            assert self.objective_mechanism, \
+            assert objective_mechanism is not None, \
                 "objective_mechanism on OptimizationControlMechanism cannot be None in 'evaluate_type_objective'"
 
-            obj_idx = self.agent_rep._get_node_index(self.objective_mechanism)
             # Mechanisms' results are stored in the first substructure
-            objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
-                                                       ctx.int32_ty(0),
-                                                       ctx.int32_ty(obj_idx)])
+            obj_idx = agent_rep._get_node_index(objective_mechanism)
+            objective_op_ptr = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(obj_idx)])
+
             # Objective mech output shape should be 1 single element 2d array
             objective_val_ptr = builder.gep(objective_op_ptr,
                                             [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)],
-                                            "obj_val_ptr")
+                                            name="obj_val_ptr")
 
             # Apply total cost to objective value
             net_outcome_f = ctx.import_llvm_function(self, tags=tags.union({"net_outcome"}))
             builder.call(net_outcome_f, [controller_params, controller_state, objective_val_ptr, arg_out])
+
         elif "evaluate_type_all_results" in tags:
             pass
+
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
@@ -3570,16 +3619,19 @@ class OptimizationControlMechanism(ControlMechanism):
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "net_outcome" in tags:
             return self._gen_llvm_net_outcome_function(ctx=ctx, tags=tags)
+
         if "evaluate" in tags and "alloc_range" in tags:
             return self._gen_llvm_evaluate_alloc_range_function(ctx=ctx, tags=tags)
+
         if "evaluate" in tags:
             return self._gen_llvm_evaluate_function(ctx=ctx, tags=tags)
 
-        is_comp = not isinstance(self.agent_rep, Function)
+        agent_rep = self.parameters.agent_rep._get_value_for_codegen()
+        is_comp = not isinstance(agent_rep, Function)
         if is_comp:
-            extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
-                          ctx.get_state_struct_type(self.agent_rep).as_pointer(),
-                          ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+            extra_args = [ctx.get_param_struct_type(agent_rep).as_pointer(),
+                          ctx.get_state_struct_type(agent_rep).as_pointer(),
+                          ctx.get_data_struct_type(agent_rep).as_pointer()]
         else:
             extra_args = []
 
@@ -3796,15 +3848,28 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
     def gen_new_seed_sequence(self, context=None):
-        """
-        Generate a new sequence of seeds for use in randomization control signal control allocations
-        """
+        """Generate estimate seeds, or seed-block bases for independent component streams."""
 
         num_estimates = self.parameters.num_estimates._get(context)
         num_estimates = try_extract_0d_array_item(num_estimates)
 
-
-
+        if self.parameters.noise_stream_policy._get(context) == 'independent':
+            # Seeds pass through floating-point ControlSignals before reaching the
+            # RNG's uint32 seed. Keep every base AND component seed exactly representable.
+            # Seed allocation happens before compilation, so the eventual compiler
+            # context may use a different precision from its global default.
+            seed_limit = 2**24
+            num_streams = len(self.random_variables)
+            num_blocks = seed_limit // num_streams
+            if num_estimates > num_blocks:
+                raise OptimizationControlMechanismError(
+                    f"'{self.name}' requests {num_estimates} estimates with {num_streams} independent noise streams; "
+                    f"at most {num_blocks} estimates have distinct seeds in the float32-safe seed range."
+                )
+            start = int(self._seed_counter) % num_blocks
+            seeds = [((start + i) % num_blocks) * num_streams for i in range(num_estimates)]
+            self._seed_counter = (start + num_estimates) % num_blocks
+            return seeds
         seeds = [self._seed_counter + i for i in range(num_estimates)]
 
         # Increment seed counter for next time

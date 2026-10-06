@@ -1420,8 +1420,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for current_exec_set in self.execution_sets:
             for component in current_exec_set:
                 mech_input_ty = ctx.get_input_struct_type(component.mechanism)
-                variable = builder.alloca(mech_input_ty)
-                z_values[component] = builder.alloca(mech_input_ty.elements[0].elements[0])
+                variable = builder.alloca(mech_input_ty, name="mech_input")
+                z_values[component] = builder.alloca(mech_input_ty.elements[0].elements[0], name="zvalue")
                 builder.store(z_values[component].type.pointee(None),z_values[component])
 
                 if (NodeRole.INPUT in self.composition.get_roles_by_node(component.mechanism)
@@ -1475,7 +1475,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # 3) compute errors
         loss_fn = ctx.import_llvm_function(loss)
-        total_loss = builder.alloca(ctx.float_ty)
+        total_loss = builder.alloca(ctx.float_ty, name="total_loss")
         builder.store(total_loss.type.pointee(0), total_loss)
 
         error_dict = {}
@@ -1486,7 +1486,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 node_z_value = z_values[node]
                 activation_func_derivative = node._gen_llvm_execute_derivative_func(ctx, builder, state, params, node_z_value)
-                error_val = builder.alloca(z_values[node].type.pointee)
+                error_val = builder.alloca(z_values[node].type.pointee, name="error_val")
                 error_dict[node] = error_val
 
                 if NodeRole.OUTPUT in self.composition.get_roles_by_node(node.mechanism):
@@ -2465,7 +2465,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         fun = ctx.import_llvm_function(self.mechanism.function, tags=frozenset({"derivative"}))
         fun_input_ty = fun.args[2].type.pointee
 
-        mech_input = builder.alloca(fun_input_ty)
+        mech_input = builder.alloca(fun_input_ty, name="derivative_function_input")
         mech_input_ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.store(builder.load(arg_in), mech_input_ptr)
 

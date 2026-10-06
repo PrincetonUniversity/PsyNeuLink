@@ -343,6 +343,8 @@ class LLVMBuilderContext:
 
     def get_param_or_state_ptr(self, builder, component, param, *, param_struct_ptr=None, state_struct_ptr=None, history=0):
         param_name = getattr(param, "name", param)
+        assert param is param_name or param in component.parameters
+
         param = None
         state = None
 
