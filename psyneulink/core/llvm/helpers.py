@@ -62,20 +62,31 @@ def array_ptr_loop(builder, array, id):
 
 def memcpy(builder, dst, src):
 
+    assert src.type.pointee == dst.type.pointee, "Mismatched copy types: {} -> {}".format(src, dst)
+
     bool_ty = ir.IntType(1)
     char_ptr_ty = ir.IntType(8).as_pointer()
 
-    ptr_src = builder.bitcast(src, char_ptr_ty)
-    ptr_dst = builder.bitcast(dst, char_ptr_ty)
+    # The objectsize intrinsic gets the size of the overall allocation even
+    # for pointers to sub-elements. Create a new dummy allocation of the
+    # matching type to get specific copy size.
+    sized_buffer_ptr = builder.alloca(src.type.pointee, name="sized_buffer")
+    sized_buffer_char_ptr = builder.bitcast(sized_buffer_ptr, char_ptr_ty)
 
+    # The params are: obj pointer, 0 on unknown size, NULL is unknown, size at runtime
     obj_size_ty = ir.FunctionType(ir.IntType(64), [char_ptr_ty, bool_ty, bool_ty, bool_ty])
     obj_size_f = builder.function.module.declare_intrinsic("llvm.objectsize.i64", [], obj_size_ty)
-    # the params are: obj pointer, 0 on unknown size, NULL is unknown, size at runtime
-    obj_size = builder.call(obj_size_f, [ptr_dst, bool_ty(1), bool_ty(0), bool_ty(0)])
 
+    obj_size = builder.call(obj_size_f, [sized_buffer_char_ptr, bool_ty(0), bool_ty(1), bool_ty(0)])
+
+    # The parameters are: destination, sources, size, volatile
     memcpy_ty = ir.FunctionType(ir.VoidType(), [char_ptr_ty, char_ptr_ty, obj_size.type, bool_ty])
     memcpy_f = builder.function.module.declare_intrinsic("llvm.memcpy", [], memcpy_ty)
-    builder.call(memcpy_f, [ptr_dst, ptr_src, obj_size, bool_ty(0)])
+
+    char_ptr_src = builder.bitcast(src, char_ptr_ty)
+    char_ptr_dst = builder.bitcast(dst, char_ptr_ty)
+
+    builder.call(memcpy_f, [char_ptr_dst, char_ptr_src, obj_size, bool_ty(0)])
 
     return builder
 
