@@ -785,3 +785,99 @@ def test_a_distributed_hierarchical_fit_scores_the_same_way(trained_artifact):
 
     np.testing.assert_allclose(there.beta, here.beta, rtol=1e-10)
     np.testing.assert_allclose(there.sigma, here.sigma, rtol=1e-10)
+
+
+# ===========================================================================
+# Sampling the hierarchical posterior
+#
+# The budgets here are far too small for the draws to mean anything; what is
+# checked is that the pieces fit together, and that a fit that has not
+# converged says so.
+# ===========================================================================
+def _sample_group(artifact, **hierarchical):
+    import functools
+
+    options = {
+        "subject_id": "subject",
+        "sampler": "nuts",
+        # max_tree_depth is capped well below the default to keep these runs short: early in
+        # warmup, the sampler can reach the cap on every draw.
+        "sampler_options": {
+            "draws": 25, "warmup": 25, "chains": 2, "seed": 0, "max_tree_depth": 3,
+        },
+    }
+    options.update(hierarchical)
+    pec = pnl.ParameterEstimationComposition(
+        data=_group_frame(),
+        fit_method="hierarchical",
+        hierarchical_options=options,
+        distributed_options={
+            "pec_factory": functools.partial(_neural_participant_pec, artifact)
+        },
+    )
+    return pec, pec.run()
+
+
+@pytest.mark.composition
+@pytest.mark.usefixtures("single_threaded_torch")
+def test_a_sampled_fit_reports_draws_for_the_group_and_every_participant(trained_artifact):
+    pec, results = _sample_group(trained_artifact)
+    n_subjects, n_params = 2, 2
+
+    assert results.group_draws.shape == (2, 25, 1, n_params)
+    assert results.scale_draws.shape == (2, 25, n_params)
+    assert results.subject_draws.shape == (2, 25, n_subjects, n_params)
+    assert results.subject_parameters.shape == (n_subjects, n_params)
+    assert list(results.group_parameters.columns) == [
+        "mean_z", "sd_z", "value", "lower_95", "upper_95", "lower", "upper"
+    ]
+    # Estimates stay inside the range the participants' models search.
+    assert np.all(results.subject_draws >= np.array(RATE_BOUNDS[0]).min())
+    assert results.settings["sampler"] == "nuts"
+    assert pec.fit_results is results
+
+
+@pytest.mark.composition
+@pytest.mark.usefixtures("single_threaded_torch")
+def test_a_sampled_fit_reports_whether_it_converged(trained_artifact):
+    # 25 draws cannot have converged, and the result has to say so rather than presenting the
+    # estimates as though they described the posterior.
+    _, results = _sample_group(trained_artifact)
+    assert set(results.convergence.columns) == {"r_hat", "ess"}
+    assert len(results.convergence) == 4          # two group means, two log scales
+    assert np.all(np.isfinite(results.convergence["r_hat"]))
+    assert "r_hat" in repr(results) or "converged" in repr(results)
+
+
+@pytest.mark.composition
+@pytest.mark.usefixtures("single_threaded_torch")
+def test_a_sampled_fit_reports_no_single_best_value(trained_artifact):
+    # The draws are the result; there is no single best value.
+    pec, results = _sample_group(trained_artifact)
+    assert pec.optimal_value is None
+    assert set(pec.optimized_parameter_values) == set(results.fit_param_names)
+
+
+@pytest.mark.composition
+@pytest.mark.usefixtures("single_threaded_torch")
+def test_sampling_refuses_a_simulated_likelihood(trained_artifact):
+    # Sampling differentiates the score, which simulating the model cannot provide.
+    def simulated_participant(data, subject_index=None):
+        pec, inputs = _neural_participant_pec(trained_artifact, data, subject_index)
+        pec._likelihood_estimator = "kde"
+        # Without common random numbers, a model scored by simulation is refused before the
+        # check this test is about.
+        pec.controller.parameters.same_seed_for_all_allocations.set(True)
+        return pec, inputs
+
+    pec = pnl.ParameterEstimationComposition(
+        data=_group_frame(),
+        fit_method="hierarchical",
+        hierarchical_options={
+            "subject_id": "subject", "sampler": "nuts",
+            "sampler_options": {"draws": 2, "warmup": 2, "chains": 1, "max_tree_depth": 2},
+        },
+        distributed_options={"pec_factory": simulated_participant},
+    )
+    with pytest.raises(Exception, match="gives no gradient"):
+        pec.run()
