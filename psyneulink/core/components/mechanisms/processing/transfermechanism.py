@@ -1682,8 +1682,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
             prev_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state, history=1)
 
-            builder.store(builder.load(current_mech_value_ptr), func_in_current_ptr)
-            builder.store(builder.load(prev_mech_value_ptr), func_in_prev_ptr)
+            pnlvm.helpers.memcpy(builder, func_in_current_ptr, current_mech_value_ptr)
+            pnlvm.helpers.memcpy(builder, func_in_prev_ptr, prev_mech_value_ptr)
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
 
