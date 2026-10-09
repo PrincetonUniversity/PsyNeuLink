@@ -142,7 +142,7 @@ def get_state_space(builder, component, state_ptr, name):
     for i in range(len(val_ptr.type.pointee) - 1, 0, -1):
         dest_ptr = get_state_ptr(builder, component, state_ptr, name, i)
         src_ptr = get_state_ptr(builder, component, state_ptr, name, i - 1)
-        builder.store(builder.load(src_ptr), dest_ptr)
+        memcpy(builder, dest_ptr, src_ptr)
 
     return get_state_ptr(builder, component, state_ptr, name)
 
