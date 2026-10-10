@@ -1,0 +1,588 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Neural Likelihoods &mdash; PsyNeuLink 0.21.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="EMComposition" href="EMComposition.html" />
+    <link rel="prev" title="Hierarchical Fitting" href="HierarchicalFitting.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.21.0.0
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="Library.html">Library</a> &gt;</li>
+        
+          <li><a href="Compositions.html">Compositions</a> &gt;</li>
+        
+          <li><a href="ParameterEstimationComposition.html">ParameterEstimationComposition</a> &gt;</li>
+        
+      <li>Neural Likelihoods</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="neural-likelihoods">
+<span id="neurallikelihood"></span><h1>Neural Likelihoods<a class="headerlink" href="#neural-likelihoods" title="Link to this heading">¶</a></h1>
+<p>In <a class="reference internal" href="ParameterEstimationComposition.html#parameterestimationcomposition-data-fitting"><span class="std std-ref">data fitting</span></a>, a <a class="reference internal" href="ParameterEstimationComposition.html"><span class="doc">ParameterEstimationComposition</span></a>
+computes the likelihood of its <strong>data</strong> under each set of parameter values it considers by simulating
+the model <code class="docutils literal notranslate"><span class="pre">num_estimates</span></code> times and estimating a density from the simulated outcomes. A neural
+likelihood is a density estimator that is trained beforehand, on data simulated from the model, and then
+used in place of those simulations. Each evaluation of the likelihood then requires a single evaluation
+of the estimator, and the likelihood varies smoothly with the parameter values.</p>
+<section id="training-an-estimator">
+<span id="neural-likelihood-training"></span><h2>Training an Estimator<a class="headerlink" href="#training-an-estimator" title="Link to this heading">¶</a></h2>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood"><code class="xref any py py-func docutils literal notranslate"><span class="pre">train_neural_likelihood</span></code></a> simulates the model at parameter values drawn uniformly from within the ranges
+specified in <strong>bounds</strong>, and trains an estimator on the results. The model can be specified directly,
+together with the inputs used to run it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">likelihood</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">train_neural_likelihood</span><span class="p">(</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="p">{</span><span class="s2">"rate"</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">),</span> <span class="s2">"threshold"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)},</span>
+    <span class="n">outcome_names</span><span class="o">=</span><span class="p">(</span><span class="s2">"decision"</span><span class="p">,</span> <span class="s2">"response_time"</span><span class="p">),</span>
+    <span class="n">pec</span><span class="o">=</span><span class="n">pec</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">comp</span><span class="p">:</span> <span class="n">trial_inputs</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">likelihood</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"ddm_nle.pt"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The keys of <strong>bounds</strong> must name the fitted parameters in the order in which the model lists them, and
+<strong>outcome_names</strong> must be the column names of the <strong>data</strong> that the estimator will be used to fit, which
+are in the order of the model’s <code class="docutils literal notranslate"><span class="pre">outcome_variables</span></code>. Each set of parameter values is simulated on the
+trials in <strong>inputs</strong>, each as many times as the model’s <code class="docutils literal notranslate"><span class="pre">num_estimates</span></code>.</p>
+<p>To distribute the simulations over a <a class="reference external" href="https://www.dask.org">Dask</a> cluster, specify a <strong>pec_factory</strong>
+in place of <strong>pec</strong>, together with <strong>distributed_options</strong> (see <a class="reference internal" href="DistributedFitting.html#distributedfitting"><span class="std std-ref">Distributed Fitting</span></a>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">likelihood</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">train_neural_likelihood</span><span class="p">(</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="p">{</span><span class="s2">"rate"</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">),</span> <span class="s2">"threshold"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)},</span>
+    <span class="n">outcome_names</span><span class="o">=</span><span class="p">(</span><span class="s2">"decision"</span><span class="p">,</span> <span class="s2">"response_time"</span><span class="p">),</span>
+    <span class="n">pec_factory</span><span class="o">=</span><span class="n">build_pec</span><span class="p">,</span>
+    <span class="n">n_trials_per_sample</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">distributed_options</span><span class="o">=</span><span class="p">{</span><span class="s2">"n_workers"</span><span class="p">:</span> <span class="mi">8</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">build_pec(data)</span> <span class="pre">-&gt;</span> <span class="pre">(pec,</span> <span class="pre">inputs)</span></code> is a top-level function that builds the model, as for distributed
+fitting. Each worker calls it with a table of <strong>n_trials_per_sample</strong> rows to build its own copy of the
+model.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood"><code class="xref any py py-func docutils literal notranslate"><span class="pre">train_neural_likelihood</span></code></a> generates an error if the estimator’s negative log-likelihood on the data held
+out from training is not finite, and records it per trial as <code class="docutils literal notranslate"><span class="pre">metadata.val_nll</span></code>. This shows that training
+worked, not that the estimator is accurate; for that, fit data simulated at known parameter values.</p>
+</section>
+<section id="fitting-with-an-estimator">
+<span id="neural-likelihood-fitting"></span><h2>Fitting with an Estimator<a class="headerlink" href="#fitting-with-an-estimator" title="Link to this heading">¶</a></h2>
+<p>To use a trained estimator, specify <code class="docutils literal notranslate"><span class="pre">likelihood_estimator=&quot;neural&quot;</span></code>, and the estimator, or the path to
+one saved with its <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">save</span></code></a> method, as the <code class="docutils literal notranslate"><span class="pre">&quot;artifact&quot;</span></code> of
+<strong>likelihood_estimator_kwargs</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pec</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ParameterEstimationComposition</span><span class="p">(</span>
+    <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">comp</span><span class="p">],</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="p">{(</span><span class="s2">"rate"</span><span class="p">,</span> <span class="n">decision</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">"threshold"</span><span class="p">,</span> <span class="n">decision</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)},</span>
+    <span class="n">outcome_variables</span><span class="o">=</span><span class="p">[</span><span class="n">decision</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DECISION_OUTCOME</span><span class="p">],</span>
+                       <span class="n">decision</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESPONSE_TIME</span><span class="p">]],</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">optimization_function</span><span class="o">=</span><span class="s2">"differential_evolution"</span><span class="p">,</span>
+    <span class="n">likelihood_estimator</span><span class="o">=</span><span class="s2">"neural"</span><span class="p">,</span>
+    <span class="n">likelihood_estimator_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"artifact"</span><span class="p">:</span> <span class="s2">"ddm_nle.pt"</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">pec</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">comp</span><span class="p">:</span> <span class="n">trial_inputs</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>The composition being fitted is not simulated when fitting with an estimator, so it is not compiled.
+<a class="reference internal" href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.log_likelihood" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.log_likelihood"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">log_likelihood</span></code></a> also uses the estimator.</p>
+<p>A parameter that depends on a condition (specified in <strong>depends_on</strong>) is fit separately for each condition,
+and each trial is scored with the value for its condition. The estimator for such a fit is trained on the
+model without <strong>depends_on</strong>, over the range of each parameter.</p>
+<p>In a <a class="reference internal" href="HierarchicalFitting.html#hierarchicalfitting"><span class="std std-ref">hierarchical fit</span></a>, <code class="docutils literal notranslate"><span class="pre">likelihood_estimator</span></code> is specified for the
+participant models built by the <code class="docutils literal notranslate"><span class="pre">pec_factory</span></code>, and not for the group.</p>
+</section>
+<section id="trial-features">
+<span id="neural-likelihood-trial-features"></span><h2>Trial Features<a class="headerlink" href="#trial-features" title="Link to this heading">¶</a></h2>
+<p>Where trials differ from one another (for example, congruent and incongruent trials), an estimator
+represents the distribution of outcomes on each kind of trial, which it distinguishes by the values of the
+model’s inputs on each trial.</p>
+<p>When fitting, the same inputs are taken from those specified for <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> or
+<a class="reference internal" href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.log_likelihood" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.log_likelihood"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">log_likelihood</span></code></a>, including any that do not vary in the
+data being fit. These must be laid out as they were for training, though the nodes to which they are
+given can be listed in any order, and an input that did not vary in training must have the same value;
+otherwise an error is generated, since the estimator has no information about such trials.</p>
+</section>
+<section id="matching-an-estimator-to-a-model">
+<span id="neural-likelihood-matching"></span><h2>Matching an Estimator to a Model<a class="headerlink" href="#matching-an-estimator-to-a-model" title="Link to this heading">¶</a></h2>
+<p>An estimator is valid only for the model, and the ranges of parameter values, for which it was trained;
+within those ranges, it can be reused for any fit of that model. It records the following, and generates
+an error if it is used to fit a model that differs in any of them:</p>
+<ul class="simple">
+<li><p>the fitted parameters, or their order;</p></li>
+<li><p>the range of any parameter, which must lie within the range used for training;</p></li>
+<li><p>the outcome variables, their order, or which of them are categorical;</p></li>
+<li><p>the values of a categorical outcome, which must be among those simulated in training.</p></li>
+</ul>
+<p>Other properties of the model, such as the values of parameters that are not fit, are not recorded; an
+estimator should be retrained if any of these are changed.</p>
+</section>
+<section id="limitations">
+<span id="neural-likelihood-limitations"></span><h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>At least one outcome must be continuous, such as a response time: an estimator cannot be trained for a
+model whose outcomes are all categorical.</p></li>
+</ul>
+</section>
+<section id="requirements">
+<span id="neural-likelihood-requirements"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">¶</a></h2>
+<p>Neural likelihoods require the <code class="docutils literal notranslate"><span class="pre">nle</span></code> extra, installed with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;psyneulink[nle]&quot;</span></code>, which
+includes <a class="reference external" href="https://sbi-dev.github.io/sbi/">sbi</a> and PyTorch.</p>
+<p><a class="reference download internal" download="" href="_downloads/9bf3a44931eb5b279ed89bb8e9e5b7d9/train_neural_likelihood.py"><code class="xref download docutils literal notranslate"><span class="pre">train_neural_likelihood.py</span></code></a> trains an
+estimator for a drift-diffusion model, in one process or, with <code class="docutils literal notranslate"><span class="pre">--distributed</span></code>, over a Dask cluster, and
+uses it to fit simulated data.</p>
+</section>
+<section id="class-reference">
+<span id="neural-likelihood-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood">
+<span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.</span></span><span class="sig-name descname"><span class="pre">train_neural_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcome_names</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pec_factory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_parameter_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_trials_per_sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categorical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood" title="Link to this definition">¶</a></dt>
+<dd><p>Train a <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood"><code class="xref py py-class docutils literal notranslate"><span class="pre">NeuralLikelihood</span></code></a> on data simulated from a composition.</p>
+<p>See <a class="reference internal" href="#neurallikelihood"><span class="std std-ref">Neural Likelihoods</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bounds</strong> (<em>Mapping</em>) – specifies the range <code class="docutils literal notranslate"><span class="pre">(lower,</span> <span class="pre">upper)</span></code> of each fitted parameter, by name, in the order the model
+lists them.  The estimator is valid only within these ranges.</p></li>
+<li><p><strong>outcome_names</strong> (<em>Sequence</em><em>[</em><em>str</em><em>]</em>) – specifies the names of the outcome variables, which must be the column names of the <strong>data</strong> the
+estimator will be used to fit, in the order of the model’s <code class="docutils literal notranslate"><span class="pre">outcome_variables</span></code>.</p></li>
+<li><p><strong>pec</strong> (<em>ParameterEstimationComposition : default None</em>) – specifies a model to simulate in this process.  Requires <strong>inputs</strong>.</p></li>
+<li><p><strong>inputs</strong> (<em>Mapping : default None</em>) – specifies the inputs with which <strong>pec</strong> is run; each parameter draw simulates the trials in
+<strong>inputs</strong>, each as many times as the model’s <code class="docutils literal notranslate"><span class="pre">num_estimates</span></code>.</p></li>
+<li><p><strong>pec_factory</strong> (<em>callable : default None</em>) – specifies a function <code class="docutils literal notranslate"><span class="pre">pec_factory(data)</span> <span class="pre">-&gt;</span> <span class="pre">(pec,</span> <span class="pre">inputs)</span></code> that builds the model, scored by
+simulating it, as used for <a class="reference internal" href="DistributedFitting.html#distributedfitting"><span class="std std-ref">distributed fitting</span></a>; it is called with a table
+of <strong>n_trials_per_sample</strong> rows.  Required by <strong>distributed_options</strong>.  Exactly one of <strong>pec</strong> and
+<strong>pec_factory</strong> must be specified.</p></li>
+<li><p><strong>n_parameter_samples</strong> (<em>int : default 20000</em>) – specifies the number of parameter values drawn uniformly from within <strong>bounds</strong> and simulated.</p></li>
+<li><p><strong>n_trials_per_sample</strong> (<em>int : default None</em>) – specifies the number of trials in the table <strong>pec_factory</strong> is called with, which sets the trials
+each parameter draw simulates as <strong>inputs</strong> does for <strong>pec</strong>; 100 if not specified.</p></li>
+<li><p><strong>categorical</strong> (<em>Sequence</em><em>[</em><em>bool</em><em>] </em><em>: default None</em>) – specifies which outcome variables are categorical; if not specified, this is inferred from the
+simulated data.</p></li>
+<li><p><strong>epochs</strong> (<em>int : default 30</em>) – specifies the number of passes over the simulated data made in training.</p></li>
+<li><p><strong>batch_size</strong> (<em>int : default 512</em>) – specifies the number of rows in each training step.</p></li>
+<li><p><strong>learning_rate</strong> (<em>float : default 5e-4</em>) – specifies the learning rate of the Adam optimizer used for training.</p></li>
+<li><p><strong>validation_fraction</strong> (<em>float : default 0.1</em>) – specifies the fraction of the parameter draws whose simulated data are held out from training, to
+evaluate the estimator.</p></li>
+<li><p><strong>seed</strong> (<em>int : default 0</em>) – specifies the seed for the parameter draws, the noise simulated at each of them, and training.</p></li>
+<li><p><strong>distributed_options</strong> (<em>Mapping : default None</em>) – specifies a Dask cluster over which to distribute the simulations, as for <a class="reference internal" href="DistributedFitting.html#distributedfitting"><span class="std std-ref">distributed fitting</span></a>.  Requires <strong>pec_factory</strong>.  Each worker builds its own model before simulating,
+so this is worthwhile only for more than a few hundred parameter draws.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>A trained <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood"><code class="xref py py-class docutils literal notranslate"><span class="pre">NeuralLikelihood</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.</span></span><span class="sig-name descname"><span class="pre">NeuralLikelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_probe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood" title="Link to this definition">¶</a></dt>
+<dd><p>A trained conditional density <code class="docutils literal notranslate"><span class="pre">p(outcomes</span> <span class="pre">|</span> <span class="pre">parameters,</span> <span class="pre">trial</span> <span class="pre">features)</span></code>.</p>
+<p>Built by <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood"><code class="xref any py py-func docutils literal notranslate"><span class="pre">train_neural_likelihood</span></code></a>, saved with <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">save</span></code></a>, and reloaded with <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.load" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.load"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">load</span></code></a>.
+<a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.trial_log_prob" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.trial_log_prob"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">trial_log_prob</span></code></a> is differentiable with respect to the parameters.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.metadata" title="Link to this definition">¶</a></dt>
+<dd><p>what the estimator was trained for, which is checked against a model before it is used to fit one
+(see <a class="reference internal" href="#neural-likelihood-matching"><span class="std std-ref">Matching an Estimator to a Model</span></a>), and its negative log-likelihood per trial on the data held out
+from training (<code class="docutils literal notranslate"><span class="pre">val_nll</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>NeuralLikelihoodMetadata</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.trial_log_prob">
+<span class="sig-name descname"><span class="pre">trial_log_prob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcomes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.trial_log_prob" title="Link to this definition">¶</a></dt>
+<dd><p>Per-trial log densities, differentiable with respect to <code class="docutils literal notranslate"><span class="pre">theta</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">theta</span></code> is one vector of parameters for every trial, or one row of them per trial.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.log_likelihood">
+<span class="sig-name descname"><span class="pre">log_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcomes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.log_likelihood" title="Link to this definition">¶</a></dt>
+<dd><p>Total log-likelihood of <code class="docutils literal notranslate"><span class="pre">outcomes</span></code> under <code class="docutils literal notranslate"><span class="pre">theta</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save" title="Link to this definition">¶</a></dt>
+<dd><p>Write weights and metadata to <code class="docutils literal notranslate"><span class="pre">path</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.load">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.load" title="Link to this definition">¶</a></dt>
+<dd><p>Read back an estimator written by <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">save</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood" title="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood"><code class="xref py py-class docutils literal notranslate"><span class="pre">NeuralLikelihood</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihoodError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.</span></span><span class="sig-name descname"><span class="pre">NeuralLikelihoodError</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihoodError" title="Link to this definition">¶</a></dt>
+<dd><p>Raised when a neural likelihood is misconfigured or does not match its model.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="EMComposition.html" class="btn btn-neutral float-right" title="EMComposition" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="HierarchicalFitting.html" class="btn btn-neutral" title="Hierarchical Fitting" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Neural Likelihoods</a><ul>
+<li><a class="reference internal" href="#training-an-estimator">Training an Estimator</a></li>
+<li><a class="reference internal" href="#fitting-with-an-estimator">Fitting with an Estimator</a></li>
+<li><a class="reference internal" href="#trial-features">Trial Features</a></li>
+<li><a class="reference internal" href="#matching-an-estimator-to-a-model">Matching an Estimator to a Model</a></li>
+<li><a class="reference internal" href="#limitations">Limitations</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#class-reference">Class Reference</a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.train_neural_likelihood"><code class="docutils literal notranslate"><span class="pre">train_neural_likelihood()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood"><code class="docutils literal notranslate"><span class="pre">NeuralLikelihood</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.metadata"><code class="docutils literal notranslate"><span class="pre">NeuralLikelihood.metadata</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.trial_log_prob"><code class="docutils literal notranslate"><span class="pre">NeuralLikelihood.trial_log_prob()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.log_likelihood"><code class="docutils literal notranslate"><span class="pre">NeuralLikelihood.log_likelihood()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.save"><code class="docutils literal notranslate"><span class="pre">NeuralLikelihood.save()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihood.load"><code class="docutils literal notranslate"><span class="pre">NeuralLikelihood.load()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.neurallikelihoodfunctions.NeuralLikelihoodError"><code class="docutils literal notranslate"><span class="pre">NeuralLikelihoodError</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=920ce76c"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

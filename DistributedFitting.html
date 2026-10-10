@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Distributed Fitting &mdash; PsyNeuLink 0.20.2.0 documentation</title>
+  <title>Distributed Fitting &mdash; PsyNeuLink 0.21.0.0 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="EMComposition" href="EMComposition.html" />
+    <link rel="next" title="Hierarchical Fitting" href="HierarchicalFitting.html" />
     <link rel="prev" title="ParameterEstimationComposition" href="ParameterEstimationComposition.html" /> 
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.20.2.0
+                  0.21.0.0
                 </div>
               
             
@@ -214,7 +214,7 @@ each candidate’s log-likelihood is scored on a worker. Distributed fitting req
 the <code class="docutils literal notranslate"><span class="pre">psyneulink[dask]</span></code> extra (see <a class="reference internal" href="#distributed-fitting-requirements"><span class="std std-ref">Requirements</span></a>), LLVM
 execution, and a single scalar objective.</p>
 <section id="enabling-distributed-fitting">
-<span id="distributed-fitting-enabling"></span><h2>Enabling distributed fitting<a class="headerlink" href="#enabling-distributed-fitting" title="Link to this heading">¶</a></h2>
+<span id="distributed-fitting-enabling"></span><h2>Enabling Distributed Fitting<a class="headerlink" href="#enabling-distributed-fitting" title="Link to this heading">¶</a></h2>
 <p>Pass <code class="docutils literal notranslate"><span class="pre">distributed=True</span></code> and a <code class="docutils literal notranslate"><span class="pre">pec_factory</span></code> to the <code class="xref any docutils literal notranslate"><span class="pre">PECOptimizationFunction</span></code>, or
 to the <a class="reference internal" href="ParameterEstimationComposition.html"><span class="doc">ParameterEstimationComposition</span></a>, which forwards them:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">PECOptimizationFunction</span><span class="p">(</span>
@@ -263,6 +263,8 @@ Ignored when <code class="docutils literal notranslate"><span class="pre">client
 the fit starts: <code class="docutils literal notranslate"><span class="pre">srun</span></code> tasks minus two with the launcher (see
 <a class="reference internal" href="#distributed-fitting-running"><span class="std std-ref">Running</span></a>), or the <code class="docutils literal notranslate"><span class="pre">LocalCluster</span></code> size on a single node.</p>
 <p>Any optuna sampler or study and <code class="docutils literal notranslate"><span class="pre">differential_evolution</span></code> are supported.</p>
+<p>The same <code class="docutils literal notranslate"><span class="pre">pec_factory</span></code> and <code class="docutils literal notranslate"><span class="pre">distributed_options</span></code> can distribute the simulations used to train a
+<a class="reference internal" href="NeuralLikelihood.html#neurallikelihood"><span class="std std-ref">neural likelihood</span></a>.</p>
 </section>
 <section id="running">
 <span id="distributed-fitting-running"></span><h2>Running<a class="headerlink" href="#running" title="Link to this heading">¶</a></h2>
@@ -293,7 +295,7 @@ one-node cluster automatically, with no launcher; <code class="docutils literal 
 </pre></div>
 </div>
 <section id="using-an-existing-cluster">
-<h3>Using an existing cluster<a class="headerlink" href="#using-an-existing-cluster" title="Link to this heading">¶</a></h3>
+<h3>Using an Existing Cluster<a class="headerlink" href="#using-an-existing-cluster" title="Link to this heading">¶</a></h3>
 <p>If you already run your own Dask cluster – for example in a notebook or outside
 SLURM – pass it as <code class="docutils literal notranslate"><span class="pre">client</span></code> and PsyNeuLink uses it instead of creating one:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
@@ -331,7 +333,7 @@ Dask is never imported.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="EMComposition.html" class="btn btn-neutral float-right" title="EMComposition" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="HierarchicalFitting.html" class="btn btn-neutral float-right" title="Hierarchical Fitting" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="ParameterEstimationComposition.html" class="btn btn-neutral" title="ParameterEstimationComposition" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
@@ -367,9 +369,9 @@ Dask is never imported.</p>
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
 <li><a class="reference internal" href="#">Distributed Fitting</a><ul>
-<li><a class="reference internal" href="#enabling-distributed-fitting">Enabling distributed fitting</a></li>
+<li><a class="reference internal" href="#enabling-distributed-fitting">Enabling Distributed Fitting</a></li>
 <li><a class="reference internal" href="#running">Running</a><ul>
-<li><a class="reference internal" href="#using-an-existing-cluster">Using an existing cluster</a></li>
+<li><a class="reference internal" href="#using-an-existing-cluster">Using an Existing Cluster</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#reproducibility">Reproducibility</a></li>
@@ -393,7 +395,7 @@ Dask is never imported.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=8cd64c98"></script>
+         <script src="_static/documentation_options.js?v=920ce76c"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

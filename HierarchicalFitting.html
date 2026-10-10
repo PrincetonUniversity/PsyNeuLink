@@ -1,0 +1,592 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Hierarchical Fitting &mdash; PsyNeuLink 0.21.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Neural Likelihoods" href="NeuralLikelihood.html" />
+    <link rel="prev" title="Distributed Fitting" href="DistributedFitting.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.21.0.0
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="Library.html">Library</a> &gt;</li>
+        
+          <li><a href="Compositions.html">Compositions</a> &gt;</li>
+        
+          <li><a href="ParameterEstimationComposition.html">ParameterEstimationComposition</a> &gt;</li>
+        
+      <li>Hierarchical Fitting</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="hierarchical-fitting">
+<span id="hierarchicalfitting"></span><h1>Hierarchical Fitting<a class="headerlink" href="#hierarchical-fitting" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="ParameterEstimationComposition.html"><span class="doc">ParameterEstimationComposition</span></a> normally fits one participant’s data at a time, which
+treats each participant as unrelated to the others, so every estimate is only as good as
+that participant’s own trial count allows.</p>
+<p>Hierarchical fitting instead fits the group jointly: participants are drawn from a
+population, and each participant’s estimate is informed by the rest of the group.
+Estimation is by empirical-Bayes Laplace EM, with the group modelled as</p>
+<div class="math notranslate nohighlight">
+\[z_s \sim \mathcal{N}(\beta,\ \mathrm{diag}(\sigma))\]</div>
+<p>where <span class="math notranslate nohighlight">\(z_s\)</span> is participant <span class="math notranslate nohighlight">\(s\)</span>’s parameter vector in an unconstrained space,
+and <span class="math notranslate nohighlight">\(\beta\)</span> and <span class="math notranslate nohighlight">\(\sigma\)</span> are estimated from the group.</p>
+<section id="enabling-hierarchical-fitting">
+<span id="hierarchical-fitting-enabling"></span><h2>Enabling Hierarchical Fitting<a class="headerlink" href="#enabling-hierarchical-fitting" title="Link to this heading">¶</a></h2>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">fit_method=&quot;hierarchical&quot;</span></code>, name the column of <code class="docutils literal notranslate"><span class="pre">data</span></code> that identifies
+participants, and supply a <code class="docutils literal notranslate"><span class="pre">pec_factory</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pec</span> <span class="o">=</span> <span class="n">ParameterEstimationComposition</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">stacked</span><span class="p">,</span>
+    <span class="n">fit_method</span><span class="o">=</span><span class="s2">"hierarchical"</span><span class="p">,</span>
+    <span class="n">hierarchical_options</span><span class="o">=</span><span class="p">{</span><span class="s2">"subject_id"</span><span class="p">:</span> <span class="s2">"subject"</span><span class="p">},</span>
+    <span class="n">distributed_options</span><span class="o">=</span><span class="p">{</span><span class="s2">"pec_factory"</span><span class="p">:</span> <span class="n">build_subject_pec</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">pec</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">results</span><span class="o">.</span><span class="n">group_parameters</span>
+</pre></div>
+</div>
+<p>No model is given here. What is fitted, over what ranges, and which outputs are compared
+against the data are declared once, by the factory: it builds a participant’s model and
+this composition holds them all to the first one it builds.</p>
+</section>
+<section id="data">
+<span id="hierarchical-fitting-data"></span><h2>Data<a class="headerlink" href="#data" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">data</span></code> is one table with every participant’s trials stacked, plus a column naming who
+produced each row:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">subject</span>   <span class="n">decision</span>   <span class="n">response_time</span>
+<span class="n">S01</span>       <span class="mi">1</span>          <span class="mf">0.512</span>
+<span class="n">S01</span>       <span class="mi">0</span>          <span class="mf">0.734</span>
+<span class="n">S02</span>       <span class="mi">1</span>          <span class="mf">0.488</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>Apart from that column, the table holds the outcome variables in the order given by
+<code class="docutils literal notranslate"><span class="pre">outcome_variables</span></code>, exactly as for a single-participant fit.</p>
+<p>Participants may have different trial counts. They are ordered by first appearance rather
+than sorted, and that order is used for every per-participant array and frame in the
+results, so <code class="docutils literal notranslate"><span class="pre">results.subject_labels[i]</span></code> always identifies row <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
+<p>Two or more participants are required, and every trial must name one.</p>
+<p><code class="docutils literal notranslate"><span class="pre">likelihood_include_mask</span></code> is not accepted; drop the rows you want excluded from <code class="docutils literal notranslate"><span class="pre">data</span></code>
+instead.</p>
+</section>
+<section id="the-participant-factory">
+<span id="hierarchical-fitting-factory"></span><h2>The Participant Factory<a class="headerlink" href="#the-participant-factory" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pec_factory(data,</span> <span class="pre">subject_index=None)</span> <span class="pre">-&gt;</span> <span class="pre">(pec,</span> <span class="pre">inputs)</span></code> is a top-level, picklable
+callable that builds one participant’s model from their rows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">build_subject_pec</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">subject_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">comp</span><span class="p">,</span> <span class="n">decision</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">()</span>
+    <span class="n">pec</span> <span class="o">=</span> <span class="n">ParameterEstimationComposition</span><span class="p">(</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">comp</span><span class="p">],</span>
+        <span class="n">parameters</span><span class="o">=</span><span class="p">{(</span><span class="s2">"rate"</span><span class="p">,</span> <span class="n">decision</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)},</span>
+        <span class="n">outcome_variables</span><span class="o">=</span><span class="p">[</span><span class="n">decision</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">DECISION_OUTCOME</span><span class="p">],</span>
+                           <span class="n">decision</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="n">RESPONSE_TIME</span><span class="p">]],</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+        <span class="n">num_estimates</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+        <span class="n">initial_seed</span><span class="o">=</span><span class="mi">100</span> <span class="o">+</span> <span class="n">subject_index</span><span class="p">,</span>
+        <span class="n">same_seed_for_all_parameter_combinations</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">pec</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">comp_execution_mode</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"LLVM"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pec</span><span class="p">,</span> <span class="p">{</span><span class="n">comp</span><span class="p">:</span> <span class="n">trial_inputs</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))}</span>
+</pre></div>
+</div>
+<p>The factory specifies no <code class="docutils literal notranslate"><span class="pre">optimization_function</span></code>: the fit only asks each participant’s model
+to score the parameter values EM chooses, and never has it search for its own. A participant’s
+model can compute its likelihood with a trained estimator, by specifying
+<code class="docutils literal notranslate"><span class="pre">likelihood_estimator=&quot;neural&quot;</span></code>; see <a class="reference internal" href="NeuralLikelihood.html#neurallikelihood"><span class="std std-ref">Neural Likelihoods</span></a>.</p>
+<p>A <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> cannot be copied, so each participant’s model is built rather than cloned.
+The factory lives in <code class="docutils literal notranslate"><span class="pre">distributed_options</span></code>, the same key distributed maximum-likelihood
+fitting uses (see <a class="reference internal" href="DistributedFitting.html#distributedfitting"><span class="std std-ref">Distributed Fitting</span></a>). Compiling each participant’s model, as the
+example does, is a speed choice and not a requirement.</p>
+<p>The models it returns must meet three conditions. The first two are checked before the fit
+begins; the third is the caller’s to get right.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">same_seed_for_all_parameter_combinations=True</span></code>, so that scoring the same parameters
+twice gives the same answer. Curvature is measured by finite differences, and a model
+without this returns curvature made of simulation noise.</p></li>
+<li><p>The same parameters, in the same order, over the same ranges, for every participant. The
+group model is defined over those ranges, so ranges that differed would mean different
+things for different people.</p></li>
+<li><p>A seed of its own per participant, fixed: <code class="docutils literal notranslate"><span class="pre">initial_seed=&lt;base&gt;</span> <span class="pre">+</span> <span class="pre">subject_index</span></code>. A shared
+seed gives every participant the same noise, which is absorbed into the group variance
+instead of averaging out, and a fixed one keeps a model scoring the way it did before if a
+worker rebuilds it.</p></li>
+</ul>
+</section>
+<section id="options">
+<span id="hierarchical-fitting-options"></span><h2>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hierarchical_options</span></code> accepts the following keys. An unrecognised key raises rather than
+being ignored.</p>
+<p>Apart from <code class="docutils literal notranslate"><span class="pre">subject_id</span></code>, each is a <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> of the composition, read and set like any other
+and checked the same way whenever it is set. <code class="docutils literal notranslate"><span class="pre">fit_results.settings</span></code> records the values a fit
+ran with.</p>
+<p><code class="docutils literal notranslate"><span class="pre">subject_id</span></code> is not among them: it says how <code class="docutils literal notranslate"><span class="pre">data</span></code> is divided into participants, which is
+settled when the composition is built.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">subject_id</span></code> (required)</dt><dd><p>Column of <code class="docutils literal notranslate"><span class="pre">data</span></code> identifying participants.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">curvature</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code> (the default) or <code class="docutils literal notranslate"><span class="pre">&quot;diagonal&quot;</span></code>. See <a class="reference internal" href="#hierarchical-fitting-curvature"><span class="std std-ref">Curvature</span></a>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code></dt><dd><p>Most EM iterations to run. Defaults to <code class="docutils literal notranslate"><span class="pre">50</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">tol</span></code></dt><dd><p>Stop once no group parameter moves by more than this. Defaults to <code class="docutils literal notranslate"><span class="pre">1e-4</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">variance_floor</span></code></dt><dd><p>Smallest posterior variance to report. Defaults to <code class="docutils literal notranslate"><span class="pre">1e-6</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">hessian_step</span></code></dt><dd><p>Finite-difference step for posterior curvature, in unconstrained units. Derived per
+parameter from the group variance when omitted.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">estep_method</span></code></dt><dd><p>Any method accepted by <code class="xref any docutils literal notranslate"><span class="pre">scipy.optimize.minimize</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;Nelder-Mead&quot;</span></code>,
+which is derivative-free, since a simulated likelihood has no gradient.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">estep_options</span></code></dt><dd><p>Passed through to <code class="xref any docutils literal notranslate"><span class="pre">scipy.optimize.minimize</span></code>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="curvature">
+<span id="hierarchical-fitting-curvature"></span><h2>Curvature<a class="headerlink" href="#curvature" title="Link to this heading">¶</a></h2>
+<p>A participant’s uncertainty comes from the curvature of their fit at its peak: the more sharply
+the fit falls away, the better that parameter is determined.</p>
+<p><code class="docutils literal notranslate"><span class="pre">curvature=&quot;full&quot;</span></code>, the default, measures the whole matrix and inverts it. That answers how
+well a parameter is determined once the others are allowed to be uncertain too. It costs
+<span class="math notranslate nohighlight">\(2P^2\)</span> evaluations of a participant’s objective per EM iteration – 32 for four
+parameters – and where an evaluation means simulating a model, that is the dominant cost of the
+fit.</p>
+<p><code class="docutils literal notranslate"><span class="pre">curvature=&quot;diagonal&quot;</span></code> measures one parameter at a time, moving it while the others are held
+where they are, for <span class="math notranslate nohighlight">\(2P\)</span> evaluations – 8 for four parameters. That answers “how well is
+this parameter determined, given the others?”, which is a different question. Where two
+parameters trade off, moving one alone makes the fit worse faster than moving it while the other
+compensates, so the answer comes out too confident. On a posterior with a known exact answer, a
+pair of parameters correlated at 0.9 gives 0.10 measured this way against a true 0.53. It is the
+cheaper choice where parameters are known not to trade off, or where evaluations are too costly
+for the whole matrix.</p>
+<p>This affects the group estimate as well as the reported intervals. The group variance is built
+from these per-participant variances, so measuring them too small makes the population look
+less varied than it is.</p>
+<p>The group model itself treats the parameters as independent either way: <code class="docutils literal notranslate"><span class="pre">curvature</span></code> says how
+each participant is measured, not what the group is allowed to express.</p>
+</section>
+<section id="running">
+<span id="hierarchical-fitting-running"></span><h2>Running<a class="headerlink" href="#running" title="Link to this heading">¶</a></h2>
+<p>By default every participant is fitted in the calling process. A participant’s model is
+constructed and compiled before it can be scored, so this is appropriate for small groups.</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">distributed=True</span></code> fits participants across a Dask cluster, one per task, with
+the group update still performed by the caller. The cluster is resolved exactly as for
+distributed maximum-likelihood fitting (see <a class="reference internal" href="DistributedFitting.html#distributed-fitting-running"><span class="std std-ref">Running</span></a>): an
+explicit <code class="docutils literal notranslate"><span class="pre">client</span></code>, a cluster formed by <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">psyneulink.dask_run</span></code>, or a
+single-node <code class="docutils literal notranslate"><span class="pre">LocalCluster</span></code> created on demand. Each worker caches the models it builds and
+participants are pinned to the worker holding theirs, so a model is built once rather than
+once per iteration.</p>
+<p>Results are collected by participant index rather than in completion order, so a
+distributed fit and an in-process one agree exactly.</p>
+<p><a class="reference download internal" download="" href="_downloads/3b2b40856ea7754a7b3d2ba239d0a9c6/hierarchical_fitting.py"><code class="xref download docutils literal notranslate"><span class="pre">hierarchical_fitting.py</span></code></a>
+is a complete example,
+<a class="reference download internal" download="" href="_downloads/6a5d7009968b9e6cb045f1026551ec9b/make_example_data.py"><code class="xref download docutils literal notranslate"><span class="pre">make_example_data.py</span></code></a>
+writes a synthetic table for it to fit, and
+<a class="reference download internal" download="" href="_downloads/72bb0ce5b89422e9815100c1bfc8f3a9/submit_hierarchical.slurm"><code class="xref download docutils literal notranslate"><span class="pre">submit_hierarchical.slurm</span></code></a>
+is a multi-node batch template.</p>
+</section>
+<section id="results">
+<span id="hierarchical-fitting-results"></span><h2>Results<a class="headerlink" href="#results" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">run()</span></code> returns a <code class="xref any docutils literal notranslate"><span class="pre">HierarchicalPECResults</span></code>, also available afterwards as
+<code class="docutils literal notranslate"><span class="pre">pec.fit_results</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">group_parameters</span></code> has one row per parameter: <code class="docutils literal notranslate"><span class="pre">mean_z</span></code> and <code class="docutils literal notranslate"><span class="pre">sd_z</span></code> are the group
+estimate and spread in the unconstrained space, and <code class="docutils literal notranslate"><span class="pre">value</span></code> is that mean mapped into the
+model’s units. Because the transform is monotone, <code class="docutils literal notranslate"><span class="pre">value</span></code> is the <strong>median</strong> of the
+implied distribution of the parameter, not the mean of <code class="docutils literal notranslate"><span class="pre">subject_parameters</span></code>. Spread is
+reported only as <code class="docutils literal notranslate"><span class="pre">sd_z</span></code>: a single standard deviation in the model’s units would
+misrepresent an interval the transform makes asymmetric near a bound.</p>
+<p><code class="docutils literal notranslate"><span class="pre">subject_parameters</span></code> gives one row per participant in the model’s units, and
+<code class="docutils literal notranslate"><span class="pre">subject_posteriors</span></code> one row per participant and parameter, with uncertainty in both
+spaces and whether that participant’s fit converged. <code class="docutils literal notranslate"><span class="pre">em_history</span></code> records each iteration
+alongside the group estimate that produced it.</p>
+<p>Convergence is judged by how far the group estimate moves, not by the objective, which is
+not monotone under an approximate E-step.</p>
+</section>
+<section id="limitations">
+<span id="hierarchical-fitting-limitations"></span><h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Group covariance is diagonal: each parameter’s spread across the population is estimated on
+its own, so a tendency for two of them to move together – participants with a high drift rate
+also tending to have a high threshold – is not represented.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">curvature=&quot;diagonal&quot;</span></code>, participant uncertainty is the spread of one parameter with the
+others held at the mode rather than integrated out, which errs towards being too tight; see
+<a class="reference internal" href="#hierarchical-fitting-curvature"><span class="std std-ref">Curvature</span></a>.</p></li>
+<li><p>Participant estimates are posterior modes with a Gaussian approximation around them, not
+posterior means.</p></li>
+<li><p>Interval width tracks the quality of the likelihood. A likelihood estimated from too few
+simulations gives intervals that are too narrow, and no amount of fitting corrects that.</p></li>
+<li><p>A parameter the data barely constrain is shrunk toward the group mean. The point estimate
+alone does not distinguish that from a well-estimated parameter; <code class="docutils literal notranslate"><span class="pre">subject_posteriors</span></code>
+reports the spread that does.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">depends_on</span></code> is not supported together with hierarchical fitting.</p></li>
+<li><p>The group model is an intercept only; group-level predictors are not yet available.</p></li>
+</ul>
+</section>
+<section id="requirements">
+<span id="hierarchical-fitting-requirements"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">¶</a></h2>
+<p>Fitting in one process needs nothing beyond PsyNeuLink itself. <code class="docutils literal notranslate"><span class="pre">distributed=True</span></code>
+requires the same extra as distributed maximum-likelihood fitting, installed with
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;psyneulink[dask]&quot;</span></code>.</p>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="NeuralLikelihood.html" class="btn btn-neutral float-right" title="Neural Likelihoods" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="DistributedFitting.html" class="btn btn-neutral" title="Distributed Fitting" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Hierarchical Fitting</a><ul>
+<li><a class="reference internal" href="#enabling-hierarchical-fitting">Enabling Hierarchical Fitting</a></li>
+<li><a class="reference internal" href="#data">Data</a></li>
+<li><a class="reference internal" href="#the-participant-factory">The Participant Factory</a></li>
+<li><a class="reference internal" href="#options">Options</a></li>
+<li><a class="reference internal" href="#curvature">Curvature</a></li>
+<li><a class="reference internal" href="#running">Running</a></li>
+<li><a class="reference internal" href="#results">Results</a></li>
+<li><a class="reference internal" href="#limitations">Limitations</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=920ce76c"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>
