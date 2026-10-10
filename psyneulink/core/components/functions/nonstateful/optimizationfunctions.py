@@ -1063,7 +1063,7 @@ class GradientOptimization(OptimizationFunction):
         `optimization process <GaussianProcess_Procedure>`.
 
     bounds : tuple
-        contains two 2d arrays; the 1st contains the lower bounds for each dimension of the sample (`variable
+        contains two arrays; the 1st contains the lower bounds for each dimension of the sample (`variable
         <GradientOptimization.variable>`), and the 2nd the upper bound of each.
 
     annealing_function : function or method
@@ -1711,9 +1711,10 @@ class GridSearch(OptimizationFunction):
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "select_min" in tags:
             return self._gen_llvm_select_min_function(ctx=ctx, tags=tags)
+
         ocm = self._get_optimized_controller()
         if ocm is not None:
-            # self.objective_function may be a bound method of
+            # self.parameters.objective_function may be a bound method of
             # OptimizationControlMechanism
             extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_state_struct_type(ocm.agent_rep).as_pointer(),
@@ -1746,22 +1747,32 @@ class GridSearch(OptimizationFunction):
         return ctx.convert_python_struct_to_llvm_ir(variable)
 
     def _get_output_struct_type(self, ctx):
+        # compiled version should never return 'all values' or 'all samples'
+        # They might be enabled in parallel execution, so don't assert here.
         val = self.defaults.value
-        # compiled version should never return 'all values'
-        if len(val[0]) != len(self.search_space):
+        search_space = self.parameters.search_space._get_value_for_codegen()
+
+        # TODO: Shape mismatch workaround
+        if len(val[0]) != len(search_space):
             val = list(val)
-            val[0] = [0.0] * len(self.search_space)
+            val[0] = [0.0] * len(search_space)
+            warnings.warn("Shape mismatch: The first element of 'value' should match sample size: "
+                          "{} vs. got: {}".format(self.defaults.value, len(search_space)),
+                          pnlvm.PNLCompilerWarning)
+
         return ctx.convert_python_struct_to_llvm_ir((val[0], val[1]))
 
     def _gen_llvm_select_min_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         assert "select_min" in tags
+
         ocm = self._get_optimized_controller()
         if ocm is not None:
             assert ocm.function is self
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
             value_t = ocm._get_evaluate_output_struct_type(ctx, tags=tags)
+
         else:
-            obj_func = ctx.import_llvm_function(self.objective_function)
+            obj_func = ctx.import_llvm_function(self.parameters.objective_function._get_value_for_codegen())
             sample_t = obj_func.args[2].type.pointee
             value_t = obj_func.args[3].type.pointee
 
@@ -1788,16 +1799,15 @@ class GridSearch(OptimizationFunction):
         select_random_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.select_randomly_from_optimal_values, param_struct_ptr=params)
 
         select_random_val = builder.load(select_random_ptr)
-        select_random = builder.fcmp_ordered("!=", select_random_val,
-                                             select_random_val.type(0))
+        select_random = builder.fcmp_ordered("!=", select_random_val, select_random_val.type(0))
 
-        rand_out_ptr = builder.alloca(ctx.float_ty)
+        rand_out_ptr = builder.alloca(ctx.float_ty, name="random_out")
 
-        # KDM 8/22/19: nonstateful direction here - OK?
-        direction = "<" if self.direction == MINIMIZE else ">"
-        replace_ptr = builder.alloca(ctx.bool_ty)
+        # TODO: Convert 'direction' to runtime parameter by using StrEnum
+        direction = "<" if self.parameters.direction._get_value_for_codegen() == MINIMIZE else ">"
+        replace_ptr = builder.alloca(ctx.bool_ty, name="should_replace")
 
-        min_idx_ptr = builder.alloca(stop.type)
+        min_idx_ptr = builder.alloca(stop.type, name="min_index")
         builder.store(stop.type(-1), min_idx_ptr)
 
         # Check the value against current min
@@ -1826,6 +1836,7 @@ class GridSearch(OptimizationFunction):
                         rand_out = b.load(rand_out_ptr)
                         replace = b.fcmp_ordered("<", rand_out, prob)
                         b.store(replace, replace_ptr)
+
                     with eb:
                         # Reset the counter if we are replacing with new best value
                         with b.if_then(b.load(replace_ptr)):
@@ -1842,8 +1853,9 @@ class GridSearch(OptimizationFunction):
             gen_samples = builder.icmp_signed("==", samples_ptr, samples_ptr.type(None))
             with builder.if_else(gen_samples) as (b_true, b_false):
                 with b_true:
-                    search_space = ctx.get_param_or_state_ptr(builder, self, self.parameters.search_space.name, param_struct_ptr=params)
+                    search_space = ctx.get_param_or_state_ptr(builder, self, self.parameters.search_space, param_struct_ptr=params)
                     pnlvm.helpers.create_sample(b, min_sample_ptr, search_space, min_idx)
+
                 with b_false:
                     sample_ptr = builder.gep(samples_ptr, [min_idx])
                     builder.store(b.load(sample_ptr), min_sample_ptr)
@@ -1879,11 +1891,9 @@ class GridSearch(OptimizationFunction):
                 assert not input_initialized[dst_idx], "Double initialization of input {}".format(dst_idx)
                 input_initialized[dst_idx] = True
 
-                src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
                 # Destination is a struct of 2d arrays
-                dst = builder.gep(comp_input, [ctx.int32_ty(0),
-                                               ctx.int32_ty(dst_idx),
-                                               ctx.int32_ty(0)])
+                dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(dst_idx), ctx.int32_ty(0)])
+                src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
                 builder.store(builder.load(src), dst)
 
             # Assert that we have populated all inputs
@@ -1895,22 +1905,26 @@ class GridSearch(OptimizationFunction):
 
             # Extra args: input, data, number of inputs
             extra_args = [comp_input, comp_args[2], num_inputs]
+
         else:
-            obj_func = ctx.import_llvm_function(self.objective_function)
-            obj_param_ptr, obj_state_ptr = ctx.get_param_or_state_ptr(builder, self, "objective_function",
-                                                                      param_struct_ptr=params, state_struct_ptr=state)
+            obj_func = ctx.import_llvm_function(self.parameters.objective_function._get_value_for_codegen())
+            obj_param_ptr, obj_state_ptr = ctx.get_param_or_state_ptr(builder,
+                                                                      self,
+                                                                      self.parameters.objective_function,
+                                                                      param_struct_ptr=params,
+                                                                      state_struct_ptr=state)
             extra_args = []
 
         sample_t = obj_func.args[2].type.pointee
         value_t = obj_func.args[3].type.pointee
-        min_sample_ptr = builder.alloca(sample_t)
-        min_value_ptr = builder.alloca(value_t)
-        sample_ptr = builder.alloca(sample_t)
-        value_ptr = builder.alloca(value_t)
+        min_sample_ptr = builder.alloca(sample_t, name="min_sample")
+        min_value_ptr = builder.alloca(value_t, name="min_value")
+        sample_ptr = builder.alloca(sample_t, name="sample")
+        value_ptr = builder.alloca(value_t, name="value")
 
         search_space_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.search_space, param_struct_ptr=params)
 
-        opt_count_ptr = builder.alloca(ctx.float_ty)
+        opt_count_ptr = builder.alloca(ctx.float_ty, name="optimized_count")
         builder.store(opt_count_ptr.type.pointee(0), opt_count_ptr)
 
         # Use NaN here. fcmp_unordered below returns true if one of the
@@ -1927,6 +1941,7 @@ class GridSearch(OptimizationFunction):
                     b, idx = stack.enter_context(pnlvm.helpers.array_ptr_loop(b, dimension, "loop_" + str(i)))
                     alloc_elem = b.gep(dimension, [ctx.int32_ty(0), idx])
                     b.store(b.load(alloc_elem), arg_elem)
+
                 elif isinstance(dimension.type.pointee, pnlvm.ir.LiteralStructType):
                     assert len(dimension.type.pointee) == 3
                     start_ptr = b.gep(dimension, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -1940,20 +1955,26 @@ class GridSearch(OptimizationFunction):
                     val = b.fmul(val, step)
                     val = b.fadd(val, start)
                     b.store(val, arg_elem)
+
                 else:
                     assert False, "Unknown dimension type: {}".format(dimension.type)
 
             # We are in the inner most loop now with sample_ptr setup for execution
-            b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr,
-                              value_ptr] + extra_args)
+            b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr] + extra_args)
 
             # Check if smaller than current best.
             # the argument pointers are already offset, so use range <0,1)
             min_tags = tags.union({"select_min", "evaluate_type_objective"})
             select_min_f = ctx.import_llvm_function(self, tags=min_tags)
-            b.call(select_min_f, [params, state, min_sample_ptr, sample_ptr,
-                                  min_value_ptr, value_ptr, opt_count_ptr,
-                                  ctx.int32_ty(0), ctx.int32_ty(1)])
+            b.call(select_min_f, [params,
+                                  state,
+                                  min_sample_ptr,
+                                  sample_ptr,
+                                  min_value_ptr,
+                                  value_ptr,
+                                  opt_count_ptr,
+                                  ctx.int32_ty(0),
+                                  ctx.int32_ty(1)])
 
             builder = b
 
@@ -2095,10 +2116,13 @@ class GridSearch(OptimizationFunction):
                 params=params,
             )
 
-            # Compiled version
+            # Compiled reduction expects one value per unaggregated search-space
+            # sample. Aggregation returns a 2D array and a reduced all_samples
+            # matrix; select from those explicit samples using the Python path.
             ocm = self._get_optimized_controller()
-            # if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
-            if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
+            if (ocm is not None
+                    and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}
+                    and np.ndim(all_values) == 1):
 
                 # Reduce array of values to min/max
                 # select_min params are:

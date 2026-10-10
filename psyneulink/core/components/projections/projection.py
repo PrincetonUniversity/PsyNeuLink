@@ -790,6 +790,12 @@ class Projection_Base(Projection):
 
         self._assign_default_projection_name()
 
+        try:
+            self._parameter_ports[MATRIX].function.reset(context=context)
+        except (AttributeError, KeyError):
+            # may not have parameter ports or a matrix one
+            pass
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender
 
@@ -868,7 +874,7 @@ class Projection_Base(Projection):
 
     def _get_matrix_from_keyword(self, keyword):
         return get_matrix(
-            keyword, self.sender.socket_width, self.receiver.socket_width
+            keyword, self.sender.socket_shape, self.receiver.socket_shape
         )
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
@@ -971,6 +977,7 @@ class Projection_Base(Projection):
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.ports.parameterport import _instantiate_parameter_port
         self._instantiate_receiver(context=context)
+        self._instantiate_parameter_ports(context=context)
         # instantiate parameter ports from UDF custom parameters if necessary
         try:
             cfp = self.function.cust_fct_params
@@ -1145,7 +1152,7 @@ class Projection_Base(Projection):
                                                          self.parameters.function,
                                                          param_struct_ptr=params,
                                                          state_struct_ptr=state)
-        main_function = ctx.import_llvm_function(self.function)
+        main_function = ctx.import_llvm_function(self.parameters.function._get_value_for_codegen())
         builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
 
         return builder

@@ -262,7 +262,7 @@ def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, context=N
 
 def _get_auto_hetero_from_matrix(matrix):
     matrix = matrix.copy()
-    auto = np.diag(matrix).copy()
+    auto = np.diagonal(matrix, axis1=-1, axis2=-2).copy()
 
     np.fill_diagonal(matrix, 0)
     hetero = matrix
@@ -419,7 +419,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     combination_function : function : default LinearCombination
         specifies function used to combine the *RECURRENT* and *INTERNAL* `InputPorts
-        <RecurrentTransferMechanism_Structure>`; must accept a 2d array with one or two items of the same length,
+        <RecurrentTransferMechanism_Structure>`; must accept a >=2d array with one or two items of the same shape,
         and generate a result that is the same size as each of these;  default simply adds the two items.
 
     enable_learning : boolean : default False
@@ -427,7 +427,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is not (the default), then learning cannot be enabled until it is configured for learning by calling
         the Mechanism's `configure_learning <RecurrentTransferMechanism.configure_learning>` method.
 
-    learning_rate : scalar, or list, 1d or 2d np.array of numeric values: default False
+    learning_rate : scalar, or list, np.ndarray of numeric values: default False
         specifies the learning rate used by its `learning function <RecurrentTransferMechanism.learning_function>`.
         If it is `None`, the `default learning_rate for a LearningMechanism <LearningMechanism_Learning_Rate>` is
         used; if it is assigned a value, that is used as the learning_rate (see `learning_rate
@@ -455,7 +455,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     Attributes
     ----------
 
-    matrix : 2d np.array
+    matrix : np.ndarray
         the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection
         <RecurrentTransferMechanism.recurrent_projection>` for the Mechanism.
 
@@ -489,7 +489,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         created automatically if `learning is specified <RecurrentTransferMechanism_Learning>`, and used to train the
         `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 
-    learning_rate : float, 1d or 2d np.array of numeric values : default None
+    learning_rate : float, np.ndarray of numeric values : default None
         determines the learning rate used by the `learning_function <RecurrentTransferMechanism.learning_function>`
         of the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` (see `learning_rate
         <AutoAssociativeLearningMechanism.learning_rate>` for details concerning specification and default value
@@ -731,7 +731,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 matrix = matrix_param.matrix
 
             elif isinstance(matrix_param, str):
-                matrix = get_matrix(matrix_param, rows=self.recurrent_size, cols=self.recurrent_size)
+                matrix = get_matrix(matrix_param, inp=self.recurrent_size, out=self.recurrent_size)
 
             elif isinstance(matrix_param, (np.matrix, list)):
                 matrix = np.array(matrix_param)
@@ -742,8 +742,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                 rows = cols = self.recurrent_size # this is a hack just to skip the tests ahead:
                 # if the matrix really is None, that is checked up ahead, in _instantiate_attributes_before_function()
             else:
-                rows = np.array(matrix).shape[0]
-                cols = np.array(matrix).shape[1]
+                rows = np.array(matrix).shape[-2]
+                cols = np.array(matrix).shape[-1]
 
             try:
                 if 'U' in repr(matrix.dtype):
@@ -817,7 +817,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         param_keys = self._parameter_ports.key_values
 
-        matrix = get_matrix(copy_parameter_value(self.defaults.matrix), rows=self.recurrent_size, cols=self.recurrent_size)
+        matrix = get_matrix(copy_parameter_value(self.defaults.matrix), inp=self.recurrent_size, out=self.recurrent_size)
 
         # below implements the rules provided by KAM:
         # - If auto and hetero but not matrix are specified, the diagonal terms of the matrix are determined by auto and the off-diagonal terms are determined by hetero.
@@ -976,6 +976,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self._instantiate_recurrent_projection(self,
                                                                                matrix=matrix,
                                                                                context=context)
+            self.recurrent_projection._activate_for_all_compositions()
 
             # creating a recurrent_projection changes the default variable shape
             # so we have to reshape any Paramter Functions
@@ -996,7 +997,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @property
     def recurrent_size(self):
-        return len(self.defaults.variable[0])
+        return self.defaults.variable.shape[-1]
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -1068,13 +1069,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
         if isinstance(matrix, str):
-            size = len(mech.defaults.variable[0])
+            size = mech.defaults.variable.shape[-1]
             matrix = get_matrix(matrix, size, size)
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
         if self.has_recurrent_input_port:
             # # FIX: 7/12/18 MAKE THIS A METHOD THAT CAN BE OVERRIDDEN BY CONTRASTIVEHEBBIAN
-            new_input_port = InputPort(owner=self, name=RECURRENT, variable=self.defaults.variable[0],
+            new_input_port = InputPort(owner=self, name=RECURRENT, variable=self.input_port.defaults.variable,
                                         internal_only=True)
             assert (len(new_input_port.all_afferents) == 0)  # just a sanity check
             assert self.input_port.name != "Recurrent Input Port"
@@ -1257,24 +1258,28 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
         recurrent_params, recurrent_state = ctx.get_param_or_state_ptr(builder,
                                                                        self,
-                                                                       "recurrent_projection",
+                                                                       self.parameters.recurrent_projection,
                                                                        param_struct_ptr=params,
                                                                        state_struct_ptr=state)
-        recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
+
+        recurrent_projection = self.parameters.recurrent_projection._get_value_for_codegen()
+        recurrent_f = ctx.import_llvm_function(recurrent_projection)
+
+        input_ports = self.parameters.input_ports._get_value_for_codegen()
+        output_ports = self.parameters.output_ports._get_value_for_codegen()
 
         # Extract the correct output port value
         old_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=state)
-        recurrent_index = self.output_ports.index(self.recurrent_projection.sender)
-        recurrent_in = builder.gep(old_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(recurrent_index)])
+        recurrent_in = builder.gep(old_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(output_ports.index(recurrent_projection.sender))])
 
         # Get the correct recurrent output location
         recurrent_out = builder.gep(arg_in, [ctx.int32_ty(0),
-                                             ctx.int32_ty(self.input_ports.index(self.recurrent_projection.receiver)),
-                                             ctx.int32_ty(self.recurrent_projection.receiver.pathway_projections.index(self.recurrent_projection))])
+                                             ctx.int32_ty(input_ports.index(recurrent_projection.receiver)),
+                                             ctx.int32_ty(recurrent_projection.receiver.pathway_projections.index(recurrent_projection))])
 
         # the recurrent projection is not executed in standalone mode
         if len(self.afferents) == 1:
-            assert self.path_afferents[0] is self.recurrent_projection
+            assert self.path_afferents[0] is recurrent_projection
             # NOTE: we should zero the target location here, but in standalone
             # mode ctypes does it for us when instantiating the input structure
         else:
@@ -1283,7 +1288,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             # input
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
 
-        assert not self.has_recurrent_input_port, "Configuration using combination function is not supported!"
+        assert not self.parameters.has_recurrent_input_port._get_value_for_codegen(), \
+            "Configuration using combination function is not supported!"
 
         return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 

@@ -307,6 +307,7 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
 @pytest.mark.benchmark(group="LinearCombinationFunction higher dim")
 @pytest.mark.function
 @pytest.mark.combination_function
+@pytest.mark.higher_dims
 @pytest.mark.parametrize("variable", [test_varh1, test_varh2, test_varh3], ids=["VAR1h", "VAR2h", "VAR3h"])
 @pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
 @pytest.mark.parametrize("exponents", [None, 2.0, [3.0], 'A'], ids=["E_NONE", "E_SCALAR", "E_VECTOR1", "E_ARRAY"])

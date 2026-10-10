@@ -397,16 +397,18 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         param_p = ctx.get_param_or_state_ptr(builder, self, param, param_struct_ptr=params, state_struct_ptr=state)
         if param == NOISE and isinstance(param_p, tuple):
             # This is a noise function so call it to get value
-            noise_f = ctx.import_llvm_function(self.parameters.noise.get())
-            noise_in = builder.alloca(noise_f.args[2].type.pointee)
-            noise_out = builder.alloca(noise_f.args[3].type.pointee)
+            noise_f = ctx.import_llvm_function(self.parameters.noise._get_value_for_codegen())
+            noise_in = builder.alloca(noise_f.args[2].type.pointee, name="noise_in")
+            noise_out = builder.alloca(noise_f.args[3].type.pointee, name="noise_out")
             builder.call(noise_f, [param_p[0], param_p[1], noise_in, noise_out])
             value_p = noise_out
 
         elif isinstance(param_p.type.pointee, pnlvm.ir.ArrayType) and param_p.type.pointee.count > 1:
             value_p = builder.gep(param_p, indices)
+
         else:
             value_p = param_p
+
         return pnlvm.helpers.load_extract_scalar_array_one(builder, value_p)
 
 
@@ -643,7 +645,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         Returns
         -------
 
-        updated value of integral : 2d array
+        updated value of integral : np.ndarray
 
         """
         self._accumulator_check_args(variable, context=context, params=params)
@@ -879,7 +881,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         Returns
         -------
 
-        updated value of integral : 2d array
+        updated value of integral : np.ndarray
 
         """
         rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
@@ -1726,7 +1728,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         Returns
         -------
 
-        updated value of integral : 2d array
+        updated value of integral : np.ndarray
 
         """
         # rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
@@ -2113,7 +2115,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         Returns
         -------
 
-        updated value of integral : 2d array
+        updated value of integral : np.ndarray
 
         """
         rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
@@ -2528,7 +2530,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         Returns
         -------
 
-        updated value of integral : 2d array
+        updated value of integral : np.ndarray
 
         """
         rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
@@ -3624,7 +3626,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         Returns
         -------
 
-        updated value of integral : 2d array
+        updated value of integral : np.ndarray
 
         """
         rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
@@ -3905,7 +3907,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         Returns
         -------
 
-        updated value of integral : 2d array
+        updated value of integral : np.ndarray
 
         """
         rate = np.atleast_1d(self._get_current_parameter_value(RATE, context))
@@ -5008,28 +5010,34 @@ class FitzHughNagumoIntegrator(
 
         param_vals = {p: _load_param(p) for p in self.llvm_param_ids}
 
-        inner_args = {"ctx": ctx, "var_ptr": arg_in, "param_vals": param_vals,
-                      "out_v": out['v'], "out_w": out['w'],
+        inner_args = {"ctx": ctx,
+                      "var_ptr": arg_in,
+                      "param_vals": param_vals,
+                      "out_v": out['v'],
+                      "out_w": out['w'],
                       "out_time": out['time'],
                       "previous_v_ptr": prev['previous_v'],
                       "previous_w_ptr": prev['previous_w'],
                       "previous_time_ptr": prev['previous_time']}
 
-        method = self.parameters.integration_method.get()
+        # TODO: Convert 'method' to runtime param by using StrEnum
+        method = self.parameters.integration_method._get_value_for_codegen()
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
             if method == "RK4":
                 self.__gen_llvm_rk4_body(*args, **inner_args)
+
             elif method == "EULER":
                 self.__gen_llvm_euler_body(*args, **inner_args)
+
             else:
-                raise FunctionError("Invalid integration method ({}) selected for {}".
-                                    format(method, self.name))
+                raise FunctionError("Invalid integration method ({}) selected for {}".format(method, self.name))
 
         # Save state
         for n, sptr in out.items():
             dptr = prev["previous_" + n]
             builder.store(builder.load(sptr), dptr)
+
         return builder
 
     def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr,
@@ -5152,7 +5160,7 @@ class FitzHughNagumoIntegrator(
 
     def __gen_llvm_dv_dt(self, builder, ctx, var, v, previous_w, param_vals):
         # val = (a_v * (v ** 3) + (1 + threshold) * b_v * (v ** 2) + (-threshold) * c_v * v +
-        #        d_v + e_v * self.previous_w + f_v * variable) / time_constant_v
+        #        d_v + e_v * previous_w + f_v * variable) / time_constant_v
         pow_f = ctx.get_builtin("pow", [v.type])
         threshold = param_vals["threshold"]
 
@@ -5185,7 +5193,7 @@ class FitzHughNagumoIntegrator(
         return res
 
     def __gen_llvm_dw_dt(self, builder, ctx, w, previous_v, param_vals):
-        # val = (mode * a_w * self.previous_v + b_w * w + c_w +
+        # val = (mode * a_w * previous_v + b_w * w + c_w +
         #       (1 - mode) * uncorrelated_activity) / time_constant_w
 
         tmp1 = builder.fmul(param_vals["mode"], previous_v)

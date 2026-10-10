@@ -209,7 +209,7 @@ class TestRecurrentTransferMechanismInputs:
                 input_shapes=4
             )
             R.execute([1, 2, 3, 4, 5])
-        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((4,)) "
+        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((1, 4)) "
                 "for input to InputPort 'InputPort-0' of R.") in str(error_text.value)
 
     def test_recurrent_mech_inputs_mismatched_with_default_shorter(self):
@@ -219,7 +219,7 @@ class TestRecurrentTransferMechanismInputs:
                 input_shapes=6
             )
             R.execute([1, 2, 3, 4, 5])
-        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((6,)) "
+        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((1, 6)) "
                 "for input to InputPort 'InputPort-0' of R.") in str(error_text.value)
 
 
@@ -459,13 +459,13 @@ class TestRecurrentTransferMechanismMatrix:
         assert "must be square" in str(error_text.value)
 
     def test_recurrent_mech_matrix_3d(self):
-        with pytest.raises(FunctionError) as error_text:
-            R = RecurrentTransferMechanism(
-                name='R',
-                input_shapes=2,
-                matrix=[[[1, 3], [2, 4]], [[5, 7], [6, 8]]]
-            )
-        assert "more than 2d" in str(error_text.value)
+        matrix = [[[1, 3], [2, 4]], [[5, 7], [6, 8]]]
+        R = RecurrentTransferMechanism(
+            name='R',
+            input_shapes=2,
+            matrix=matrix
+        )
+        np.testing.assert_array_equal(R.defaults.matrix, matrix)
 
 
 class TestRecurrentTransferMechanismFunction:
@@ -1046,8 +1046,11 @@ class TestStandardOutputPorts:
 @pytest.mark.composition
 class TestRecurrentInputPort:
 
-    def test_ris_simple(self):
-        R2 = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+    @pytest.mark.higher_dims
+    @pytest.mark.parametrize('dimensions', [2, 3, 4])
+    def test_ris_simple(self, dimensions):
+        var_shape = (1,) * (dimensions - 1) + (3,)
+        R2 = RecurrentTransferMechanism(default_variable=np.zeros(var_shape),
                                             matrix=[[1.0, 2.0, 3.0],
                                                     [2.0, 1.0, 2.0],
                                                     [3.0, 2.0, 1.0]],
@@ -1055,7 +1058,8 @@ class TestRecurrentInputPort:
         R2.execute(input=[1, 3, 2])
         c = Composition(pathways=[R2])
         c.run(inputs=[[1, 3, 2]])
-        np.testing.assert_allclose(R2.parameters.value.get(c), [[14., 12., 13.]])
+        expected = np.array([[14., 12., 13.]]).reshape(var_shape)
+        np.testing.assert_allclose(R2.parameters.value.get(c), expected)
         assert len(R2.input_ports) == 2
         assert "Recurrent Input Port" not in R2.input_port.name  # make sure recurrent InputPort isn't primary
 
