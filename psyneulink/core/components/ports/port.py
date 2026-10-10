@@ -2365,9 +2365,10 @@ class Port_Base(Port):
             # there are modulating projections of type other than OVERRIDE.
             # LLVM is not eliminating the redundant copy.
             f_params = builder.alloca(port_f.args[0].type.pointee, name="modulated_port_params")
-            builder.store(builder.load(base_params), f_params)
+            pnlvm.helpers.memcpy(builder, f_params, base_params)
 
         else:
+            # All modulations are OVERRIDE we don't need t
             f_params = base_params
 
         # FIXME: Handle and combine multiple afferents
@@ -2401,7 +2402,7 @@ class Port_Base(Port):
                                                                    self.name,
                                                                    afferent.defaults.value)
                 # Directly store the value in the output array
-                builder.store(builder.load(f_mod_ptr), arg_out)
+                pnlvm.helpers.memcpy(builder, arg_out, f_mod_ptr)
                 return builder
 
             else:

@@ -792,7 +792,9 @@ def gen_node_assembly(ctx, composition, node, *, tags:frozenset):
         if len(node_function.args) > 4:
             assert node is composition.controller
             call_args += [params, state, data_in]
+
         ret = builder.call(node_function, call_args)
+
     elif "reset" not in tags:
         # FIXME: reinitialization of compositions is not supported
         # Condition and data structures includes parent first
@@ -804,7 +806,9 @@ def gen_node_assembly(ctx, composition, node, *, tags:frozenset):
         # Copy output of the nested composition to its output place
         output_idx = node._get_node_index(node.output_CIM)
         result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])
-        builder.store(builder.load(result), node_out)
+
+        helpers.memcpy(builder, node_out, result)
+
     else:
         # composition reset
         ret = None
@@ -1056,9 +1060,9 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
             node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_ran")
             with builder.if_then(node_cond):
-                out_ptr = builder.gep(output_storage, [zero, zero, ctx.int32_ty(idx)], name="result_ptr_" + node.name)
+                result_ptr = builder.gep(output_storage, [zero, zero, ctx.int32_ty(idx)], name="result_ptr_" + node.name)
                 data_ptr = builder.gep(data, [zero, zero, ctx.int32_ty(idx)], name="data_result_" + node.name)
-                builder.store(builder.load(out_ptr), data_ptr)
+                helpers.memcpy(builder, data_ptr, result_ptr)
 
         # Update step counter
         # FIXME: This shouldn't really happen. If no node is run,

@@ -1140,7 +1140,7 @@ class DDM(ProcessingMechanism):
                                            self.RT_INCORRECT_SKEW_INDEX)):
                 src = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(res_idx)])
                 dst = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-                builder.store(builder.load(src), dst)
+                pnlvm.helpers.memcpy(builder, dst, src)
 
             # Handle upper threshold probability (1 - Lower Threshold)
             src = builder.gep(m_val, [ctx.int32_ty(0), ctx.int32_ty(self.PROBABILITY_LOWER_THRESHOLD_INDEX), ctx.int32_ty(0)])
