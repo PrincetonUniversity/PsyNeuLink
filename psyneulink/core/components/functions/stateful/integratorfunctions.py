@@ -3191,9 +3191,9 @@ class DriftOnASphereIntegrator(IntegratorFunction):
                 """
         x = self.parameters.previous_value._get(context)  # shape (d,)
         ddir = self.parameters.drift_dir._get(context)
-        rate = float(self._get_current_parameter_value("rate", context))
+        rate = float(self._get_current_parameter_value("rate", context).item())
         noise = self._get_current_parameter_value("noise", context)
-        dt = float(self._get_current_parameter_value("time_step_size", context))
+        dt = float(self._get_current_parameter_value("time_step_size", context).item())
         rng = self._get_current_parameter_value("random_state", context)
 
 
