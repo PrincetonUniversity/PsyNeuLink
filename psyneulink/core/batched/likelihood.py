@@ -322,7 +322,11 @@ def _sum_histogram_log_likelihood(like, include_mask=None):
                 f"{log_like.shape[-1]} trials."
             )
         log_like = log_like[..., mask]
-    total = log_like.sum(axis=-1)
+    # Torch can return column-major densities for multiple parameter rows. NumPy
+    # uses a different summation order for a strided trial axis, so identical
+    # densities would score differently in a batch or alone. Boolean masking
+    # above can also change the layout. Keep each row's trial reduction identical.
+    total = np.ascontiguousarray(log_like).sum(axis=-1)
     if total.ndim == 0:
         return float(total)
     return total

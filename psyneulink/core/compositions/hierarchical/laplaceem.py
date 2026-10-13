@@ -96,7 +96,7 @@ def log_gauss_diag(z, mean, var):
     return float(-0.5 * np.sum((z - mean) ** 2 / var + LOG_2PI + np.log(var)))
 
 
-def diagonal_hessian(func, z, step, f0=None):
+def diagonal_hessian(func, z, step, f0=None, *, func_batch=None, batch_size=16):
     """Diagonal of the Hessian of scalar `func` at `z`, by central second differences.
 
     ``H_kk = (f(z + h e_k) - 2 f(z) + f(z - h e_k)) / h^2``
@@ -115,21 +115,15 @@ def diagonal_hessian(func, z, step, f0=None):
 
     f0 : float : default None
         Value of `func` at `z`, if already known, to save one evaluation.
-    """
-    z = np.asarray(z, dtype=float)
-    n = z.size
-    steps = _resolve_steps(step, n)
 
-    if f0 is None:
-        f0 = func(z)
-    diag = np.empty(n, dtype=float)
-    for k in range(n):
-        h = steps[k]
-        zp, zm = z.copy(), z.copy()
-        zp[k] += h
-        zm[k] -= h
-        diag[k] = (func(zp) - 2.0 * f0 + func(zm)) / (h * h)
-    return diag
+    func_batch : callable or None
+        Optional evaluator taking parameter rows and returning one score per row. It must
+        reproduce `func` at each row, including its random numbers.
+
+    batch_size : int : default 16
+        Maximum rows per batch. A value of 1 uses `func` exclusively.
+    """
+    return _finite_difference_hessian(func, z, step, f0, func_batch, batch_size, full=False)
 
 
 def _resolve_steps(step, n):
@@ -142,7 +136,7 @@ def _resolve_steps(step, n):
     return steps
 
 
-def full_hessian(func, z, step, f0=None):
+def full_hessian(func, z, step, f0=None, *, func_batch=None, batch_size=16):
     """Full Hessian of scalar `func` at `z`, by central second differences.
 
     The diagonal is `diagonal_hessian`; each off-diagonal entry is the four-point form
@@ -153,25 +147,78 @@ def full_hessian(func, z, step, f0=None):
     computed once and mirrored, so the result is symmetric by construction.  Arguments are as for
     `diagonal_hessian`; the cost is ``2 n^2`` evaluations of `func` rather than ``2 n``.
     """
+    return _finite_difference_hessian(func, z, step, f0, func_batch, batch_size, full=True)
+
+
+def _finite_difference_hessian(func, z, step, f0, func_batch, batch_size, *, full):
+    """Evaluate the stencil in bounded batches, preserving scalar arithmetic and point order."""
+    _validate_hessian_batch_size(batch_size)
     z = np.asarray(z, dtype=float)
     n = z.size
     steps = _resolve_steps(step, n)
     if f0 is None:
         f0 = func(z)
 
-    hessian = np.zeros((n, n))
-    np.fill_diagonal(hessian, diagonal_hessian(func, z, steps, f0=f0))
+    def points():
+        for k in range(n):
+            for sign in (1.0, -1.0):
+                shifted = z.copy()
+                shifted[k] += sign * steps[k]
+                yield shifted
+        if full:
+            for j in range(n):
+                for k in range(j + 1, n):
+                    for sign_j in (1.0, -1.0):
+                        for sign_k in (1.0, -1.0):
+                            shifted = z.copy()
+                            shifted[j] += sign_j * steps[j]
+                            shifted[k] += sign_k * steps[k]
+                            yield shifted
+
+    def values():
+        if func_batch is None or batch_size == 1:
+            for point in points():
+                yield func(point)
+            return
+        # Keep both host stencils and GPU workloads bounded for high-dimensional fits.
+        from itertools import islice
+        source = points()
+        while rows := list(islice(source, int(batch_size))):
+            scores = np.asarray(func_batch(np.asarray(rows)), dtype=float)
+            if scores.shape != (len(rows),):
+                raise ValueError("batched objective must return one score per parameter vector")
+            yield from scores
+
+    scores = values()
+    diag = np.array([(next(scores) - 2.0 * f0 + next(scores)) / (h * h) for h in steps])
+    if not full:
+        return diag
+    hessian = np.diag(diag)
     for j in range(n):
         for k in range(j + 1, n):
             corners = 0.0
             for sign_j in (1.0, -1.0):
                 for sign_k in (1.0, -1.0):
-                    shifted = z.copy()
-                    shifted[j] += sign_j * steps[j]
-                    shifted[k] += sign_k * steps[k]
-                    corners += sign_j * sign_k * func(shifted)
+                    corners += sign_j * sign_k * next(scores)
             hessian[j, k] = hessian[k, j] = corners / (4.0 * steps[j] * steps[k])
     return hessian
+
+
+def _validate_hessian_batch_size(batch_size):
+    if (not isinstance(batch_size, (int, np.integer)) or isinstance(batch_size, (bool, np.bool_))
+            or batch_size < 1):
+        raise ValueError("hessian_batch_size must be a positive integer")
+
+
+def _make_batched_neg_log_posterior(log_likelihood_batch, transform, mean, variance):
+    """Wrap a batch likelihood with the same transforms and prior as the scalar objective."""
+    def evaluate(rows):
+        theta = np.asarray([transform.to_natural(z) for z in rows])
+        scores = np.asarray(log_likelihood_batch(theta), dtype=float)
+        if scores.shape != (len(rows),):
+            raise ValueError("batched likelihood must return one score per parameter vector")
+        return -scores - np.asarray([log_gauss_diag(z, mean, variance) for z in rows])
+    return evaluate
 
 
 @dataclass(frozen=True)
@@ -211,6 +258,10 @@ class EStepConfig:
     optimizer_options : Mapping or None
         Passed through to `scipy.optimize.minimize`, overriding the defaults below.
 
+    hessian_batch_size : int : default 16
+        Maximum finite-difference parameter vectors scored together when a batch evaluator is
+        available. A value of 1 disables batching. Optimization itself remains scalar.
+
     """
 
     method: str = "Nelder-Mead"
@@ -218,8 +269,10 @@ class EStepConfig:
     hessian_step: Optional[Union[float, np.ndarray]] = None
     variance_floor: float = 1e-6
     optimizer_options: Optional[Mapping] = None
+    hessian_batch_size: int = 16
 
     def __post_init__(self):
+        _validate_hessian_batch_size(self.hessian_batch_size)
         if self.curvature not in Curvature:
             raise ValueError(
                 f"curvature must be one of {[c.value for c in Curvature]}; "
@@ -309,7 +362,7 @@ def _posterior_covariance(curvature, prior_variance, variance_floor):
     return rebuild(1.0 / np.maximum(eigenvalues, 1.0)), rebuild(1.0 / eigenvalues)
 
 
-def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
+def subject_map_estep(neg_log_post, z0, prior_variance, config=None, *, neg_log_post_batch=None):
     """Find one participant's posterior mode and approximate the posterior around it.
 
     Arguments
@@ -329,6 +382,9 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
 
     config : EStepConfig : default None
         Settings; a default-constructed `EStepConfig` if omitted.
+
+    neg_log_post_batch : callable or None
+        Optional batch evaluator matching `neg_log_post`, used only for finite differences.
 
     Returns
     -------
@@ -367,9 +423,10 @@ def subject_map_estep(neg_log_post, z0, prior_variance, config=None):
     f0 = float(result.fun)
 
     def measure(step):
+        batch_options = dict(func_batch=neg_log_post_batch, batch_size=config.hessian_batch_size)
         if config.curvature == Curvature.FULL:
-            return full_hessian(neg_log_post, z_hat, step=step, f0=f0)
-        return np.diag(diagonal_hessian(neg_log_post, z_hat, step=step, f0=f0))
+            return full_hessian(neg_log_post, z_hat, step=step, f0=f0, **batch_options)
+        return np.diag(diagonal_hessian(neg_log_post, z_hat, step=step, f0=f0, **batch_options))
 
     curvature = measure(step)
 
@@ -446,7 +503,7 @@ class EStepResult:
         return float(np.sum(self.subject_objective))
 
 
-def make_inprocess_estep_runner(log_likelihood, transform, config=None):
+def make_inprocess_estep_runner(log_likelihood, transform, config=None, *, log_likelihood_batch=None):
     """Build an E-step that fits each participant in turn, in this process.
 
     Arguments
@@ -461,6 +518,10 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
 
     config : EStepConfig : default None
         Settings for each participant's optimization.
+
+    log_likelihood_batch : callable or None
+        Optional ``(parameter_rows, subject_index) -> scores`` evaluator for curvature probes.
+        Scores must agree with individual likelihood calls, including common random numbers.
 
     Returns
     -------
@@ -490,12 +551,18 @@ def make_inprocess_estep_runner(log_likelihood, transform, config=None):
                 theta = transform.to_natural(z)
                 return -float(log_likelihood(theta, s)) - log_gauss_diag(z, mu_s, sigma)
 
+            batch = None
+            if log_likelihood_batch is not None and config.hessian_batch_size > 1:
+                batch = _make_batched_neg_log_posterior(
+                    lambda rows, s=s: log_likelihood_batch(rows, s), transform, mu_s, sigma,
+                )
             try:
                 post = subject_map_estep(
                     neg_log_post,
                     z0=prev_z[s] if warm_start else mu_s,
                     prior_variance=sigma,
                     config=config,
+                    neg_log_post_batch=batch,
                 )
             except HierarchicalEMError as error:
                 raise HierarchicalEMError(f"participant {s}: {error}") from None

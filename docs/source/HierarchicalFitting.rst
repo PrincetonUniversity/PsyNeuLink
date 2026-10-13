@@ -153,6 +153,13 @@ settled when the composition is built.
     Finite-difference step for posterior curvature, in unconstrained units. Derived per
     parameter from the group variance when omitted.
 
+* ``hessian_batch_size``
+    Maximum parameter vectors scored together for finite-difference curvature. Defaults to
+    ``16``; set to ``1`` for individual evaluations. Participant PECs using the batched
+    simulation backend evaluate these vectors together with the same seed and simulation
+    budget. LLVM and neural likelihoods retain individual evaluations. This applies to both
+    local fits and distributed participant tasks; the mode-finding optimizer remains scalar.
+
 * ``estep_method``
     Any method accepted by `scipy.optimize.minimize`. Defaults to ``"Nelder-Mead"``,
     which is derivative-free, since a simulated likelihood has no gradient.

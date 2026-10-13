@@ -20,6 +20,15 @@ def test_hierarchical_fit_uses_batched_participant_likelihoods(batched_backend, 
 
     monkeypatch.setattr(pnl.PECOptimizationFunction, "_run_simulations", reject_legacy_simulation)
     participants = []
+    batch_results = []
+    original_batch = pnl.ParameterEstimationComposition.log_likelihood_batch
+
+    def record_batch(pec, rows, **kwargs):
+        scores = original_batch(pec, rows, **kwargs)
+        batch_results.append((pec, rows.copy(), scores.copy(), kwargs["inputs"]))
+        return scores
+
+    monkeypatch.setattr(pnl.ParameterEstimationComposition, "log_likelihood_batch", record_batch)
 
     def participant_factory(data, subject_index=None):
         seed = 100 + subject_index
@@ -33,7 +42,8 @@ def test_hierarchical_fit_uses_batched_participant_likelihoods(batched_backend, 
         model = pnl.Composition(pathways=decision)
         participant = pnl.ParameterEstimationComposition(
             model=model,
-            parameters={("rate", decision): np.linspace(0.1, 1.5, 101)},
+            parameters={("rate", decision): np.linspace(0.1, 1.5, 101),
+                        ("threshold", decision): np.linspace(0.1, 0.3, 101)},
             outcome_variables=list(decision.output_ports),
             data=data,
             optimization_function=pnl.PECOptimizationFunction(
@@ -73,9 +83,23 @@ def test_hierarchical_fit_uses_batched_participant_likelihoods(batched_backend, 
     assert np.isfinite(result.objective)
     assert np.isfinite(result.posterior_variance).all()
     assert len(participants) == 2
+    assert batch_results
+    assert all(rows.shape == (8, 2) for _, rows, _, _ in batch_results)
+    # Each perturbed vector must use exactly the same RNG stream and score in a batch or alone.
+    for participant, rows, scores, inputs in batch_results:
+        scalar = [participant.log_likelihood(*row, inputs=inputs) for row in rows]
+        np.testing.assert_array_equal(scores, scalar)
     for participant, inputs in participants:
         plan = participant.controller.function._batched_plan
         assert plan.backend == batched_backend
-        first = participant.log_likelihood(0.7, inputs=inputs)
-        assert participant.log_likelihood(0.7, inputs=inputs) == first
+        first = participant.log_likelihood(0.7, 0.2, inputs=inputs)
+        assert participant.log_likelihood(0.7, 0.2, inputs=inputs) == first
         assert participant.controller.function._batched_plan is plan
+
+    batch_results.clear()
+    group.parameters.hessian_batch_size.set(1)
+    scalar_result = group.run()
+    assert not batch_results
+    assert scalar_result.objective == result.objective
+    np.testing.assert_array_equal(scalar_result.posterior_covariance, result.posterior_covariance)
+    pd.testing.assert_frame_equal(scalar_result.subject_parameters, result.subject_parameters)

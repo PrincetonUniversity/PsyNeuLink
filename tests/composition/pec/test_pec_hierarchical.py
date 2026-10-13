@@ -1386,6 +1386,7 @@ def test_constructor_options_become_parameters():
     pec = _build_group_pec(hierarchical_options={
         "subject_id": "subject", "curvature": "diagonal", "max_iterations": 7,
         "tol": 1e-2, "variance_floor": 1e-3, "hessian_step": 0.2,
+        "hessian_batch_size": 3,
         "estep_method": "Powell", "estep_options": {"maxiter": 5},
     })
     assert pec.parameters.curvature.get() == "diagonal"
@@ -1393,6 +1394,7 @@ def test_constructor_options_become_parameters():
     assert pec.parameters.tol.get() == 1e-2
     assert pec.parameters.variance_floor.get() == 1e-3
     assert pec.parameters.hessian_step.get() == 0.2
+    assert pec.parameters.hessian_batch_size.get() == 3
     assert pec.parameters.estep_method.get() == "Powell"
     assert pec.parameters.estep_options.get() == {"maxiter": 5}
 
@@ -1406,6 +1408,7 @@ def test_unset_options_take_the_parameter_defaults():
     assert pec.parameters.tol.get() == 1e-4
     assert pec.parameters.variance_floor.get() == 1e-6
     assert pec.parameters.hessian_step.get() is None
+    assert pec.parameters.hessian_batch_size.get() == 16
     assert pec.parameters.estep_method.get() == "Nelder-Mead"
     assert pec.parameters.estep_options.get() is None
 
@@ -1430,6 +1433,9 @@ def test_settings_are_independent_between_compositions():
     ("tol", 0.0),
     ("variance_floor", -1.0),
     ("hessian_step", -0.1),
+    ("hessian_batch_size", 0),
+    ("hessian_batch_size", 1.5),
+    ("hessian_batch_size", True),
     ("estep_method", 3),
     ("estep_options", 5),
     # Every check is a comparison, and a comparison against NaN is False, so one would pass all
@@ -1551,6 +1557,7 @@ def test_both_execution_paths_are_given_the_same_settings(monkeypatch):
     options = {
         "subject_id": "subject", "max_iterations": 2, "tol": 1e-2,
         "curvature": "diagonal", "variance_floor": 1e-5, "estep_method": "Powell",
+        "hessian_batch_size": 3,
     }
     here = _captured_settings(
         monkeypatch,
@@ -1568,6 +1575,7 @@ def test_both_execution_paths_are_given_the_same_settings(monkeypatch):
     assert here["estep_config"] == there["estep_config"]
     assert here["estep_config"].curvature == "diagonal"
     assert here["estep_config"].method == "Powell"
+    assert here["estep_config"].hessian_batch_size == 3
 
 
 @pytest.mark.composition

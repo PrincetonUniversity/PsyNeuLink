@@ -27,6 +27,23 @@ requires_triton = pytest.mark.triton_interpreter
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
 
 
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+@pytest.mark.parametrize("masked", [False, True])
+@pytest.mark.parametrize("order", ["C", "F"])
+def test_log_score_is_independent_of_batch_layout(dtype, masked, order):
+    from psyneulink.core.batched.likelihood import _sum_histogram_log_likelihood
+
+    rng = np.random.default_rng(104)
+    densities = np.array(rng.uniform(.0001, 1.5, (8, 60)), dtype=dtype, order=order)
+    mask = np.arange(60) % 3 != 0 if masked else None
+    expected = [_sum_histogram_log_likelihood(row, mask) for row in densities]
+    np.testing.assert_array_equal(_sum_histogram_log_likelihood(densities, mask), expected)
+    # Candidate reordering and chunking must not change finite-difference inputs.
+    np.testing.assert_array_equal(_sum_histogram_log_likelihood(densities[::-1], mask), expected[::-1])
+    chunks = [_sum_histogram_log_likelihood(densities[start:start + 3], mask) for start in range(0, 8, 3)]
+    np.testing.assert_array_equal(np.concatenate(chunks), expected)
+
+
 def _numpy_reference(sim, exp, cat_mask, bins, bin_range):
     """Independent numpy histogram density, matching ``histogram_likelihood``."""
     T, S, D = sim.shape

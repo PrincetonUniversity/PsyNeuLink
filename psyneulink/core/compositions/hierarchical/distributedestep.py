@@ -35,10 +35,12 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     HierarchicalEMError,
     log_gauss_diag,
     subject_map_estep,
+    _make_batched_neg_log_posterior,
 )
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
     ParameterSchema,
     check_scoring_is_deterministic,
+    _pec_log_likelihood_batch,
 )
 from psyneulink.core.compositions.hierarchical.transforms import BoundedTransform
 
@@ -120,7 +122,12 @@ def _dask_subject_estep(
             return -float(pec.log_likelihood(*theta, inputs=inputs)) - log_gauss_diag(z, mu_s, sigma)
 
         try:
-            post = subject_map_estep(neg_log_post, z0=z0, prior_variance=sigma, config=config)
+            batch = _make_batched_neg_log_posterior(
+                lambda rows: _pec_log_likelihood_batch(pec, inputs, rows), transform, mu_s, sigma,
+            )
+            post = subject_map_estep(
+                neg_log_post, z0=z0, prior_variance=sigma, config=config, neg_log_post_batch=batch,
+            )
         except HierarchicalEMError as error:
             raise HierarchicalEMError(f"participant {subject_index}: {error}") from None
 

@@ -177,6 +177,10 @@ class SubjectLikelihoodProvider:
         """Log-likelihood of participant `subject_index`'s data at parameters `theta`."""
         raise NotImplementedError
 
+    def log_likelihood_batch(self, theta, subject_index):
+        """Score parameter rows, falling back to individual calls when necessary."""
+        return np.asarray([self.log_likelihood(row, subject_index) for row in theta])
+
     def close(self):
         """Release anything held open.  Optional."""
 
@@ -367,6 +371,19 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
         pec, inputs = self._build(subject_index)
         return float(pec.log_likelihood(*np.asarray(theta, dtype=float), inputs=inputs))
 
+    def log_likelihood_batch(self, theta, subject_index):
+        """Score a participant's parameter rows with its configured likelihood backend."""
+        pec, inputs = self._build(subject_index)
+        return _pec_log_likelihood_batch(pec, inputs, theta)
+
     def close(self):
         """Drop the cached models."""
         self._cache.clear()
+
+
+def _pec_log_likelihood_batch(pec, inputs, theta):
+    """Use GPU parameter batching where supported; preserve LLVM and neural scoring otherwise."""
+    if (getattr(pec, "scores_by_simulation", True)
+            and getattr(pec.controller.function, "batched_backend", None) is not None):
+        return pec.log_likelihood_batch(theta, inputs=inputs)
+    return np.asarray([pec.log_likelihood(*row, inputs=inputs) for row in theta], dtype=float)

@@ -666,6 +666,7 @@ class ParameterEstimationComposition(Composition):
         tol = Parameter(1e-4, stateful=False, modulable=False, loggable=False)
         variance_floor = Parameter(1e-6, stateful=False, modulable=False, loggable=False)
         hessian_step = Parameter(None, stateful=False, modulable=False, loggable=False)
+        hessian_batch_size = Parameter(16, stateful=False, modulable=False, loggable=False)
         estep_method = Parameter("Nelder-Mead", stateful=False, modulable=False, loggable=False)
         estep_options = Parameter(None, stateful=False, modulable=False, loggable=False)
 
@@ -701,6 +702,12 @@ class ParameterEstimationComposition(Composition):
             step = np.asarray(hessian_step, dtype=float)
             if not np.all(np.isfinite(step)) or np.any(step <= 0):
                 return "must be finite and positive"
+            return None
+
+        def _validate_hessian_batch_size(self, hessian_batch_size):
+            value = np.asarray(hessian_batch_size)
+            if (value.ndim != 0 or not np.issubdtype(value.dtype, np.integer) or value < 1):
+                return "must be a positive integer"
             return None
 
         def _validate_estep_method(self, estep_method):
@@ -1040,6 +1047,7 @@ class ParameterEstimationComposition(Composition):
         "tol",
         "variance_floor",
         "hessian_step",
+        "hessian_batch_size",
         "estep_method",
         "estep_options",
     )
@@ -1113,6 +1121,7 @@ class ParameterEstimationComposition(Composition):
         settings["estep_options"] = copy.deepcopy(settings["estep_options"])
         # Validation accepts any whole number, 3.0 included, but it counts iterations.
         settings["max_iterations"] = int(settings["max_iterations"])
+        settings["hessian_batch_size"] = int(settings["hessian_batch_size"])
         return settings
 
     def _setup_hierarchical(self, likelihood_include_mask):
@@ -1179,6 +1188,7 @@ class ParameterEstimationComposition(Composition):
             method=options["estep_method"],
             curvature=options["curvature"],
             hessian_step=options["hessian_step"],
+            hessian_batch_size=options["hessian_batch_size"],
             variance_floor=options["variance_floor"],
             optimizer_options=options["estep_options"],
         )
@@ -1214,7 +1224,10 @@ class ParameterEstimationComposition(Composition):
                     runner.release()
         else:
             provider.warn_if_costly_in_process()
-            runner = make_inprocess_estep_runner(provider.log_likelihood, transform, config)
+            runner = make_inprocess_estep_runner(
+                provider.log_likelihood, transform, config,
+                log_likelihood_batch=provider.log_likelihood_batch,
+            )
             em = fit_laplace_em(runner, provider.n_subjects, provider.n_params, **fit_kwargs)
 
         self.fit_results = HierarchicalPECResults.from_em(
