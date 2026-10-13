@@ -285,7 +285,7 @@ def castReturn(variable, param1, param2):
     return float(int(param1)) + float(param2) + float(variable[0] + variable[1])
 
 def singletonArrayCast(variable, param1, param2):
-    return float(variable) + float(int(param1)) + float(bool(param2))
+    return float(variable.item()) + float(int(param1)) + float(bool(param2))
 
 
 def condReturn(variable, param1, param2):
