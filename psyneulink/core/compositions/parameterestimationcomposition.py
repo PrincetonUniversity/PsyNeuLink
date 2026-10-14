@@ -266,6 +266,7 @@ Class Reference
 
 """
 import copy
+import dataclasses
 import warnings
 from enum import auto
 
@@ -300,12 +301,20 @@ from psyneulink.core.compositions.hierarchical.distributedestep import (
 )
 from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
     HierarchicalPECResults,
+    HierarchicalSamplingResults,
 )
 from psyneulink.core.compositions.hierarchical.laplaceem import (
     Curvature,
     EStepConfig,
     fit_laplace_em,
     make_inprocess_estep_runner,
+)
+from psyneulink.core.compositions.hierarchical.nuts import (
+    HierarchicalNeuralPosterior,
+    NUTSConfig,
+    Sampler,
+    SamplingWarning,
+    run_nuts,
 )
 from psyneulink.core.compositions.hierarchical.subjectlikelihood import (
     PECFactorySubjectLikelihood,
@@ -662,6 +671,8 @@ class ParameterEstimationComposition(Composition):
         # anything it computes, and they hold still for the length of a fit, so none of them is
         # stateful, modulable or logged.  They are the only place their defaults are written down.
         curvature = Parameter(Curvature.FULL, stateful=False, modulable=False, loggable=False)
+        sampler = Parameter(None, stateful=False, modulable=False, loggable=False)
+        sampler_options = Parameter(None, stateful=False, modulable=False, loggable=False)
         max_iterations = Parameter(50, stateful=False, modulable=False, loggable=False)
         tol = Parameter(1e-4, stateful=False, modulable=False, loggable=False)
         variance_floor = Parameter(1e-6, stateful=False, modulable=False, loggable=False)
@@ -675,6 +686,23 @@ class ParameterEstimationComposition(Composition):
         def _validate_curvature(self, curvature):
             if curvature not in Curvature:
                 return f"must be one of {[c.value for c in Curvature]}"
+            return None
+
+        def _validate_sampler(self, sampler):
+            # None is not "unset": it is the EM fit, which is what a hierarchical fit does by default.
+            if sampler is not None and sampler not in Sampler:
+                return f"must be None, which fits by EM, or one of {[k.value for k in Sampler]}"
+            return None
+
+        def _validate_sampler_options(self, sampler_options):
+            if sampler_options is None:
+                return None
+            if not isinstance(sampler_options, Mapping):
+                return "must be a mapping of options for the sampler"
+            accepted = {field.name for field in dataclasses.fields(NUTSConfig)}
+            unknown = set(sampler_options) - accepted
+            if unknown:
+                return f"has no {sorted(unknown)}; valid options are {sorted(accepted)}"
             return None
 
         def _validate_max_iterations(self, max_iterations):
@@ -1036,6 +1064,8 @@ class ParameterEstimationComposition(Composition):
     #: when the composition is built (see `_setup_hierarchical`).
     _HIERARCHICAL_SOLVER_SETTINGS = (
         "curvature",
+        "sampler",
+        "sampler_options",
         "max_iterations",
         "tol",
         "variance_floor",
@@ -1113,6 +1143,20 @@ class ParameterEstimationComposition(Composition):
         settings["estep_options"] = copy.deepcopy(settings["estep_options"])
         # Validation accepts any whole number, 3.0 included, but it counts iterations.
         settings["max_iterations"] = int(settings["max_iterations"])
+        # Combinations of settings are checked here, where the fit reads them together: each
+        # Parameter is validated on its own when it is set.
+        sampling = settings["sampler"] is not None
+        if settings["sampler_options"] is not None and not sampling:
+            raise ParameterEstimationCompositionError(
+                'sampler_options applies only when a sampler is chosen; set sampler="nuts" as '
+                "well"
+            )
+        if sampling and self._pec_distributed:
+            raise ParameterEstimationCompositionError(
+                "sampling moves the whole group at once, so a participant cannot be fitted apart "
+                "from the rest and there is nothing to send to a worker. Run it in one process, "
+                "or fit by EM, which does distribute"
+            )
         return settings
 
     def _setup_hierarchical(self, likelihood_include_mask):
@@ -1175,6 +1219,8 @@ class ParameterEstimationComposition(Composition):
         # participant's model settles it, and the rest are held to that. Building it here is not
         # spare work even for a distributed fit, since the group prior is defined over its ranges.
         schema = provider.schema
+        if options["sampler"] == Sampler.NUTS:
+            return self._sample_hierarchical(provider, options, context)
         config = EStepConfig(
             method=options["estep_method"],
             curvature=options["curvature"],
@@ -1226,6 +1272,38 @@ class ParameterEstimationComposition(Composition):
         )
         self.optimal_value = em.objective
         self.parameters.results._set(self.fit_results.subject_parameters.to_numpy(), context)
+        return self.fit_results
+
+    def _sample_hierarchical(self, provider, options, context):
+        """Sample the joint posterior over the group and every participant.
+
+        Every participant's model is held in this process at once, since one evaluation of the
+        posterior needs all of them.
+        """
+        provider.warn_if_costly_in_process()
+        config = NUTSConfig(**dict(options["sampler_options"] or {}))
+        posterior = HierarchicalNeuralPosterior(
+            [provider.subject_terms(s) for s in range(provider.n_subjects)],
+            *provider.bounds,
+        )
+        draws, diagnostics = run_nuts(
+            posterior.log_prob, posterior.initial_points(config.chains, config.seed), config
+        )
+        for message in diagnostics.warnings:
+            warnings.warn(message, SamplingWarning, stacklevel=3)
+
+        self.fit_results = HierarchicalSamplingResults.from_draws(
+            draws, diagnostics, posterior, provider.fit_param_names,
+            self._subject_split.labels, settings=dict(options),
+        )
+        self.optimized_parameter_values = dict(
+            zip(provider.fit_param_names, self.fit_results.group_parameters["value"].to_numpy())
+        )
+        # A sampled fit has no single best value: the draws are the result.
+        self.optimal_value = None
+        self.parameters.results._set(
+            self.fit_results.subject_parameters.to_numpy(), context
+        )
         return self.fit_results
 
     def _validate_data(self):
@@ -1517,31 +1595,58 @@ class ParameterEstimationComposition(Composition):
         self._neural_parameter_index = index[included]
         self._neural_likelihood = likelihood
 
+    def _neural_trial_features(self, inputs):
+        """The features of the included trials, from ``inputs``: None if the estimator takes none."""
+        metadata = self._neural_likelihood.metadata
+        if inputs is None and not metadata.n_trial_features:
+            return None
+        # The inputs training used, even where one does not vary in these data: a participant
+        # who saw one condition still has to be scored as being in it.
+        columns = _input_columns(inputs, len(self.data), self.model)[self.likelihood_include_mask]
+        metadata.check_inputs(columns)
+        if not metadata.n_trial_features:
+            return None
+        return columns[:, list(metadata.trial_feature_columns)]
+
     def _score_with_neural_likelihood(self, inputs=None):
         """Give the optimization function the log-likelihood of the data under the estimator.
 
         It is set again on each call, whose inputs give the trials' features.
         """
         likelihood = self._neural_likelihood
-        included = self.likelihood_include_mask
-        features = None
-        metadata = likelihood.metadata
-        if inputs is not None or metadata.n_trial_features:
-            # The inputs training used, even where one does not vary in these data: a participant
-            # who saw one condition still has to be scored as being in it.
-            columns = _input_columns(inputs, len(self.data), self.model)[included]
-            metadata.check_inputs(columns)
-            if metadata.n_trial_features:
-                features = columns[:, list(metadata.trial_feature_columns)]
-
+        features = self._neural_trial_features(inputs)
         # Excluded trials are dropped, as they are from a simulated likelihood.
-        outcomes = self._data_numpy[included]
+        outcomes = self._data_numpy[self.likelihood_include_mask]
         index = self._neural_parameter_index
         self.controller.function.set_neural_likelihood(
             lambda *values: likelihood.log_likelihood(
                 np.asarray(values, dtype=float)[index], outcomes, features
             )
         )
+
+    def neural_likelihood_terms(self, inputs=None):
+        """The trained estimator this composition scores with, and the trials it scores.
+
+        Gradient-based fitting differentiates the score with respect to the parameters, which a
+        simulated likelihood cannot supply, so it reaches the estimator directly rather than
+        through `log_likelihood`.
+
+        Returns
+        -------
+
+        ``(likelihood, outcomes, trial_features, parameter_index)``: ``trial_features`` is None
+        unless the estimator was trained with trial features, and ``parameter_index[t, k]``
+        is the position, among the values fitted, of the value the model's k-th parameter takes
+        on trial t.
+        """
+        if self._likelihood_estimator != "neural":
+            raise ParameterEstimationCompositionError(
+                f"ParameterEstimationComposition {self.name} is scored by simulating it, which "
+                f"gives no gradient. Sampling needs likelihood_estimator=\"neural\"; see "
+                f"train_neural_likelihood()."
+            )
+        return (self._neural_likelihood, self._data_numpy[self.likelihood_include_mask],
+                self._neural_trial_features(inputs), self._neural_parameter_index)
 
     @handle_external_context()
     def run(self, *args, context=None, **kwargs):
