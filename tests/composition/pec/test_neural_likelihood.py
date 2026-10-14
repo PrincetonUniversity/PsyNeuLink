@@ -820,7 +820,7 @@ def _sample_group(artifact, **hierarchical):
 
 @pytest.mark.composition
 @pytest.mark.usefixtures("single_threaded_torch")
-def test_a_sampled_fit_reports_draws_for_the_group_and_every_participant(trained_artifact):
+def test_a_sampled_fit_reports_its_draws_estimates_and_convergence(trained_artifact):
     pec, results = _sample_group(trained_artifact)
     n_subjects, n_params = 2, 2
 
@@ -836,24 +836,13 @@ def test_a_sampled_fit_reports_draws_for_the_group_and_every_participant(trained
     assert results.settings["sampler"] == "nuts"
     assert pec.fit_results is results
 
-
-@pytest.mark.composition
-@pytest.mark.usefixtures("single_threaded_torch")
-def test_a_sampled_fit_reports_whether_it_converged(trained_artifact):
-    # 25 draws cannot have converged, and the result has to say so rather than presenting the
-    # estimates as though they described the posterior.
-    _, results = _sample_group(trained_artifact)
+    # Two group means and two log scales; 25 draws cannot have converged, and the result says so.
     assert set(results.convergence.columns) == {"r_hat", "ess"}
-    assert len(results.convergence) == 4          # two group means, two log scales
+    assert len(results.convergence) == 4
     assert np.all(np.isfinite(results.convergence["r_hat"]))
-    assert "r_hat" in repr(results) or "converged" in repr(results)
+    assert results.converged is False
 
-
-@pytest.mark.composition
-@pytest.mark.usefixtures("single_threaded_torch")
-def test_a_sampled_fit_reports_no_single_best_value(trained_artifact):
     # The draws are the result; there is no single best value.
-    pec, results = _sample_group(trained_artifact)
     assert pec.optimal_value is None
     assert set(pec.optimized_parameter_values) == set(results.fit_param_names)
 
