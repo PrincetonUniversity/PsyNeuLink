@@ -14,11 +14,20 @@ graph recognizer. The shared adapters cover:
 
 - Scheduled Logistic LCAs of width 1–32, finite dense recurrent matrices,
   scalar numeric or `NormalDist` noise, maximum-activity termination, and
-  decision index/time/step and energy outputs.
+  decision index/time/step, energy, and canonical `MAX_VAL` outputs.
 - Scalar Euler FitzHugh–Nagumo integration in a Linear TransferMechanism,
   with zero initializers and a fixed number of internal executions per pass.
-- Elementwise ObjectiveMechanisms and scalar OVERRIDE controllers that can
-  fan out to multiple registered parameters in a dynamic schedule.
+- Scalar Logistic TransferMechanisms with a zero-noise AdaptiveIntegrator,
+  one update per execution, and `Never` or `AtTrialStart` resets.
+- Elementwise ObjectiveMechanisms and scalar OVERRIDE or ADDITIVE controllers
+  that can fan out to multiple registered parameters in a dynamic schedule,
+  including per-pass OVERRIDE of the FitzHugh–Nagumo integrator's `mode`.
+
+ADDITIVE control samples `base parameter + held control signal` when each target
+executes. The base can vary by candidate or trial. Both the held signal and the
+last effective value sampled by the target survive split launches, so resets
+and retained ACC state follow the native scheduler. The additive path requires
+an identity Linear ParameterPort and one control projection per target parameter.
 
 Scheduled LCAs use `execute_until_finished=False`. Gaussian LCAs support
 `AtTrialStart` and `Never` resets. Custom recurrent matrices are frozen;

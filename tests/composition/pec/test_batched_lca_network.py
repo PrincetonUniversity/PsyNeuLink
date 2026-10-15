@@ -21,7 +21,7 @@ def _response(*, width=4, noise=0.0, matrix=None):
         matrix=matrix, noise=pnl.NormalDist(standard_deviation=noise),
         time_step_size=0.1, termination_threshold=0.68,
         execute_until_finished=False, reset_stateful_function_when=pnl.AtTrialStart(),
-        output_ports=[pnl.RESULT, pnl.DECISION_INDEX, pnl.DECISION_TIME, pnl.ENERGY],
+        output_ports=[pnl.RESULT, pnl.DECISION_INDEX, pnl.DECISION_TIME, pnl.ENERGY, pnl.MAX_VAL],
     )
 
 

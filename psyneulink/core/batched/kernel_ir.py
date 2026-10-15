@@ -134,6 +134,8 @@ class KernelOp:
             _validate_initialize_effective_parameter(self)
         elif self.kind == "ApplyModulation":
             _validate_apply_modulation(self)
+        elif self.kind == "SampleModulation":
+            _validate_sample_modulation(self)
         elif self.kind == "ForPasses":
             _validate_for_passes(self)
         elif self.kind == "ExecuteConsiderationSet":
@@ -180,6 +182,7 @@ _DYNAMIC_SCHEDULE_BODY_OP_KINDS = frozenset({
     "Concatenate",
     "ExtractSlice",
     "LoadInput",
+    "SampleModulation",
     "StepMechanism",
 })
 _DYNAMIC_SCHEDULE_EFFECT_OP_KINDS = frozenset({"ApplyModulation"})
@@ -605,7 +608,7 @@ def _validate_dynamic_member_dataflow(
 
     for member in members:
         local_by_name: dict[str, KernelValue] = {}
-        for op in member.body:
+        for op_index, op in enumerate(member.body):
             for value in op.inputs:
                 available = local_by_name.get(value.name)
                 if available is None:
@@ -656,7 +659,16 @@ def _validate_dynamic_member_dataflow(
                     any(carry is None for carry in expected)
                     or len(sampled_inputs) != len(expected)
                     or any(
-                        not _kernel_value_matches(actual, carry.value)
+                        not (
+                            _kernel_value_matches(actual, carry.value)
+                            or any(
+                                sample.kind == "SampleModulation"
+                                and sample.attrs["effective_parameter_id"] == carry.value_id
+                                and _kernel_value_matches(sample.inputs[0], carry.value)
+                                and _kernel_value_matches(sample.outputs[0], actual)
+                                for sample in member.body[:op_index]
+                            )
+                        )
                         for actual, carry in zip(sampled_inputs, expected)
                     )
                 ):
@@ -995,7 +1007,7 @@ def apply_modulation_op(
     held_effective: KernelValue,
     controller_value: KernelValue,
 ) -> KernelOp:
-    """Apply a typed scalar ``OVERRIDE`` to a held effective parameter."""
+    """Publish a typed scalar control signal into held parameter storage."""
 
     return KernelOp(
         kind="ApplyModulation",
@@ -1116,7 +1128,8 @@ def _validate_apply_modulation(op: KernelOp) -> None:
             type(op.attrs.get(key)) is not int or op.attrs[key] < 0
             for key in integer_keys
         )
-        or op.attrs.get("mode") != "OVERRIDE"
+        or op.attrs.get("mode") not in {"OVERRIDE", "ADDITIVE"}
+        or ("folded_control_id" in op.attrs and op.attrs.get("mode") != "OVERRIDE")
         or op.attrs.get("update_event") != "after_controller_execution"
         or len(op.inputs) != 2
         or len(op.outputs) != 1
@@ -1132,8 +1145,20 @@ def _validate_apply_modulation(op: KernelOp) -> None:
     ):
         raise ValueError(
             "KernelIR ApplyModulation requires exact scalar float32 held-value "
-            "rebinding and typed OVERRIDE identities."
+            "rebinding and typed OVERRIDE or ADDITIVE identities."
         )
+
+
+def _validate_sample_modulation(op: KernelOp) -> None:
+    """Read a held additive signal against the target's current base parameter."""
+    if (
+        set(op.attrs) != {"effective_parameter_id", "base_parameter_id"}
+        or any(not _valid_dynamic_id(value) for value in op.attrs.values())
+        or len(op.inputs) != 1 or len(op.outputs) != 1
+        or not _kernel_value_matches(op.inputs[0], KernelValue(f"effective:{op.attrs['effective_parameter_id']}", 1))
+        or not _kernel_value_matches(op.outputs[0], KernelValue(f"modulated:{op.attrs['effective_parameter_id']}", 1))
+    ):
+        raise ValueError("KernelIR SampleModulation requires exact scalar additive parameter identities.")
 
 
 def _validate_affine_scheduler_value(op: KernelOp) -> None:
@@ -3025,7 +3050,7 @@ def _kernel_op_output_lineage(
                     )
         return output_lineage
 
-    if op.kind not in {"AddConstant", "Clamp", "ExtractSlice"}:
+    if op.kind not in {"AddConstant", "Clamp", "ExtractSlice", "SampleModulation"}:
         return output_lineage
 
     input_components = frozenset().union(
@@ -5034,6 +5059,17 @@ def _dynamic_ordinary_member(
     trial_state_candidates = ()
     finished_candidate = None
     candidate_index = 0
+    sampled_values = {carry.value_id: carry.value for carry in sampled_effective_parameters}
+    for modulation_spec in kernel.modulations:
+        if modulation_spec.target_component_id != node.component_id or modulation_spec.mode != "ADDITIVE":
+            continue
+        effective_id = modulation_spec.effective_parameter_id
+        parameter = next(p for p in kernel.params if p.name == node.params[modulation_spec.target_parameter])
+        sampled = KernelValue(f"modulated:{effective_id}", 1)
+        body.append(KernelOp("SampleModulation", node.name,
+                             inputs=(sampled_values[effective_id],), outputs=(sampled,),
+                             attrs={"effective_parameter_id": effective_id, "base_parameter_id": parameter.parameter_id}))
+        sampled_values[effective_id] = sampled
 
     def local_input(value):
         return local_values.get(_kernel_value_key(value), value)
@@ -5071,7 +5107,7 @@ def _dynamic_ordinary_member(
         }
         if op.kind != "CallMechanism":
             if op.kind == "CallFunction" and sampled_effective_parameters:
-                inputs += tuple(carry.value for carry in sampled_effective_parameters)
+                inputs += tuple(sampled_values[carry.value_id] for carry in sampled_effective_parameters)
                 attrs["sampled_effective_parameter_ids"] = tuple(carry.value_id for carry in sampled_effective_parameters)
             body.append(
                 KernelOp(
@@ -5189,7 +5225,7 @@ def _dynamic_ordinary_member(
                 op.target,
                 inputs=(
                     *inputs,
-                    *(carry.value for carry in sampled_effective_parameters),
+                    *(sampled_values[carry.value_id] for carry in sampled_effective_parameters),
                     *(carry.value for carry in owned_states),
                     *(carry.value for carry in owned_trial_states),
                 ),
@@ -5221,7 +5257,7 @@ def _dynamic_ordinary_member(
         sampled_key = ("sampled_parameter", node.component_id, carry.value_id)
         if sampled_key in carries_by_key:
             value = KernelValue(f"sampled:{carry.value_id}:candidate", 1)
-            body.append(KernelOp("ExtractSlice", node.name, inputs=(carry.value,), outputs=(value,),
+            body.append(KernelOp("ExtractSlice", node.name, inputs=(sampled_values[carry.value_id],), outputs=(value,),
                                  attrs={"start": 0, "stop": 1}))
             publications.append(KernelPublication(value, "sampled_parameter", node.component_id, carry.value_id))
     for port_id in node.output_port_ids:

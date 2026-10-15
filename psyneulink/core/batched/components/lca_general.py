@@ -14,7 +14,7 @@ from psyneulink.core.batched.specs import (
 )
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Energy
-from psyneulink.core.globals.keywords import RESULT, ENERGY, OWNER_VALUE
+from psyneulink.core.globals.keywords import RESULT, ENERGY, MAX_VAL, OWNER_VALUE
 from psyneulink.core.scheduling.condition import AtTrialStart, Never
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import (
@@ -88,7 +88,7 @@ def _outputs_supported(node):
     if not ports or ports[0].name != RESULT:
         return BatchedDiagnostic(node.name, "unsupported scheduled LCA outputs", "RESULT must be first")
     for port in ports:
-        valid = port.name in {RESULT, ENERGY, DECISION_INDEX, DECISION_TIME, DECISION_STEPS}
+        valid = port.name in {RESULT, ENERGY, MAX_VAL, DECISION_INDEX, DECISION_TIME, DECISION_STEPS}
         standard = node.standard_output_ports.get_port_dict(port.name) if valid else {}
         if valid:
             selector = standard.get("variable", (OWNER_VALUE, 0))
@@ -145,6 +145,11 @@ def _readouts(ctx, node):
     for port, _ in node.attrs["op_outputs"]:
         if port == RESULT:
             result.extend(act)
+        elif port == MAX_VAL:
+            maximum = act[0]
+            for value in act[1:]:
+                maximum = f"tl.maximum({maximum}, {value})"
+            result.append(maximum)
         elif port == DECISION_STEPS:
             result.append(count)
         elif port == DECISION_TIME:

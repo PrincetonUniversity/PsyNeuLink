@@ -600,8 +600,8 @@ class BatchedFoldedAffineControlSpec:
 class BatchedModulationSpec:
     """One object-free effective-parameter edge.
 
-    The first declared subset is a scalar ``OVERRIDE`` supplied by one
-    ControlMechanism.  Numeric component, port, and parameter IDs are the
+    Scalar ``OVERRIDE`` and ``ADDITIVE`` signals are supplied by one
+    ControlMechanism. Numeric component, port, and parameter IDs are the
     semantic identity; names remain diagnostic labels.  The identity port IDs
     make the intentionally absorbed monitor/signal/projection chain auditable
     without retaining live PsyNeuLink objects in the IR.
@@ -662,9 +662,9 @@ class BatchedModulationSpec:
         )
         if any(type(value) is not str or not value for value in labels):
             raise ValueError("Batched modulation labels must be nonempty strings.")
-        if self.mode != "OVERRIDE" or self.width != 1 or self.dtype != "float32":
+        if self.mode not in {"OVERRIDE", "ADDITIVE"} or self.width != 1 or self.dtype != "float32":
             raise ValueError(
-                "Batched modulation currently requires scalar float32 OVERRIDE."
+                "Batched modulation currently requires scalar float32 OVERRIDE or ADDITIVE."
             )
         if self.absorbed_identity_chain is not True:
             raise ValueError(

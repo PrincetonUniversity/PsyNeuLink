@@ -120,7 +120,8 @@ def _specialized(ports):
 def _resolve(node):
     if type(getattr(node, "integrator_function", None)) is FitzHughNagumoIntegrator:
         return _specialized(tuple(port.name for port in node.output_ports))
-    return None
+    from psyneulink.core.batched.components.adaptive_transfer import resolve
+    return resolve(node)
 
 
 register_batched_specializer(TransferMechanism, _resolve)

@@ -2445,7 +2445,7 @@ def _scalar_override_declaration_supported(graph, parameters, modulation, node_s
         )
         and modulation.controller == control.name and modulation.source == source.name and modulation.target == target.name
         and len({control.component_id, source.component_id, target.component_id}) == 3
-        and modulation.mode == "OVERRIDE" and modulation.width == 1 and modulation.dtype == "float32"
+        and modulation.mode in {"OVERRIDE", "ADDITIVE"} and modulation.width == 1 and modulation.dtype == "float32"
         and modulation.absorbed_identity_chain is True
         and control.input_port_ids == (input_port.port_id,) and signal.port_id in control.output_port_ids
         and source_port.port_id in source.output_port_ids
@@ -2537,7 +2537,7 @@ def _modulation_ir_specs(
     dict[int, object],
     dict[int, object],
 ]:
-    """Snapshot exact scalar LCA ``OVERRIDE`` chains as typed data.
+    """Snapshot exact scalar control chains and parameter sampling as typed data.
 
     Execution remains fail-closed.  This declaration replaces the informal
     name dictionary as the semantic description of the absorbed monitor,
@@ -2588,7 +2588,9 @@ def _modulation_ir_specs(
 
         base_value = _finite_fp32_scalar_value(
             _parameter_value(target, chain.target_port,
-                             _parameter_value(target.function, chain.target_port, None))
+                             _parameter_value(target.function, chain.target_port,
+                                              _parameter_value(getattr(target, "integrator_function", None),
+                                                               chain.target_port, None)))
         )
         initial_modulation_value = _finite_fp32_scalar_value(
             _parameter_default_value(control_projection, "value", None)
@@ -2775,6 +2777,7 @@ def _modulation_ir_specs(
                 control_projection_id=control_projection_id,
                 controller_function_spec_key=function_spec_key,
                 controller_param_bindings=controller_param_bindings,
+                mode="ADDITIVE" if _is_additive(signal.modulation) else "OVERRIDE",
             )
         )
         bindings_by_id[modulation_id] = control_projection
@@ -4188,6 +4191,7 @@ def _resolve_control_chain(
     composition,
     *,
     projection=None,
+    allow_additive=False,
 ) -> tuple[_ResolvedControlChain | None, BatchedDiagnostic | None]:
     """Validate and resolve the exact scalar control chain once.
 
@@ -4226,9 +4230,8 @@ def _resolve_control_chain(
             "unsupported control monitor routing for batched v2",
             "monitor MappingProjection is not active in this Composition",
         )
-    if not _is_override(
-        getattr(signal, "modulation", getattr(control, "modulation", None))
-    ):
+    modulation = getattr(signal, "modulation", getattr(control, "modulation", None))
+    if not (_is_override(modulation) or (allow_additive and _is_additive(modulation))):
         return None, BatchedDiagnostic(
             name,
             "unsupported control modulation for batched v2",
@@ -4275,6 +4278,11 @@ def _resolve_control_chain(
     source = getattr(source_port, "owner", None)
     target = getattr(target_parameter_port, "owner", None)
     target_port = getattr(target_parameter_port, "name", "")
+    if _is_additive(modulation) and not _is_identity_linear(getattr(target_parameter_port, "function", None)):
+        return None, BatchedDiagnostic(
+            name, "unsupported additive ParameterPort semantics for batched v2",
+            "requires identity Linear so the effective value is base plus signal",
+        )
     monitor_is_identity = _is_identity_scalar_projection(monitor_projection)
     monitor_is_parameter_input = _is_external_parameter_projection(
         composition,
@@ -4354,7 +4362,7 @@ def _resolve_control_chain(
 
 
 def _scalar_override_chains(control, composition):
-    """Authenticate scalar OVERRIDE fan-out to registered numeric arguments."""
+    """Authenticate scalar OVERRIDE or ADDITIVE fan-out to registered arguments."""
     if not _is_coevolving(composition, [node for node in composition.nodes if type(node) is not ControlMechanism]):
         return ()
     if type(control.function) is not Identity and not _is_identity_linear(control.function):
@@ -4365,7 +4373,7 @@ def _scalar_override_chains(control, composition):
     chains = []
     active = {id(node) for node in composition.nodes}
     for projection in efferents:
-        chain, diagnostic = _resolve_control_chain(control, composition, projection=projection)
+        chain, diagnostic = _resolve_control_chain(control, composition, projection=projection, allow_additive=True)
         if diagnostic is not None or chain is None or chain.target_port in {"threshold", "termination_threshold"}:
             return ()
         if id(chain.source) not in active or id(chain.target) not in active or _port_width(chain.source_port) != 1:
@@ -4596,6 +4604,11 @@ def _is_unmodeled_coevolving_lca_termination(composition, lca) -> bool:
 
 def _is_override(value) -> bool:
     return type(value) is str and value == "OVERRIDE"
+
+
+def _is_additive(value) -> bool:
+    # PNL resolves ADDITIVE to the ParameterPort function's additive alias.
+    return type(value) is str and value in {"ADDITIVE", "additive_param"}
 
 
 def _control_signal_is_identity(signal) -> bool:

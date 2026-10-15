@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from psyneulink.core.batched.backend.triton.emit.ops import OpEmitMixin
+from psyneulink.core.batched.backend.triton.emit.trials import IndependentTrialEmitMixin
 from psyneulink.core.batched.backend.triton.source_builder import SourceBuilder
 from psyneulink.core.batched.kernel_ir import (
     KernelComponentExecutionBudget,
@@ -24,9 +25,10 @@ from psyneulink.core.batched.kernel_ir import (
 pytestmark = pytest.mark.batched
 
 
-class _SchedulerEmitHarness(OpEmitMixin):
+class _SchedulerEmitHarness(OpEmitMixin, IndependentTrialEmitMixin):
     def __init__(self):
         self.builder = SourceBuilder()
+        self.trial_reset_mask = None
 
 
 def _value(name, dtype="float32"):

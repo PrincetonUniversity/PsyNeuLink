@@ -152,6 +152,8 @@ class OpEmitMixin:
             self._emit_concatenate(op)
         elif op.kind == "ExtractSlice":
             self._emit_extract_slice(op)
+        elif op.kind == "SampleModulation":
+            self._emit_sample_modulation(op)
         elif op.kind == "AddConstant":
             self._emit_add_constant(op)
         elif op.kind == "Clamp":
@@ -287,19 +289,23 @@ class OpEmitMixin:
                     f"effective parameter ID {effective_id}."
                 ) from error
             input_values = self._get_value(effective_input.name)
+            modulation = next((m for m in self.kernel.modulations if m.effective_parameter_id == effective_id), None)
+            additive = modulation is not None and modulation.mode == "ADDITIVE"
+            expected_name = f"modulated:{effective_id}" if additive else carry.value.name
             if (
                 parameter.target_component_id != op.attrs["component_id"]
                 or carry.owner_component_id != op.attrs["component_id"]
-                or carry.value.name != effective_input.name
+                or expected_name != effective_input.name
                 or carry.value.width != 1
                 or effective_input.width != 1
-                or input_values != [storage_var]
+                or (not additive and input_values != [storage_var])
+                or len(input_values) != 1
             ):
                 raise ValueError(
                     "Triton dynamic StepMechanism sampled effective parameter "
                     "does not match its typed target carry."
                 )
-            sampled_effective_values[effective_id] = storage_var
+            sampled_effective_values[effective_id] = input_values[0]
 
         saved_state_vars = {}
         new_state_keys = set()
@@ -1514,8 +1520,22 @@ class OpEmitMixin:
         self._set_value(op.outputs[0].name, output_vars)
         self.builder.line()
 
+    def _emit_sample_modulation(self, op: KernelOp) -> None:
+        """Add the held signal to the target's runtime base at execution time."""
+        parameter = self.kernel.params[op.attrs["base_parameter_id"]]
+        node = self.graph.node(op.target)
+        modulation = next(m for m in self.kernel.modulations
+                          if m.effective_parameter_id == op.attrs["effective_parameter_id"])
+        if (modulation.mode != "ADDITIVE" or modulation.target_component_id != node.component_id
+                or node.params[modulation.target_parameter] != parameter.name):
+            raise ValueError("SampleModulation must bind its declared additive target parameter.")
+        output = self._component_vars(op.outputs[0].name, 1)[0]
+        held = self._get_value(op.inputs[0].name)[0]
+        self.builder.line(f"{output} = {self.param_vars[parameter.name]} + {held}")
+        self._set_value(op.outputs[0].name, [output])
+
     def _emit_apply_modulation(self, op: KernelOp) -> None:
-        """Assign an OVERRIDE into real, outer-scope effective storage."""
+        """Retain the controller's signal until its target next executes."""
 
         effective_parameter_id = op.attrs["effective_parameter_id"]
         try:
@@ -1528,12 +1548,12 @@ class OpEmitMixin:
         held_values = self._get_value(op.inputs[0].name)
         controller_values = self._get_value(op.inputs[1].name)
         if (
-            op.attrs.get("mode") != "OVERRIDE"
+            op.attrs.get("mode") not in {"OVERRIDE", "ADDITIVE"}
             or held_values != [storage_var]
             or len(controller_values) != 1
         ):
             raise ValueError(
-                "Triton ApplyModulation requires exact scalar OVERRIDE storage."
+                "Triton ApplyModulation requires exact scalar OVERRIDE or ADDITIVE storage."
             )
         self.builder.line(
             f"{storage_var} = tl.where("
