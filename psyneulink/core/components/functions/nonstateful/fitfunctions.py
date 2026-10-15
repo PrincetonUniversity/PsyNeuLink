@@ -230,7 +230,7 @@ def simulation_likelihood(
             # Linear interpolation using the grid we computed the KDE
             # on.
             if kde is not None:
-                kdes_eval[trial] = interpn(
+                evals = interpn(
                     axes,
                     kde,
                     exp_data[trial, ~categorical_dims],
@@ -238,6 +238,9 @@ def simulation_likelihood(
                     bounds_error=False,
                     fill_value=ZERO_PROB,
                 )
+
+                # eval[trial] expects a scalar so convert the result explicitly
+                kdes_eval[trial] = evals.item()
             else:
                 kdes_eval[trial] = ZERO_PROB
 
