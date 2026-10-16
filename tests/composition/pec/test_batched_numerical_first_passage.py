@@ -4,14 +4,14 @@ from dataclasses import replace
 
 import numpy as np
 import pytest
-import torch
+torch = pytest.importorskip("torch", minversion="2.0")
 
-from psyneulink.core.batched.likelihood_planning import LikelihoodPlanningError
-from psyneulink.core.batched.numerical import (
+from psyneulink.core.batched.likelihood_planning import LikelihoodPlanningError  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.numerical import (  # noqa: E402 -- optional Torch guard above
     FirstPassageMesh, FirstPassageProblem, compile_first_passage,
 )
-from psyneulink.core.batched.numerical.native import native_kernels_available
-from psyneulink.core.batched.wiener import wiener_log_density
+from psyneulink.core.batched.numerical.native import native_kernels_available  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.wiener import wiener_log_density  # noqa: E402 -- optional Torch guard above
 
 
 pytestmark = [pytest.mark.composition]

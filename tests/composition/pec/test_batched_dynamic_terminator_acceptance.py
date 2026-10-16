@@ -297,6 +297,7 @@ def test_backward_when_finished_dependency_remains_fail_closed():
         )
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_scheduled_terminator_has_typed_dynamic_program():
     model = _build_scheduled_terminator(noise=0.25)
     plan = BatchedCompositionCompiler.compile(
@@ -484,6 +485,7 @@ def test_scheduled_terminator_has_typed_dynamic_program():
     )
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_distinct_scheduled_rng_owners_use_global_stream_inventory():
     model = _build_scheduled_terminator(noise=0.25)
     second_terminator = pnl.DDM(
@@ -562,6 +564,7 @@ def test_distinct_scheduled_rng_owners_use_global_stream_inventory():
         emitter._index_rng_streams()
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_scheduled_terminator_schema_rejects_semantic_forgeries():
     model = _build_scheduled_terminator(noise=0.25)
     kernel = BatchedCompositionCompiler.compile(

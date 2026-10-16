@@ -10,30 +10,31 @@ import sys
 import numpy as np
 import pytest
 import sympy as sp
-import torch
+torch = pytest.importorskip("torch")
 
-import psyneulink as pnl
-from psyneulink.core.batched import BatchedCompositionCompiler as Compiler, LikelihoodEffectContract, LikelihoodPlanningError
-from psyneulink.core.batched import batched_node_op, unregister_batched_instance_op
-from psyneulink.core.batched import specs, registry
-from psyneulink.core.batched.continuous_ir import ContinuousDynamics
-from psyneulink.core.batched.numerical import compile_continuous_phase, compile_first_passage, FirstPassageProblem, FirstPassageMesh
-from psyneulink.core.batched.numerical.dynamics_codegen import evaluate_equations
-from psyneulink.core.batched.numerical.native import native_kernels_available
-from psyneulink.core.batched.symbolic_values import derive_symbolic_values
+import psyneulink as pnl  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched import BatchedCompositionCompiler as Compiler, LikelihoodEffectContract, LikelihoodPlanningError  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched import batched_node_op, unregister_batched_instance_op  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched import specs, registry  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.continuous_ir import ContinuousDynamics  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.numerical import compile_continuous_phase, compile_first_passage, FirstPassageProblem, FirstPassageMesh  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.numerical.dynamics_codegen import evaluate_equations  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.numerical.native import native_kernels_available  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.symbolic_values import derive_symbolic_values  # noqa: E402 -- optional Torch guard above
 
 
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
 native = pytest.mark.skipif(not native_kernels_available(), reason="Requires Ninja and a C++ compiler.")
 
 
-def _network(backend="triton_cpu"):
+def _network(backend="triton_cpu", *, compile_plan=True):
     origin = pnl.TransferMechanism(default_variable=[0., 0.], function=pnl.Linear(slope=1.3, intercept=-.1), name="value-input")
     middle = pnl.TransferMechanism(default_variable=[0., 0.], function=pnl.Linear(slope=-.7, offset=.2), name="value_middle")
     output = pnl.TransferMechanism(default_variable=[0., 0.], function=pnl.Logistic(gain=1.1, bias=.2, x_0=-.3, scale=.9, offset=.1), name="value.output")
     matrix = np.array([[.3, -.7], [.6, .2]])
     composition = pnl.Composition(pathways=[[origin, middle, output], [origin, matrix, output]])
-    return composition, origin, middle, output, Compiler.compile(composition, backend=backend, outputs=[output.output_port])
+    plan = Compiler.compile(composition, backend=backend, outputs=[output.output_port]) if compile_plan else None
+    return composition, origin, middle, output, plan
 
 
 def _phase(values):
@@ -53,6 +54,7 @@ def _args(values, *, grad=False):
 
 @native
 @pytest.mark.parametrize("backend", ["triton_cpu", "triton"])
+@pytest.mark.usefixtures("batched_runtime")
 def test_graph_values_match_pnl_and_batched_execution(backend):
     if backend == "triton" and not torch.cuda.is_available():
         pytest.skip("Requires CUDA.")
@@ -80,6 +82,7 @@ def test_graph_values_match_pnl_and_batched_execution(backend):
 
 
 @native
+@pytest.mark.usefixtures("batched_runtime")
 def test_all_bound_parameters_and_inputs_have_checked_gradients():
     *_, source = _network()
     values = source.derive_symbolic_values()
@@ -117,6 +120,7 @@ def test_symbolic_rules_bind_registered_arguments_and_validate_domains():
         LikelihoodEffectContract(symbolic_value=lambda x: x)
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_snapshot_survives_live_nodes_and_registry_mutation(monkeypatch):
     c, _, _, output, source = _network()
     before = source.derive_symbolic_values()
@@ -133,14 +137,15 @@ def test_snapshot_survives_live_nodes_and_registry_mutation(monkeypatch):
 
 
 def test_symbolic_derivation_does_not_require_a_simulation_device(monkeypatch):
-    c, _, _, out, source = _network()
-    expected = source.derive_symbolic_values()
+    c, _, _, out, _ = _network(compile_plan=False)
+    expected = Compiler.derive_symbolic_values(c, outputs=[out.output_port])
     monkeypatch.setattr(registry, "_backend_availability", lambda backend: (False, []))
     actual = Compiler.derive_symbolic_values(c, outputs=[out.output_port])
     assert actual.expressions == expected.expressions
 
 
 @pytest.mark.parametrize("change", ["noise", "clip", "integration", "event"])
+@pytest.mark.usefixtures("batched_runtime")
 def test_state_noise_clipping_and_events_are_not_silently_removed(change):
     if change == "event":
         node = pnl.DDM(function=pnl.DriftDiffusionIntegrator(), output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME])
@@ -157,6 +162,7 @@ def test_state_noise_clipping_and_events_are_not_silently_removed(change):
 
 
 @pytest.mark.parametrize("change", ["schedule", "termination"])
+@pytest.mark.usefixtures("batched_runtime")
 def test_unsupported_trial_semantics_are_not_reinterpreted(change):
     *_, source = _network()
     kernel = source.kernel_ir
@@ -170,6 +176,7 @@ def test_unsupported_trial_semantics_are_not_reinterpreted(change):
 
 
 @native
+@pytest.mark.usefixtures("batched_runtime")
 def test_graph_derived_readout_backpropagates_through_shared_pde():
     *_, source = _network()
     values = source.derive_symbolic_values()
@@ -192,6 +199,7 @@ def test_graph_derived_readout_backpropagates_through_shared_pde():
 
 
 @native
+@pytest.mark.usefixtures("batched_runtime")
 def test_csi_style_graph_readout_matches_explicit_equations_and_gradients(monkeypatch):
     monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile"))
     from benchmark_continuous_dynamics import csi_equations, csi_graph_equations
@@ -220,6 +228,7 @@ def _boundary_phase(values):
 
 
 @native
+@pytest.mark.usefixtures("batched_runtime")
 def test_stochastic_boundary_is_explicit_and_generated_derivatives_remain_correct():
     ddm = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=.1),
                   output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME])
@@ -266,6 +275,7 @@ def test_zero_weight_does_not_erase_stochastic_boundary_dependency():
 
 
 @pytest.mark.parametrize("effect", ["clip", "noise", "held"])
+@pytest.mark.usefixtures("batched_runtime")
 def test_readout_cuts_modified_and_conditionally_held_producers(effect):
     a = pnl.TransferMechanism(function=pnl.Linear(slope=2), **(dict(clip=(.1, .9)) if effect == "clip" else
                                                             dict(noise=.1) if effect == "noise" else {}))
@@ -303,6 +313,7 @@ def csi_readout():
 
 
 @native
+@pytest.mark.usefixtures("batched_runtime")
 def test_region_in_real_csi_graph_matches_pnl_publications(csi_readout):
     c, inputs, lca, a, b = csi_readout
     source = Compiler.compile(c, outputs=[b.output_port])
@@ -336,6 +347,7 @@ def test_region_in_real_csi_graph_matches_pnl_publications(csi_readout):
 
 
 @pytest.mark.parametrize("matching", [False, True])
+@pytest.mark.usefixtures("batched_runtime")
 def test_pass_gates_preserve_held_values_instead_of_recomputing_them(matching):
     a = pnl.TransferMechanism(function=pnl.Linear(slope=3))
     b = pnl.TransferMechanism(function=pnl.Logistic())
@@ -351,6 +363,7 @@ def test_pass_gates_preserve_held_values_instead_of_recomputing_them(matching):
     assert values.boundary_reasons[0][1] == "held_conditional_publication"
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_readout_requires_supported_root_single_execution_and_valid_scope():
     c, a, _, b, _ = _network()
     with pytest.raises(ValueError, match="scope"):

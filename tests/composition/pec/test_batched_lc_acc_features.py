@@ -122,6 +122,7 @@ def test_adaptive_transfer_rejects_unmodeled_semantics(change):
     assert not BatchedCompositionCompiler.diagnose(pnl.Composition(pathways=node)).model_supported
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_additive_sampling_cannot_be_retargeted_in_kernel_ir():
     c, _, ports, _ = _network()
     plan = BatchedCompositionCompiler.compile(c, outputs=ports, max_steps=64)

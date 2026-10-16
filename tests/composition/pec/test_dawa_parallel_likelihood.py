@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 import pytest
-import torch
+torch = pytest.importorskip("torch", minversion="2.0")
 
 DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa"
 sys.path.insert(0, str(DIRECTORY))
@@ -47,18 +47,21 @@ def compare_flux(run):
 
 
 @pytest.mark.parametrize("threads", [2, 4])
+@pytest.mark.usefixtures("native_cpu")
 def test_parallel_cpu_flux_and_adjoint(threads):
     compare_flux(lambda m, r: native_flux_block(m, r, 3, .03, threads))
 
 
 @GPU
 @pytest.mark.parametrize("graphs", [False, True])
+@pytest.mark.usefixtures("native_cpu")
 def test_gpu_flux_and_adjoint(graphs):
     from dawa_likelihood.continuous_flux_gpu import gpu_flux_block
     compare_flux(lambda m, r: gpu_flux_block(m.cuda(), r.cuda(), 3, .03, graphs=graphs))
 
 
 @pytest.mark.parametrize("backend", ["cpu_parallel", pytest.param("triton", marks=GPU)])
+@pytest.mark.usefixtures("native_cpu")
 def test_parallel_coefficients_and_all_derivatives(backend):
     generator = torch.Generator().manual_seed(33)
     cfg = ContinuousConfig(points=11, flux_backend="native")
@@ -81,6 +84,7 @@ def test_parallel_coefficients_and_all_derivatives(backend):
 
 @pytest.mark.parametrize("backend", ["cpu_parallel", pytest.param("triton", marks=GPU)])
 @pytest.mark.parametrize("retain", [False, True])
+@pytest.mark.usefixtures("native_cpu")
 def test_sequential_values_and_all_gradients_preserve_history(backend, retain):
     cfg = ContinuousConfig(points=17, time_step=.002, checkpoint_steps=16, recompute_rates=not retain,
                            ode_backend="generated", flux_backend="native")

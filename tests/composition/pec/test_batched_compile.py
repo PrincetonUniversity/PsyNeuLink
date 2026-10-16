@@ -246,6 +246,7 @@ def test_batched_ir_debug_transfer_only_generic_graph():
 
 
 @pytest.mark.composition
+@pytest.mark.usefixtures("batched_runtime")
 def test_kernel_ir_transfer_only_structure():
     mech = pnl.TransferMechanism(
         input_shapes=2,
@@ -449,6 +450,7 @@ def test_batched_node_op_registration_is_instance_scoped_and_reversible():
 
 
 @pytest.mark.composition
+@pytest.mark.usefixtures("batched_runtime")
 def test_triton_stateless_graph_source_structure():
     comp, _, _ = _make_linear_projection_comp()
     plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
@@ -462,6 +464,7 @@ def test_triton_stateless_graph_source_structure():
 
 
 @pytest.mark.composition
+@pytest.mark.usefixtures("batched_runtime")
 def test_single_ddm_uses_generated_graph_kernel():
     comp, _ = _make_ddm_comp(noise=0.0)
     plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu", max_steps=64)
@@ -475,6 +478,7 @@ def test_single_ddm_uses_generated_graph_kernel():
 
 
 @pytest.mark.composition
+@pytest.mark.usefixtures("batched_runtime")
 def test_kernel_ir_dense_projection_structure():
     comp, source, _ = _make_linear_projection_comp()
     plan = BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
@@ -516,6 +520,7 @@ def test_batched_ir_debug_product_combine_generic_graph():
 
 
 @pytest.mark.composition
+@pytest.mark.usefixtures("batched_runtime")
 def test_kernel_ir_product_combine_structure():
     left = pnl.TransferMechanism(input_shapes=2, name="left")
     right = pnl.TransferMechanism(input_shapes=2, name="right")
@@ -576,6 +581,7 @@ def test_batched_ir_debug_ddm_behind_transfer_generic_graph():
 
 
 @pytest.mark.composition
+@pytest.mark.usefixtures("batched_runtime")
 def test_kernel_ir_ddm_graph_structure():
     source = pnl.TransferMechanism(input_shapes=1, name="stimulus")
     decision = pnl.DDM(
@@ -669,6 +675,7 @@ def test_batched_compiler_accepts_stateless_transfer():
 
 
 @pytest.mark.composition
+@pytest.mark.usefixtures("batched_runtime")
 def test_csi_surrogate_with_iti_compiles_after_drift_udf_registration():
     # With iti>0, Task Input fires at AtPass(iti): a delayed within-trial onset.
     # The typed co-evolving region now models that schedule, affine CSI count,
@@ -862,6 +869,7 @@ def test_stability_flexibility_rejects_old_model_specific_parameter_names():
 
 
 @pytest.mark.composition
+@pytest.mark.usefixtures("batched_runtime")
 def test_kernel_ir_stability_flexibility_stateful_structure():
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from test_stab_flex_pec_fit import make_stab_flex

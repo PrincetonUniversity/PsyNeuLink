@@ -5,7 +5,7 @@ import sys
 
 import numpy as np
 import pytest
-import torch
+torch = pytest.importorskip("torch", minversion="2.0")
 
 
 DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa"

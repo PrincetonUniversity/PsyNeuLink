@@ -48,6 +48,7 @@ def _stateless_graph_plan():
     return BatchedCompositionCompiler.compile(comp, backend="triton_cpu")
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_generated_kernel_source_matches_golden():
     """Keep one representative snapshot; semantic tests carry broad coverage."""
 

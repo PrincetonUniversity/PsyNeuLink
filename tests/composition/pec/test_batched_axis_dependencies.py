@@ -1,6 +1,7 @@
 """Tests for general batched execution-axis dependency analysis."""
 
 import numpy as np
+import pytest
 
 import psyneulink as pnl
 from psyneulink.core.batched.compiler import BatchedCompositionCompiler
@@ -158,6 +159,7 @@ def test_scheduler_dependencies_propagate_estimate_axis_without_data_edge():
     assert result.estimate_frontier_edges == ()
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_compiler_exposes_axis_analysis_without_changing_execution_plan():
     stimulus = pnl.TransferMechanism(input_shapes=1, name="axis-stimulus")
     decision = pnl.DDM(

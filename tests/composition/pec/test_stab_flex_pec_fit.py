@@ -492,11 +492,11 @@ def test_stab_flex_cond_fit():
     # These aren't the recovered parameters, we are doing too few trials and too few estimates to get the correct
     # results.
     expected_results = {
-        'Task Activations [Act1, Act2]-1.gain': 2.3965500000000004,
-        'Automaticity-weighted Stimulus Input [w*S1, w*S2]-1.slope': 0.0058000000000000005,
-        'DDM-1.threshold[threshold=0.7]': 0.43483,
-        'DDM-1.threshold[threshold=0.3]': 0.30449,
-        'DDM-1.non_decision_time': 0.3124
+        'Task Activations [Act1, Act2]-1.gain': fit_parameters[('gain', controlModule)][155],
+        'Automaticity-weighted Stimulus Input [w*S1, w*S2]-1.slope': fit_parameters[('slope', congruenceWeighting)][58],
+        'DDM-1.threshold[threshold=0.7]': fit_parameters[('threshold', decisionMaker)][866],
+        'DDM-1.threshold[threshold=0.3]': fit_parameters[('threshold', decisionMaker)][601],
+        'DDM-1.non_decision_time': fit_parameters[('non_decision_time', decisionMaker)][708],
     }
 
     for key, value in expected_results.items():

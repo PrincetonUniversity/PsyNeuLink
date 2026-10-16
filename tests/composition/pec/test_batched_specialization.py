@@ -21,6 +21,7 @@ def _linear(backend="triton_cpu"):
     return BatchedCompositionCompiler.compile(pnl.Composition(pathways=m), backend=backend), m
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_specialization_snapshot_and_parameter_resolution():
     plan, _ = _linear()
     fixed = {"fixed target.slope": .2}
@@ -44,12 +45,14 @@ def test_specialization_snapshot_and_parameter_resolution():
 
 
 @pytest.mark.parametrize("value", [np.nan, np.inf, 1e40, 1j, [1., 2.], BatchedTrialParameter([1., 1.])])
+@pytest.mark.usefixtures("batched_runtime")
 def test_specialization_rejects_invalid_constants(value):
     plan, _ = _linear()
     with pytest.raises(ValueError):
         plan.specialize_parameters({"fixed target.slope": value})
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_specialization_rejects_ambiguous_names():
     a = pnl.TransferMechanism(name="a")
     b = pnl.TransferMechanism(name="b")
@@ -61,6 +64,7 @@ def test_specialization_rejects_ambiguous_names():
         p.specialize_parameters({"shared.slope": 2.})
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_constant_overrides_check_fp32_bits_in_every_lane_and_trial():
     p, _ = _linear()
     p = p.specialize_parameters({"fixed target.slope": .1, "fixed target.intercept": -0.})
@@ -75,6 +79,7 @@ def test_constant_overrides_check_fp32_bits_in_every_lane_and_trial():
         p.specialize_parameters({"fixed target.slope": .2})
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_specialization_respects_source_constraints_and_validates_ir():
     p, _ = _histogram_model("triton_cpu")
     name = next(s.name for s in p.ir.params if s.name.endswith(".time_step_size"))

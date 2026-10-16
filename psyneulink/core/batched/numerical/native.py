@@ -2,21 +2,44 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache, lru_cache
+import importlib.util
 import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
+import tempfile
+from typing import TYPE_CHECKING
 
-import torch
+if TYPE_CHECKING:
+    import torch
 
 
 def native_kernels_available() -> bool:
     """Whether the optional fused CPU backend can be built or loaded."""
-    compiler = os.environ.get("CXX", "c++")
-    return (
-        shutil.which("ninja") is not None
-        and shutil.which(compiler) is not None
-    )
+    if importlib.util.find_spec("torch") is None:
+        return False
+    compiler = shutil.which(os.environ.get("CXX", "c++"))
+    # These extensions use GCC/Clang flags and OpenMP. In particular, Apple's
+    # system Clang and Windows' unrelated c++ executable are insufficient.
+    if sys.platform == "win32" or shutil.which("ninja") is None or compiler is None:
+        return False
+    return _compiler_supports_openmp(compiler)
+
+
+@cache
+def _compiler_supports_openmp(compiler):
+    try:
+        with tempfile.TemporaryDirectory(prefix="pnl-openmp-") as directory:
+            result = subprocess.run(
+                [compiler, "-fopenmp", "-x", "c++", "-", "-o", str(Path(directory) / "probe")],
+                input="#include <omp.h>\nint main() { return omp_get_max_threads() < 1; }\n",
+                text=True, capture_output=True, timeout=30, check=False,
+            )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
 
 
 @lru_cache(maxsize=1)

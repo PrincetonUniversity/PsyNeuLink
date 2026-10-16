@@ -6,15 +6,15 @@ import sys
 
 import pytest
 import sympy as sp
-import torch
+torch = pytest.importorskip("torch")
 
-from psyneulink.core.batched.continuous_ir import (
+from psyneulink.core.batched.continuous_ir import (  # noqa: E402 -- optional Torch guard above
     ContinuousDynamics, DiffusionTerm, Sigmoid, analyze_continuous_dynamics, extract_deterministic_subsystem,
 )
-from psyneulink.core.batched.likelihood_planning import LikelihoodPlanningError
-from psyneulink.core.batched.numerical.dynamics import compile_continuous_phase
-from psyneulink.core.batched.numerical.dynamics_codegen import evaluate_equations, generate_dynamics_source
-from psyneulink.core.batched.numerical.native import native_kernels_available
+from psyneulink.core.batched.likelihood_planning import LikelihoodPlanningError  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.numerical.dynamics import compile_continuous_phase  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.numerical.dynamics_codegen import evaluate_equations, generate_dynamics_source  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.numerical.native import native_kernels_available  # noqa: E402 -- optional Torch guard above
 
 
 pytestmark = [pytest.mark.composition]

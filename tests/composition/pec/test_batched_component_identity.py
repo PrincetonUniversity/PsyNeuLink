@@ -104,6 +104,7 @@ def test_state_and_diagnostic_symbols_use_component_ids():
     assert tuple(value.name for value in initialize.outputs) == (
         "n0:state:0",
         "n0:state:1",
+        "n0:state:2",
     )
     store_flag = next(op for op in iter_kernel_ops(kernel) if op.kind == "StoreFlag")
     assert store_flag.inputs[0].name == "n1:diagnostic:0"
@@ -111,5 +112,6 @@ def test_state_and_diagnostic_symbols_use_component_ids():
     source = triton_graph_kernel_source(kernel)
     assert "n0_state_0_0" in source
     assert "n0_state_1_0" in source
+    assert "n0_state_2_0" in source
     assert "n0_lca_steps" in source
     assert "n1_diagnostic_0_0" in source

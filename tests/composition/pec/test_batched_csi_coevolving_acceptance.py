@@ -386,6 +386,7 @@ def _recovery_pec(
     return pec
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_csi_compiles_to_one_generic_lane_local_dynamic_region(
     registered_csi_drift_rate,
 ):
@@ -564,6 +565,7 @@ def test_csi_compiles_to_one_generic_lane_local_dynamic_region(
         )
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_csi_axis_analysis_accounts_for_stochastic_schedule_duration(
     registered_csi_drift_rate,
 ):
@@ -608,6 +610,7 @@ def test_csi_axis_analysis_accounts_for_stochastic_schedule_duration(
         "finished-initializer",
     ),
 )
+@pytest.mark.usefixtures("batched_runtime")
 def test_generic_csi_kernel_ir_rejects_folded_control_forgery(
     registered_csi_drift_rate, forgery
 ):
@@ -756,6 +759,7 @@ def test_generic_csi_kernel_ir_rejects_folded_control_forgery(
         _replace_csi_dynamic_program(kernel, program)
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_generic_csi_kernel_ir_rejects_coupled_folded_parameter_forgeries(
     registered_csi_drift_rate,
 ):
@@ -1185,6 +1189,7 @@ def test_csi_historical_threshold_fit_names_bind_to_folded_ddm_lanes(
         ("offset", 0.01),
     ),
 )
+@pytest.mark.usefixtures("batched_runtime")
 def test_csi_folded_ddm_boundary_parameters_are_fixed(
     registered_csi_drift_rate,
     argument,
@@ -1216,6 +1221,7 @@ def test_csi_folded_ddm_boundary_parameters_are_fixed(
         )
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_csi_fixed_nonzero_ddm_noise_is_admitted_and_frozen(
     registered_csi_drift_rate,
 ):
@@ -1675,6 +1681,7 @@ def test_csi_conditioned_likelihood_preserves_strict_truncation_check(
         )
 
 
+@pytest.mark.pytorch
 def test_csi_conditioned_llvm_pec_runs_and_replays(registered_csi_drift_rate):
     composition, inputs, outputs = _model(ddm_rate=0.0, ddm_noise=0.1)
     ddm = _node(composition, "DDM")

@@ -10,6 +10,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+pytest.importorskip("torch", minversion="2.0")
+pytest.importorskip("optuna.storages.journal")
+
 DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa"
 sys.path.insert(0, str(DIRECTORY))
 import dawa_pec_fit as driver  # noqa: E402

@@ -8,15 +8,15 @@ import mpmath as mp
 import numpy as np
 import pytest
 from scipy.integrate import quad
-import torch
+torch = pytest.importorskip("torch")
 
-import psyneulink as pnl
-from psyneulink.core.batched import (
+import psyneulink as pnl  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched import (  # noqa: E402 -- optional Torch guard above
     BatchedCompositionCompiler as Compiler, LikelihoodPlanningError,
     ObservationField, ObservationSpec,
 )
-from psyneulink.core.batched import registry, specs
-from psyneulink.core.batched.wiener import (
+from psyneulink.core.batched import registry, specs  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched.wiener import (  # noqa: E402 -- optional Torch guard above
     _small_time_log_density, _large_time_log_density, wiener_log_density,
 )
 

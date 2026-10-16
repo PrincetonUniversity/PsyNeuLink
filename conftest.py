@@ -8,6 +8,7 @@ import numpy as np
 import os
 import pytest
 import re
+import shutil
 import types
 
 import graph_scheduler as gs
@@ -200,6 +201,40 @@ def pytest_collection_modifyitems(items):
     for item in items:
         if 'triton_interpreter' in item.keywords or 'triton_gpu' in item.keywords:
             item.add_marker(pytest.mark.triton)
+
+
+@pytest.fixture
+def batched_runtime():
+    """Dependencies for plan construction tests that do not launch a kernel."""
+    for package in ('torch', 'triton'):
+        pytest.importorskip(package)
+
+
+@pytest.fixture
+def native_cpu():
+    """Native numerical tests require the compiler used by their backend."""
+    pytest.importorskip('torch', minversion='2.0')
+    from psyneulink.core.batched.numerical.native import native_kernels_available
+    if not native_kernels_available():
+        pytest.skip('Requires Ninja and an OpenMP C++ toolchain')
+
+
+@pytest.fixture
+def compiled_torch():
+    pytest.importorskip('torch', minversion='2.0')
+    compiler = 'cl' if os.name == 'nt' else os.environ.get('CXX', 'c++')
+    if shutil.which(compiler) is None:
+        pytest.skip(f'Torch CPU compilation requires {compiler}')
+
+
+@pytest.fixture
+def adaptive_optuna():
+    import optuna
+    from optuna._transform import _SearchSpaceTransform
+    parameters = inspect.signature(optuna.samplers.CmaEsSampler).parameters
+    if (not {'lr_adapt', 'popsize'} <= parameters.keys()
+            or 'transform_0_1' not in inspect.signature(_SearchSpaceTransform).parameters):
+        pytest.skip('Adaptive fitting requires normalized CMA-ES, lr_adapt, and popsize support')
 
 
 _old_register_prefix = None

@@ -2,9 +2,27 @@ import numpy as np
 import pytest
 
 from psyneulink.core import llvm as pnlvm
+import psyneulink as pnl
 
 DIM_X=1000
 DIM_Y=2000
+
+
+@pytest.mark.llvm
+def test_cleanup_releases_command_line_execution_cache():
+    node = pnl.TransferMechanism(function=pnl.Linear(slope=2.0))
+    composition = pnl.Composition(pathways=node)
+    # Direct execute calls use COMMAND_LINE context, which normally logs
+    # parameter values. Cleanup must release that reference to the cache too.
+    composition.execute(inputs={node: [3.0]}, execution_mode=pnl.ExecutionMode._LLVMPerNode)
+    assert composition._compilation_data.execution.values
+    pnlvm.cleanup(check_leaks=False)
+    assert not composition._compilation_data.execution.values
+    assert not composition._compilation_data.execution.log
+    assert not pnlvm.CompExecution.active_executions
+    result = composition.execute(inputs={node: [4.0]}, execution_mode=pnl.ExecutionMode._LLVMPerNode)
+    np.testing.assert_allclose(result, [[8.0]])
+
 
 @pytest.mark.llvm
 def test_recompile():

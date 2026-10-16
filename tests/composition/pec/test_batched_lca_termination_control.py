@@ -312,6 +312,7 @@ def test_controlled_lca_schedule_matches_fresh_python(timing, batched_backend):
     )
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_controlled_lca_compile_reports_generic_schedule_capability():
     model = _make_scheduled_model(_TerminationTiming(onset=0))
     diagnosed = BatchedCompositionCompiler.diagnose(

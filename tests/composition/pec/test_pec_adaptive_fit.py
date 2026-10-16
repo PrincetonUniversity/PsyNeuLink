@@ -55,6 +55,7 @@ def run_policy(sample, *, reserved=(), **options):
     return *result, records
 
 
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_reference_checks_ignore_low_count_bias_and_reuse_covariance():
     calls = []
 
@@ -107,6 +108,7 @@ def test_reference_checks_ignore_low_count_bias_and_reuse_covariance():
     assert fit["optimal_value"] == selection["reference_scores"][selection["winner"]]
 
 
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_selection_averages_whole_log_scores_and_excludes_any_truncation():
     selection_order = []
 
@@ -130,6 +132,7 @@ def test_selection_averages_whole_log_scores_and_excludes_any_truncation():
 
 
 @pytest.mark.parametrize("bad", [np.ones((1, 2)), np.array([np.nan])])
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_policy_rejects_trial_factors_and_nonfinite_scores(bad):
     with pytest.raises(FloatingPointError, match="one finite complete-filter"):
         run_policy(lambda *args: bad)
@@ -185,6 +188,7 @@ def test_callback_retries_truncating_batches_without_accepting_partial_paths():
     }
 
 
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_all_truncated_finalists_are_an_error():
     def sample(rows, count, seed):
         return (
@@ -326,6 +330,7 @@ def _fake_plan(pec, monkeypatch, *, failure=False):
 
 
 @pytest.mark.parametrize("failure", [False, True])
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_public_batch_budget_overrides_preserve_settings_even_on_error(
     monkeypatch, failure
 ):
@@ -364,6 +369,7 @@ def test_public_batch_budget_overrides_preserve_settings_even_on_error(
 
 @pytest.mark.parametrize("strategy", ["fixed", "adaptive"])
 @pytest.mark.parametrize("failure", [False, True])
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_public_adaptive_likelihood_is_independent_of_fit_policy(
     monkeypatch, strategy, failure
 ):
@@ -424,6 +430,7 @@ def test_public_adaptive_likelihood_is_independent_of_fit_policy(
         ("invalid_options", "target_se"),
     ],
 )
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_invalid_public_adaptive_scoring_fails_before_compilation(
     monkeypatch, case, match
 ):
@@ -456,6 +463,7 @@ def test_invalid_public_adaptive_scoring_fails_before_compilation(
 
 @pytest.mark.triton_gpu
 @pytest.mark.batched
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_adaptive_likelihood_replays_complete_masked_noisy_stateful_filters():
     pec, inputs = _small_pec(backend="triton", strategy="fixed")
     rows = [[1.5, 0.3], [1.2, 0.4]]
@@ -491,6 +499,7 @@ def test_adaptive_likelihood_replays_complete_masked_noisy_stateful_filters():
 
 
 @pytest.mark.parametrize("strategy", ["fixed", "adaptive"])
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_public_run_uses_generic_policy_and_exposes_results(monkeypatch, strategy):
     records = []
     pec, inputs = _small_pec(
@@ -558,6 +567,7 @@ def test_adaptive_rejects_unsupported_likelihood_or_execution(options):
 @pytest.mark.triton_gpu
 @pytest.mark.batched
 @pytest.mark.parametrize("precompile", [False, True])
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_public_adaptive_fits_a_small_noisy_retained_state_model(precompile):
     pec, inputs = _small_pec(backend="triton")
     rows = [[1.5, 0.3], [1.2, 0.4]]
@@ -591,6 +601,7 @@ def test_public_adaptive_fits_a_small_noisy_retained_state_model(precompile):
         ("sampler", "CmaEsSampler"),
     ],
 )
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_invalid_adaptive_settings_fail_before_sampling(monkeypatch, case, match):
     from psyneulink.core.components.functions.nonstateful.optimizationfunctions import (
         OptimizationFunctionError,
@@ -618,6 +629,7 @@ def test_invalid_adaptive_settings_fail_before_sampling(monkeypatch, case, match
     assert calls == []
 
 
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_score_failure_marks_pending_search_trials_failed(monkeypatch):
     pec, inputs = _small_pec()
     function = pec.controller.function
@@ -647,6 +659,7 @@ def test_score_failure_marks_pending_search_trials_failed(monkeypatch):
 
 
 @pytest.mark.parametrize("strategy", ["fixed", "adaptive"])
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_callback_errors_propagate_without_stranded_trials(monkeypatch, strategy):
     def callback(*args):
         raise RuntimeError("reporting failed")
@@ -681,6 +694,7 @@ def test_strict_truncation_is_not_silently_penalized():
     assert invalid == [] and work["filter_batch_calls"] == 1
 
 
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_fixed_penalized_fit_does_not_publish_an_all_truncated_winner(monkeypatch):
     from psyneulink.core.batched.backend.triton.runtime import BatchedTruncationError
 

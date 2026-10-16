@@ -62,6 +62,7 @@ def test_race_preserves_old_blocks_and_uses_unique_seeds(noisy):
     assert np.isfinite(scores).all()
 
 
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_checked_final_selection_ignores_biased_low_budget_scores():
     bounds = {"x": (0.0, 1.0, 0.01), "y": (0.0, 1.0, 0.01)}
     initial = {"x": 0.2, "y": 0.2}
@@ -161,6 +162,7 @@ def test_rank_uncertainty_includes_swaps_within_elite():
     assert np.all(pair_se[:2, 2:] == 0)
 
 
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_covariance_restart_keeps_normalized_parameter_order_and_correlations():
     from optuna._transform import _SearchSpaceTransform
     from optuna.distributions import FloatDistribution
@@ -216,6 +218,7 @@ def test_covariance_restart_keeps_normalized_parameter_order_and_correlations():
         incorrect.ask(distributions)
 
 
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_fresh_selection_can_reject_the_reference_seed_winner():
     bounds = {"x": (0.0, 1.0, 0.01), "y": (0.0, 1.0, 0.01)}
     initial = {"x": 0.4, "y": 0.4}
@@ -292,6 +295,7 @@ def test_profile_maximizes_after_pooling_and_uses_one_shift_for_all_trials():
     assert index[0] == 0 and score[0] == pytest.approx(np.log(13.0))
 
 
+@pytest.mark.usefixtures("adaptive_optuna")
 def test_profiled_fit_returns_joint_parameters_from_fresh_selection():
     bounds = {"x": (0.0, 1.0, 0.01), "y": (0.0, 1.0, 0.01)}
     initial = {"x": 0.4, "y": 0.4}

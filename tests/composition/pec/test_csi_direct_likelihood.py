@@ -8,7 +8,7 @@ import sys
 import numpy as np
 import pandas as pd
 import pytest
-import torch
+torch = pytest.importorskip("torch", minversion="2.0")
 
 
 CSI_FIT_DIRECTORY = (
@@ -631,6 +631,7 @@ def test_duration_buckets_preserve_likelihood_state_and_gradients():
     torch.testing.assert_close(vectors[0].grad, vectors[1].grad)
 
 
+@pytest.mark.usefixtures("compiled_torch")
 def test_custom_adjoints_preserve_likelihood_and_all_gradients():
     trials = _gradient_trials()
     vectors = [

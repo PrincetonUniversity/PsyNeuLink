@@ -8,7 +8,7 @@ import sys
 
 import numpy as np
 import pytest
-import torch
+torch = pytest.importorskip("torch", minversion="2.0")
 
 DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa"
 sys.path.insert(0, str(DIRECTORY))
@@ -43,6 +43,7 @@ def test_refined_source_replay_preserves_schedule_and_trial_resets():
         ResponseSolver().solve(path, p[0], p[2])
 
 
+@pytest.mark.usefixtures("native_cpu")
 def test_generated_equations_match_torch_states_and_parameter_and_initial_state_gradients():
     from dawa_likelihood.continuous_native import continuous_path_native, advance_control_native
     p = torch.tensor([.3, .2, -.45, 10., .9, 1., 5.], dtype=torch.float64, requires_grad=True)
@@ -63,6 +64,7 @@ def test_generated_equations_match_torch_states_and_parameter_and_initial_state_
         torch.testing.assert_close(a, b, atol=1.e-9, rtol=1.e-9)
 
 
+@pytest.mark.usefixtures("native_cpu")
 def test_native_flux_adjoint_matches_torch_for_mass_rates_and_all_exit_categories():
     from dawa_likelihood.continuous_flux import native_flux_block
     generator = torch.Generator().manual_seed(31)
@@ -90,6 +92,7 @@ def test_native_flux_adjoint_matches_torch_for_mass_rates_and_all_exit_categorie
         torch.testing.assert_close(a, b, atol=1.e-12, rtol=1.e-12)
 
 
+@pytest.mark.usefixtures("native_cpu")
 def test_native_coefficients_and_all_coefficient_gradients_match_reference():
     generator = torch.Generator().manual_seed(19)
     cfg = ContinuousConfig(points=11)
@@ -108,6 +111,7 @@ def test_native_coefficients_and_all_coefficient_gradients_match_reference():
         torch.testing.assert_close(a, b, atol=1.e-9, rtol=1.e-11)
 
 
+@pytest.mark.usefixtures("native_cpu")
 def test_native_rates_are_smooth_across_bernoulli_branches_and_large_drifts():
     # Exercise both signs, both sides of the series cutoff, half-cell boundary
     # faces, and exp underflow. Check derivatives against Torch, not the native
@@ -129,7 +133,9 @@ def test_native_rates_are_smooth_across_bernoulli_branches_and_large_drifts():
 
 
 @pytest.mark.parametrize("backend", ["torch", "native"])
-def test_rate_retention_preserves_cfl_probabilities_and_all_coefficient_gradients(backend):
+def test_rate_retention_preserves_cfl_probabilities_and_all_coefficient_gradients(backend, request):
+    if backend == "native":
+        request.getfixturevalue("native_cpu")
     cfg = ContinuousConfig(points=9, time_step=.002, checkpoint_steps=3, flux_backend=backend)
     t = torch.arange(8, dtype=torch.float64) * cfg.time_step
     values = [torch.stack((1. + t, .7 - t), dim=1), 4. + t, t.new_tensor(-.3),
@@ -153,6 +159,7 @@ def test_rate_retention_preserves_cfl_probabilities_and_all_coefficient_gradient
         torch.testing.assert_close(a, b, atol=1.e-12, rtol=1.e-11)
 
 
+@pytest.mark.usefixtures("native_cpu")
 def test_native_sequential_likelihood_matches_torch_and_ndt_finite_difference():
     p = torch.tensor([[.18, .193, -.43, 11., .75, 1.3, 5.2]] * 2, dtype=torch.float64, requires_grad=True)
     cfg = ContinuousConfig(points=25, time_step=.002)

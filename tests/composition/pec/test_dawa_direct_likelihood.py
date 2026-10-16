@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from scipy.integrate import quad
 from scipy.special import ndtr
-import torch
+torch = pytest.importorskip("torch", minversion="2.0")
 
 
 DIRECTORY = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa"

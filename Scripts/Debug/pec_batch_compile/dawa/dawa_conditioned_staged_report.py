@@ -50,7 +50,7 @@ def ranking_summary(report):
         for count, values in zip(counts, scores, strict=True):
             values = values[:, indices]
             selected = values.argmax(axis=1)
-            correlations = [float(spearmanr(row, target).statistic) for row in values]
+            correlations = [float(spearmanr(row, target)[0]) for row in values]
             losses = target.max() - target[selected]
             rows.append(
                 {

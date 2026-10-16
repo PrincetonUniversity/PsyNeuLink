@@ -197,6 +197,7 @@ def _expected_python_role_trace():
     return tuple(traces)
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_parallel_controlled_chains_use_one_generic_dynamic_region():
     model = _build_parallel_controlled_chains()
     plan = BatchedCompositionCompiler.compile(

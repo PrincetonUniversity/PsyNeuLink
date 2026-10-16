@@ -152,6 +152,7 @@ def test_gaussian_lca_has_the_leaky_integrator_noise_scale(batched_backend):
 
 
 @pytest.mark.parametrize("change", ["selector", "noise", "clip", "matrix-parameter"])
+@pytest.mark.usefixtures("batched_runtime")
 def test_extended_lca_rejects_unrepresented_semantics(change):
     matrix = [[0., -.5, 0., 0.], [-.3, 0., 0., 0.], [0., 0., 0., -.7], [0., 0., -.2, 0.]]
     c, response, _ = _network(matrix=matrix)

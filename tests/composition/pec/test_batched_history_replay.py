@@ -87,10 +87,16 @@ def test_cyclic_stochastic_feedback_keeps_source_lowering_rejection(coupled):
         sender=decision.output_ports[0], receiver=lca,
         projection=pnl.MappingProjection(matrix=[[1.0, -1.0]]),
     )
-    with pytest.raises(BatchedCompileError, match="cyclic processing dependencies"):
+    # Feedback changes the scheduler's consideration sets. The resulting
+    # controlled schedule must still fail source admission before replay.
+    with pytest.raises(BatchedCompileError, match="supported simulation IR") as error:
         _plan(composition, outputs)
+    assert not error.value.capability_report.model_supported
+    assert any("schedule" in diagnostic.reason
+               for diagnostic in error.value.capability_report.model_diagnostics)
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_supported_stochastic_state_dependency_is_rejected_by_history_analysis():
     composition, decision = _ddm()
     state = pnl.LCAMechanism(

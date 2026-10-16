@@ -83,6 +83,7 @@ def test_persistent_noise_moments_streams_and_replay(batched_backend):
     assert np.max(np.abs(correlation - np.eye(8))) < .06
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_persistent_noise_initial_state_is_authenticated():
     comp, node = _model()
     kernel = BatchedCompositionCompiler.compile(comp, max_steps=4).kernel_ir

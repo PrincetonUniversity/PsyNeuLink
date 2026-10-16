@@ -6,13 +6,14 @@ import sys
 import numpy as np
 import optuna
 import pytest
-import torch
-from optuna.distributions import FloatDistribution
-from optuna.storages import JournalStorage
-from optuna.storages.journal import JournalFileBackend
+torch = pytest.importorskip("torch", minversion="2.0")
+pytest.importorskip("optuna.storages.journal")
+from optuna.distributions import FloatDistribution  # noqa: E402 -- optional Torch guard above
+from optuna.storages import JournalStorage  # noqa: E402 -- optional Torch guard above
+from optuna.storages.journal import JournalFileBackend  # noqa: E402 -- optional Torch guard above
 
-from psyneulink.core.batched import likelihood
-from psyneulink.core.components.functions.nonstateful.fitfunctions import (
+from psyneulink.core.batched import likelihood  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.components.functions.nonstateful.fitfunctions import (  # noqa: E402 -- optional Torch guard above
     _run_batched_ask_tell_rounds,
 )
 

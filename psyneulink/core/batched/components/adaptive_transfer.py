@@ -83,6 +83,7 @@ def _specialized(ports):
 
 def resolve(node):
     if (type(getattr(node, "integrator_function", None)) is AdaptiveIntegrator
-            and type(node.function) is Logistic and _raw_parameter(node, "integrator_mode", False)):
+            and type(node.function) is Logistic and _raw_parameter(node, "integrator_mode", False)
+            and len(node.input_ports) == 1 and node.input_port.value.size == 1):
         return _specialized(tuple(port.name for port in node.output_ports))
     return None

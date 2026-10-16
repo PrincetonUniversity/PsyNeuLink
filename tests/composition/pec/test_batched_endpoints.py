@@ -223,6 +223,7 @@ def test_event_readout_registration_authenticates_primitive_bindings(attribute, 
         register_batched_op(replace(original, likelihood_contract=replace(contract, event_readout=invalid)))
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_premature_rt_gate_is_rejected_by_endpoint_publication_validation(coupled):
     composition, _, outputs = coupled
     composition.scheduler.add_condition(outputs[1].owner, pnl.Always())

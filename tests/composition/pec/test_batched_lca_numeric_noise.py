@@ -129,6 +129,7 @@ def test_standalone_lca_noise_is_a_runtime_parameter(batched_backend):
     )
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_numeric_lca_initialization_policy_is_reauthenticated():
     composition, lca = _standalone_lca(0.125)
     plan = BatchedCompositionCompiler.compile(

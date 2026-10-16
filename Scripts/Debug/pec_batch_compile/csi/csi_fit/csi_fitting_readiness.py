@@ -35,6 +35,7 @@ from psyneulink.core.batched import (
     LikelihoodEffectContract,
     BatchedTrialParameter,
     batched_node_op,
+    unregister_batched_instance_op,
 )
 
 
@@ -162,7 +163,6 @@ FITTER_TIME_STEPS = {
 }
 
 
-@batched_node_op("Drift Rate Value", likelihood_contract=LikelihoodEffectContract())
 def _batched_csi_drift_rate(x0, x1, x2, x3, x4, x5, x6):
     """Triton transcription of the original seven-input CSI drift UDF."""
     a = 1.0 / (1.0 + tl.exp(-((x0 - x1) + 4.0 * x4 - 4.0)))
@@ -462,12 +462,17 @@ def _generate_gpu(
         _node(composition, "DECISION_GATE").output_port,
         _node(composition, "RESPONSE_GATE").output_port,
     )
-    plan = BatchedCompositionCompiler.compile(
-        composition,
-        backend="triton",
-        outputs=outputs,
-        max_steps=max_steps,
-    )
+    drift = _node(composition, "Drift Rate Value")
+    batched_node_op(drift.name, likelihood_contract=LikelihoodEffectContract())(_batched_csi_drift_rate)
+    try:
+        plan = BatchedCompositionCompiler.compile(
+            composition,
+            backend="triton",
+            outputs=outputs,
+            max_steps=max_steps,
+        )
+    finally:
+        unregister_batched_instance_op(drift.name)
     parameter_set, realized = _gpu_parameter_set(
         composition, trials, vector, time_step
     )

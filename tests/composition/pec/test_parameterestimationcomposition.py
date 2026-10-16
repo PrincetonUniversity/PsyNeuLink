@@ -632,6 +632,7 @@ def test_pec_log_likelihood_requires_llvm():
 
 
 @pytest.mark.composition
+@pytest.mark.pytorch
 def test_pec_conditioned_llvm_log_likelihood_runs_and_replays():
     pec, comp, trial_inputs, params = _make_ddm_log_likelihood_pec(
         num_trials=3,

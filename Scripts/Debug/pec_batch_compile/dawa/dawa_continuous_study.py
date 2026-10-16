@@ -17,7 +17,6 @@ import torch
 
 from dawa_likelihood import DEFAULT_PARAMETERS, PARAMETER_NAMES
 from dawa_likelihood.continuous_model import continuous_path
-from dawa_likelihood.continuous_monte_carlo import simulate_continuous
 from dawa_likelihood.continuous_solver import ContinuousConfig, ContinuousResponseSolver
 from dawa_likelihood.model import response_path, initial_history
 
@@ -149,6 +148,8 @@ class StudyConfig:
 
 
 def continuous_samples(path, p, config, *, seed):
+    from dawa_likelihood.continuous_monte_carlo import simulate_continuous
+
     # Independent chunks keep every Triton RNG counter within uint32 range.
     chunk = min(config.estimates, (2**32 - 1) // (4 * (len(path.gain) - 1)))
     if chunk < 1:

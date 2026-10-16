@@ -3,20 +3,10 @@
 from __future__ import annotations
 
 from functools import lru_cache
-import os
 from pathlib import Path
-import shutil
 
 import torch
-
-
-def native_kernels_available() -> bool:
-    """Whether the optional fused CPU backend can be built or loaded."""
-    compiler = os.environ.get("CXX", "c++")
-    return (
-        shutil.which("ninja") is not None
-        and shutil.which(compiler) is not None
-    )
+from psyneulink.core.batched.numerical.native import native_kernels_available  # noqa: F401
 
 
 @lru_cache(maxsize=1)

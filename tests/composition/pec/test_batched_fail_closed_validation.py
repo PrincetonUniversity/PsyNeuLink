@@ -512,8 +512,12 @@ def test_rejects_non_primary_output_port_routing():
 def test_rejects_unmodeled_input_port_functions(function, expected):
     left = pnl.TransferMechanism(input_shapes=1, name="left")
     right = pnl.TransferMechanism(input_shapes=1, name="right")
+    # Cross entropy needs both projection values even during initialization.
+    input_spec = {pnl.INPUT_SHAPES: 1, pnl.FUNCTION: function}
+    if expected == "cross-entropy":
+        input_spec = {pnl.VARIABLE: [[0.0], [0.0]], pnl.FUNCTION: function}
     receiver = pnl.TransferMechanism(
-        input_ports={pnl.INPUT_SHAPES: 1, pnl.FUNCTION: function},
+        input_ports=input_spec,
         name="receiver",
     )
     composition = pnl.Composition()

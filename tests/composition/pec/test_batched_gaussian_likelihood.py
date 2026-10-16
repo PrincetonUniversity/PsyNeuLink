@@ -8,15 +8,15 @@ import numpy as np
 import pytest
 from scipy.integrate import quad
 from scipy.stats import norm
-import torch
+torch = pytest.importorskip("torch")
 
-import psyneulink as pnl
-from psyneulink.core.batched import (
+import psyneulink as pnl  # noqa: E402 -- optional Torch guard above
+from psyneulink.core.batched import (  # noqa: E402 -- optional Torch guard above
     BatchedCompositionCompiler as Compiler, BatchedTrialParameter,
     GaussianReadout, LikelihoodEffectContract, LikelihoodPlanningError,
     ObservationField, ObservationSpec,
 )
-from psyneulink.core.batched import registry, specs
+from psyneulink.core.batched import registry, specs  # noqa: E402 -- optional Torch guard above
 
 
 pytestmark = [pytest.mark.batched, pytest.mark.composition]
@@ -208,7 +208,9 @@ def test_reject_dynamic_schedule_and_latent_initial_state():
         Compiler.compile_likelihood(c, obs, process="ideal_real")
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_registration_does_not_shadow_other_processing_functions():
+    specs.ensure_builtin_specs()
     c, normal, out = _model()
     assert specs.mechanism_spec_for(normal).likelihood_contract.gaussian_readout is not None
     assert specs.mechanism_spec_for(out) is None

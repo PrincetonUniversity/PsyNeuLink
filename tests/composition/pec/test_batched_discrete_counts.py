@@ -111,6 +111,7 @@ def test_counts_reject_missing_support_and_truncated_candidates(batched_backend)
                                     invalid_candidates="nan", **options)
 
 
+@pytest.mark.pytorch
 def test_shift_map_deduplication_preserves_all_grid_scores():
     import torch
     from psyneulink.core.batched.backend.triton.discrete_counts import DiscreteOutputCounts

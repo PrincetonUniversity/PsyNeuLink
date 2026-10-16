@@ -113,6 +113,7 @@ def test_float_outputs_do_not_establish_a_continuous_density():
     assert "observation.density_not_established" in _obligation_codes(report)
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_csi_is_a_candidate_with_explicit_scheduler_obligations(csi):
     composition, outputs = csi
     plan = BatchedCompositionCompiler.compile(composition, outputs=outputs, max_steps=64)
@@ -255,6 +256,7 @@ def test_stochastic_state_dependency_is_reported_with_a_witness():
     assert any(edge.kind == "projection" for edge in diagnostic.dependency_path)
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_port_resolution_is_object_free_and_rejects_foreign_or_duplicate_ports():
     composition, node = _ddm()
     observations = _observations(node.output_ports)
@@ -283,6 +285,7 @@ def _identity(x0):
     return x0
 
 
+@pytest.mark.usefixtures("batched_runtime")
 def test_opaque_udf_requires_contract_and_contract_is_frozen():
     node = pnl.ProcessingMechanism(
         function=pnl.UserDefinedFunction(custom_function=lambda variable: variable),
