@@ -4,6 +4,7 @@ import importlib.util
 import inspect
 import io
 import itertools
+import matplotlib
 import numpy as np
 import pytest
 import re
@@ -84,6 +85,10 @@ def pytest_runtest_setup(item):
         pytest.skip('sbi not available')
 
     doctest.ELLIPSIS_MARKER = "[...]"
+
+    # using a "non-interactive" backend prevents a plot window opening on `Figure.show`
+    matplotlib.rcParams['backend'] = 'pdf'
+
 
 def pytest_generate_tests(metafunc):
     mech_and_func_modes = ['Python',

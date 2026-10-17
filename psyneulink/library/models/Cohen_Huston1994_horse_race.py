@@ -378,4 +378,4 @@ if args.enable_plot:
     plt.title('stimulus onset asynchrony - horse race model ')
     plt.legend(['congruent', 'incongruent', 'neutral'])
     plt.ylabel('reaction time in ms')
-    plt.show(block=not pnl._called_from_pytest)
+    plt.show()
