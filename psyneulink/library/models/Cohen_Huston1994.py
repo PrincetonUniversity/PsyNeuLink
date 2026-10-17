@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import numpy as np
 import psyneulink as pnl
@@ -13,12 +14,31 @@ parser.add_argument(
     '--no-plot', action='store_false',
     help='Disable plotting', dest='enable_plot')
 parser.add_argument(
+    '--output-dir',
+    type=Path,
+    help='Directory for exported images, if plotting enabled (default: %%(default)s)',
+    default=Path.cwd(),
+)
+parser.add_argument('--plot-fname', type=str, help='Filename for exported image, if plotting enabled (default: %%(default))', default='Cohen_Huston1994.png')
+parser.add_argument(
     '--threshold', type=float,
     help='Termination threshold for response output (default: %%(default)f)', default=0.6)
 parser.add_argument(
     '--settle-trials', type=int,
     help='Number of trials for composition to initialize and settle (default: %%(default)d)', default=500)
 args = parser.parse_args()
+
+if args.enable_plot:
+    import matplotlib.pyplot as plt
+
+
+def _finish_plot(plt, plt_name: str = ''):
+    pfx = Path(__file__).with_suffix('').name
+    plt_name = f'-{plt_name}' if plt_name else ''
+    plt.savefig(args.output_dir.joinpath(f'{pfx}{plt_name}.png'))
+    if not pnl._called_from_pytest:
+        plt.show()
+
 
 # Define Parameters ---------------------------------------------------------------------------------------------------
 RATE = 0.01  # Integration rate (called time constant in paper)
@@ -469,8 +489,6 @@ for cond in range(conditions):
     print('response_all: ', response_all)
 
 if args.enable_plot:
-    import matplotlib.pyplot as plt
-
     # Plot results --------------------------------------------------------------------------------------------------------
     # First, plot response layer activity for whole run
     plt.figure()
@@ -483,7 +501,7 @@ if args.enable_plot:
     plt.plot(response_all3[0])
     plt.plot(response_all3[1])
     plt.plot(response_all3[2])
-    plt.show(block=not pnl._called_from_pytest)
+    _finish_plot(plt, 'responselayer')
 
     # -- Regression --
 
@@ -529,4 +547,4 @@ if args.enable_plot:
     plt.legend(['Color Naming', 'Word Reading'])
     plt.xticks(np.arange(3), ('Control', 'Conflict', 'Congruent'))
     plt.ylabel('Reaction Time (ms)')
-    plt.show(block=not pnl._called_from_pytest)
+    _finish_plot(plt)

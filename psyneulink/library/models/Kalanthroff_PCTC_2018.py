@@ -1,10 +1,17 @@
 import argparse
+from pathlib import Path
 
 import numpy as np
 import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+parser.add_argument(
+    '--output-dir',
+    type=Path,
+    help='Directory for exported images, if plotting enabled (default: %%(default)s)',
+    default=Path.cwd(),
+)
 parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %%(default)f)', default=0.70)
 parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %%(default)d)', default=200)
 args = parser.parse_args()
@@ -554,4 +561,7 @@ if args.enable_plot:
     axes[2, 3].plot(www_incong[settle:, 0], 'b')
     axes[2, 3].plot(www_incong[settle:, 1], 'g')
 
-    plt.show(block=not pnl._called_from_pytest)
+    plt_fname = Path(__file__).with_suffix('').name
+    plt.savefig(args.output_dir.joinpath(plt_fname).with_suffix('.png'))
+    if not pnl._called_from_pytest:
+        plt.show()

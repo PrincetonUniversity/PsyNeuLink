@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import numpy as np
 import psyneulink as pnl
@@ -30,6 +31,12 @@ import psyneulink as pnl
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
 parser.add_argument(
+    '--output-dir',
+    type=Path,
+    help='Directory for exported images, if plotting enabled (default: %%(default)s)',
+    default=Path.cwd(),
+)
+parser.add_argument(
     '--settle-trials', type=int,
     help='Number of trials for composition to initialize and settle (default: %%(default)d)', default=500)
 parser.add_argument(
@@ -37,6 +44,18 @@ parser.add_argument(
     help='Number of trials for composition to run with the stimulus (default: %%(default)d)', default=600)
 
 args = parser.parse_args()
+
+if args.enable_plot:
+    import matplotlib.pyplot as plt
+
+
+def _finish_plot(plt, plt_name: str = ''):
+    pfx = Path(__file__).with_suffix('').name
+    plt_name = f'-{plt_name}' if plt_name else ''
+    plt.savefig(args.output_dir.joinpath(f'{pfx}{plt_name}.png'))
+    if not pnl._called_from_pytest:
+        plt.show()
+
 
 # Define Parameters ---------------------------------------------------------------------------------------------------
 RATE = 0.01  # Integration rate
@@ -384,8 +403,6 @@ energy = r2['DECISION ENERGY']  # save logged DECISION_ENERGY
 
 # Plot ----------------------------------------------------------------------------------------------------------------
 if args.enable_plot:
-    import matplotlib.pyplot as plt
-
     n = SETTLE_TRIALS + STIMULUS_TRIALS
     plt.figure()
     x = np.arange(0, STIMULUS_TRIALS, 1)  # create x-axis length
@@ -396,7 +413,7 @@ if args.enable_plot:
     plt.xlabel('Cycle')  # add x label
     legend = ['Incongruent', 'Neutral', 'Congruent']
     plt.legend(legend)
-    plt.show()
+    _finish_plot(plt)
 
 # For more closely mimicking the original figure run the simulation as follows ----------------------------------------
 # Note: Also uncomment the noise in the mechanism definitions above
@@ -461,8 +478,6 @@ if args.enable_plot:
 #             c_3.append(r2)
 #
 # if args.enable_plot:
-#     import matplotlib.pyplot as plt
-#
 #     n = SETTLE_TRIALS + STIMULUS_TRIALS
 #     plt.figure()
 #     x = np.arange(0, n, 1)  # create x-axis length
@@ -474,4 +489,4 @@ if args.enable_plot:
 #     plt.xlabel('Cycle')  # add x label
 #     legend = ['congruent', 'incongruent', 'neutral']
 #     plt.legend(legend)
-#     plt.show()
+#     _finish_plot(plt)

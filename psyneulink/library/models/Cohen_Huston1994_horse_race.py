@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import numpy as np
 
@@ -6,6 +7,12 @@ import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+parser.add_argument(
+    '--output-dir',
+    type=Path,
+    help='Directory for exported images, if plotting enabled (default: %%(default)s)',
+    default=Path.cwd(),
+)
 parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %%(default)f)', default=0.55)
 parser.add_argument('--word-runs', type=int, help='Number of runs after word is presented (default: %%(default)d)', default=5)
 parser.add_argument('--color-runs', type=int, help='Number of runs after color is presented (default: %%(default)d)', default=4)
@@ -378,4 +385,7 @@ if args.enable_plot:
     plt.title('stimulus onset asynchrony - horse race model ')
     plt.legend(['congruent', 'incongruent', 'neutral'])
     plt.ylabel('reaction time in ms')
-    plt.show(block=not pnl._called_from_pytest)
+    plt_fname = Path(__file__).with_suffix('').name
+    plt.savefig(args.output_dir.joinpath(plt_fname).with_suffix('.png'))
+    if not pnl._called_from_pytest:
+        plt.show()

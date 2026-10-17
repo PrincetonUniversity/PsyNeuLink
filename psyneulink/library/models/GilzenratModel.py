@@ -6,12 +6,19 @@ and electrophysiological data (from LC recordings) in non-human primates.
 """
 import argparse
 import sys
+from pathlib import Path
 
 import numpy as np
 import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+parser.add_argument(
+    '--output-dir',
+    type=Path,
+    help='Directory for exported images, if plotting enabled (default: %%(default)s)',
+    default=Path.cwd(),
+)
 parser.add_argument(
     '--noise-stddev',
     type=float,
@@ -274,7 +281,10 @@ if args.enable_plot:
     plt.xticks(x_values)
     plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 
-    plt.show(block=not pnl._called_from_pytest)
+    plt_fname = Path(__file__).with_suffix('').name
+    plt.savefig(args.output_dir.joinpath(plt_fname).with_suffix('.png'))
+    if not pnl._called_from_pytest:
+        plt.show()
 
-    task.show_graph()
+    task.show_graph(view=not pnl._called_from_pytest)
     print('\nPlots generated')
