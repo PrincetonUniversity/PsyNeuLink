@@ -483,7 +483,7 @@ if args.enable_plot:
     plt.plot(response_all3[0])
     plt.plot(response_all3[1])
     plt.plot(response_all3[2])
-    plt.show(block=not pnl._called_from_pytest)
+    plt.show()
 
     # -- Regression --
 
@@ -529,4 +529,4 @@ if args.enable_plot:
     plt.legend(['Color Naming', 'Word Reading'])
     plt.xticks(np.arange(3), ('Control', 'Conflict', 'Congruent'))
     plt.ylabel('Reaction Time (ms)')
-    plt.show(block=not pnl._called_from_pytest)
+    plt.show()
