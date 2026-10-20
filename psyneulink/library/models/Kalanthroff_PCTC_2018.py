@@ -5,8 +5,8 @@ import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
-parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %(default)f)', default=0.70)
-parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %(default)d)', default=200)
+parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %%(default)f)', default=0.70)
+parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %%(default)d)', default=200)
 args = parser.parse_args()
 
 # Implements the Kalanthroff, Davelaar, Henik, Goldfarb & Usher model: Task Conflict and Proactive Control:
