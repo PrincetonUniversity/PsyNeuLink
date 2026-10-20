@@ -31,10 +31,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
 parser.add_argument(
     '--settle-trials', type=int,
-    help='Number of trials for composition to initialize and settle (default: %(default)d)', default=500)
+    help='Number of trials for composition to initialize and settle (default: %%(default)d)', default=500)
 parser.add_argument(
     '--stimulus-trials', type=int,
-    help='Number of trials for composition to run with the stimulus (default: %(default)d)', default=600)
+    help='Number of trials for composition to run with the stimulus (default: %%(default)d)', default=600)
 
 args = parser.parse_args()
 

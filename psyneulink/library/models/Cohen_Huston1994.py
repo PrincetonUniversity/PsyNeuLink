@@ -14,10 +14,10 @@ parser.add_argument(
     help='Disable plotting', dest='enable_plot')
 parser.add_argument(
     '--threshold', type=float,
-    help='Termination threshold for response output (default: %(default)f)', default=0.6)
+    help='Termination threshold for response output (default: %%(default)f)', default=0.6)
 parser.add_argument(
     '--settle-trials', type=int,
-    help='Number of trials for composition to initialize and settle (default: %(default)d)', default=500)
+    help='Number of trials for composition to initialize and settle (default: %%(default)d)', default=500)
 args = parser.parse_args()
 
 # Define Parameters ---------------------------------------------------------------------------------------------------

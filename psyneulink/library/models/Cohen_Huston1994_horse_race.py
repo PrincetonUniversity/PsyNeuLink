@@ -6,10 +6,10 @@ import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
-parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %(default)f)', default=0.55)
-parser.add_argument('--word-runs', type=int, help='Number of runs after word is presented (default: %(default)d)', default=5)
-parser.add_argument('--color-runs', type=int, help='Number of runs after color is presented (default: %(default)d)', default=4)
-parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %(default)d)', default=50)
+parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %%(default)f)', default=0.55)
+parser.add_argument('--word-runs', type=int, help='Number of runs after word is presented (default: %%(default)d)', default=5)
+parser.add_argument('--color-runs', type=int, help='Number of runs after color is presented (default: %%(default)d)', default=4)
+parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %%(default)d)', default=50)
 parser.add_argument('--pre-stimulus-trials', type=int, help='Number of trials before stimulus is added', default=100)
 args = parser.parse_args()
 
