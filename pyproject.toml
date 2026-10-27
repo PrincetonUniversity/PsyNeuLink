@@ -136,6 +136,7 @@ filterwarnings = [
     "error:Pickle, copy, and deepcopy support will be removed from itertools:DeprecationWarning",
     "error:Benchmark fixture was not used at all in this test!",
     "error:Passing a non-Collection iterable to parametrize is deprecated.",
+    "error:Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future.",
     "ignore:.*is not an MDF standard function, this is likely to produce an incompatible model.:UserWarning",
 ]
 
