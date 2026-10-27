@@ -660,8 +660,15 @@ class UserDefinedFunction(Function_Base):
             value = self.custom_function(variable, **kwargs)
         except TypeError as e:
             if "'str' object is not callable" != str(e):
-                # Try calling with just variable and cust_fct_params
-                value = self.custom_function(variable, **call_params)
+
+                try:
+                    # Try calling with just variable and cust_fct_params
+                    value = self.custom_function(variable, **call_params)
+
+                except (DeprecationWarning, TypeError):
+                    # Try calling with explicit singleton array to scalar conversion
+                    value = self.custom_function(variable.item(), **call_params)
+
             else:
                 value = eval(self.custom_function, kwargs)
 
