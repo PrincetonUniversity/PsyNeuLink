@@ -246,6 +246,20 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
             return astype
 
+        elif node.attr == "item":
+            val = self.get_rval(val)
+
+            def extract_item(builder):
+                local_val = val
+
+                while hasattr(local_val.type, 'elements'):
+                    assert len(local_val.type) == 1
+                    local_val = builder.extract_value(local_val, 0)
+
+                return local_val
+
+            return extract_item
+
         return val[node.attr]
 
     def visit_Assign(self, node):
