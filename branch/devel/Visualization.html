@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Visualization &mdash; PsyNeuLink 0.21.0.0+22.gd1eece467 documentation</title>
+  <title>Visualization &mdash; PsyNeuLink 0.21.0.0+27.g054078053 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.21.0.0+22
+                  0.21.0.0+27
                 </div>
               
             
@@ -318,7 +318,7 @@ to execute.</p>
 can be shown, along with other information, using options in the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>
 method.  The figure below shows several examples.</p>
 <p id="composition-show-graph-options-figure"><strong>Output of show_graph using different options</strong></p>
-<figure class="align-default" id="id5">
+<figure class="align-default" id="id7">
 <img alt="Composition graph examples" src="_images/Composition_show_graph_options_fig.svg" />
 <figcaption>
 <p><span class="caption-text">Displays of the Composition in the <a class="reference internal" href="#composition-show-graph-basic-figure"><span class="std std-ref">example above</span></a>, generated using various
@@ -327,7 +327,7 @@ and Component dimensions displayed.  <strong>Panel B</strong> shows the <a class
 Composition and its associated <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> using the <strong>show_controller</strong> option (controller-related
 Components are displayed in blue by default).  <strong>Panel C</strong> adds the Composition’s <a class="reference internal" href="CompositionInterfaceMechanism.html"><span class="doc">CompositionInterfaceMechanisms</span></a> using the <strong>show_cim</strong> option. <strong>Panel D</strong> shows a detailed view of the Mechanisms
 using the <strong>show_node_structure</strong> option, that includes their <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> and their <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">roles</span></code></a> in the
-Composition. <strong>Panel E</strong> shows an even more detailed view using <strong>show_node_structure</strong> as well as <strong>show_cim</strong>.</span><a class="headerlink" href="#id5" title="Link to this image">¶</a></p>
+Composition. <strong>Panel E</strong> shows an even more detailed view using <strong>show_node_structure</strong> as well as <strong>show_cim</strong>.</span><a class="headerlink" href="#id7" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
@@ -415,7 +415,7 @@ when the <code class="xref any docutils literal notranslate"><span class="pre">s
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.showgraph.ShowGraph.show_graph">
-<span class="sig-name descname"><span class="pre">show_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_node_structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_nested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nested'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_nested_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_cim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_controller</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_learning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_dimensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_projection_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_projections_not_in_composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_items</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pdf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">show_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_node_structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_nested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nested'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_nested_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_cim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_controller</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_learning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_dimensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_projection_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_projections_not_in_composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_items</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pdf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="Link to this definition">¶</a></dt>
 <dd><p>Show graphical display of Components in a Composition’s graph.  See <a class="reference internal" href="#showgraph-show-graph-method"><span class="std std-ref">show_graph</span></a>
 for additional details.</p>
 <div class="admonition note">
@@ -506,6 +506,13 @@ formats).</p></li>
 ‘gif’: return gif used for animation
 ‘source’: return the source code for the graphviz object
 None : return None</p></li>
+<li><p><strong>directory</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>PathLike</em><em>, </em><em>str</em><em>]</em><em>] </em><em>: default None</em>) – if specified, rendered graph files are output in <strong>directory</strong>.
+Otherwise, a default is used (the current directory; or, the
+PsyNeuLink repo directory if using an editable install)</p></li>
+<li><p><strong>view</strong> (<em>bool : default True</em>) – used with <a href="#id5"><span class="problematic" id="id6">**</span></a>output_fmt**=’pdf’. Corresponds to the <code class="xref any docutils literal notranslate"><span class="pre">view</span></code> argument
+of <code class="xref any docutils literal notranslate"><span class="pre">graphviz.Graph.render</span></code>. If True, the system also opens the
+output file of the rendered graph when it is generated. Otherwise,
+the file is created but not opened.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -597,7 +604,7 @@ None : return None</p></li>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=6baf446a"></script>
+         <script src="_static/documentation_options.js?v=d37cf3f1"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
