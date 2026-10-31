@@ -31,9 +31,7 @@ def test_random_int64(benchmark, mode, seed, expected):
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int64')
 
         def f():
-            out = gen_fun.np_buffer_for_arg(1)
-            gen_fun(state, out)
-            return out
+            return gen_fun(state)
 
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
@@ -43,7 +41,7 @@ def test_random_int64(benchmark, mode, seed, expected):
         init_fun.cuda_call(gpu_state, np.int64(seed))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int64')
-        out = gen_fun.np_buffer_for_arg(1)
+        out = gen_fun.np_buffer_for_retval()
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
@@ -86,9 +84,7 @@ def test_random_int32_bounded(benchmark, mode, bounds, expected):
 
         def f():
             lower, upper = bounds if len(bounds) == 2 else (0, bounds[0])
-            out = gen_fun.np_buffer_for_arg(3)
-            gen_fun(state, lower, upper, out)
-            return out
+            return gen_fun(state, lower, upper)
 
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
@@ -97,7 +93,7 @@ def test_random_int32_bounded(benchmark, mode, bounds, expected):
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32_bounded')
-        out = gen_fun.np_buffer_for_arg(3)
+        out = gen_fun.np_buffer_for_retval()
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
@@ -134,9 +130,7 @@ def test_random_int32(benchmark, mode):
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32')
 
         def f():
-            out = gen_fun.np_buffer_for_arg(1)
-            gen_fun(state, out)
-            return out
+            return gen_fun(state)
 
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
@@ -145,7 +139,7 @@ def test_random_int32(benchmark, mode):
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32')
-        out = gen_fun.np_buffer_for_arg(1)
+        out = gen_fun.np_buffer_for_retval()
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
@@ -181,9 +175,7 @@ def test_random_double(benchmark, mode):
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_double')
 
         def f():
-            out = gen_fun.np_buffer_for_arg(1)
-            gen_fun(state, out)
-            return out
+            return gen_fun(state)
 
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
@@ -192,7 +184,7 @@ def test_random_double(benchmark, mode):
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_double')
-        out = gen_fun.np_buffer_for_arg(1)
+        out = gen_fun.np_buffer_for_retval()
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
@@ -227,9 +219,7 @@ def test_random_float(benchmark, mode):
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_float')
 
         def f():
-            out = gen_fun.np_buffer_for_arg(1)
-            gen_fun(state, out)
-            return out
+            return gen_fun(state)
 
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
@@ -238,7 +228,7 @@ def test_random_float(benchmark, mode):
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_float')
-        out = gen_fun.np_buffer_for_arg(1)
+        out = gen_fun.np_buffer_for_retval()
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
@@ -279,9 +269,7 @@ def test_random_normal(benchmark, mode, fp_type):
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
 
         def f():
-            out = gen_fun.np_buffer_for_arg(1)
-            gen_fun(state, out)
-            return out
+            return gen_fun(state)
 
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
@@ -290,7 +278,7 @@ def test_random_normal(benchmark, mode, fp_type):
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
-        out = gen_fun.np_buffer_for_arg(1)
+        out = gen_fun.np_buffer_for_retval()
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
@@ -375,13 +363,9 @@ def test_random_binomial(benchmark, mode, fp_type, n, p, exp_64, exp_32):
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_binomial')
-        n = np.asarray(n, dtype=gen_fun.np_arg_dtypes[1])
-        p = np.asarray(p, dtype=gen_fun.np_arg_dtypes[2])
 
         def f():
-            out = gen_fun.np_buffer_for_arg(1)
-            gen_fun(state, n, p, out)
-            return out
+            return gen_fun(state, n, p)
 
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
@@ -390,9 +374,9 @@ def test_random_binomial(benchmark, mode, fp_type, n, p, exp_64, exp_32):
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_binomial')
-        gpu_n = pnlvm.jit_engine.pycuda.driver.In(np.asarray(n, dtype=gen_fun.np_arg_dtypes[1]))
-        gpu_p = pnlvm.jit_engine.pycuda.driver.In(np.asarray(p, dtype=gen_fun.np_arg_dtypes[2]))
-        out = gen_fun.np_buffer_for_arg(1)
+        gpu_n = gen_fun.np_arg_dtypes[1].type(n)
+        gpu_p = gen_fun.np_arg_dtypes[2].type(p)
+        out = gen_fun.np_buffer_for_retval()
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():

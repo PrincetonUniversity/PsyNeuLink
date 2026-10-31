@@ -160,8 +160,8 @@ class LLVMBinaryFunction:
 
         # Create ctype function instance
         start = time.perf_counter()
-        return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
 
+        self.np_retval_dtype = _convert_llvm_ir_to_dtype(f.return_value.type)
         self.np_arg_dtypes = [_convert_llvm_ir_to_dtype(getattr(a.type, "pointee", a.type)) for a in f.args]
 
         args = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
@@ -178,6 +178,7 @@ class LLVMBinaryFunction:
                     args[i] = np.ctypeslib.ndpointer(dtype=arg.base, shape=arg.shape, flags='C_CONTIGUOUS')
 
         middle = time.perf_counter()
+        return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *args)
         finish = time.perf_counter()
 
@@ -204,6 +205,7 @@ class LLVMBinaryFunction:
         if self.__cuda_kernel is None:
             _ptx_engine.compile_staged()
             self.__cuda_kernel = _ptx_engine.get_kernel(self.name)
+
         return self.__cuda_kernel
 
     def cuda_max_block_size(self, override):
@@ -234,11 +236,14 @@ class LLVMBinaryFunction:
     def cuda_call(self, *args, threads=1, block_size=None):
         block_size = self.cuda_max_block_size(block_size)
         grid = ((threads + block_size - 1) // block_size, 1)
-        ktime = self._cuda_kernel(*args, np.int32(threads), time_kernel="time_stat" in debug_env,
-                                  block=(block_size, 1, 1), grid=grid)
+        ktime = self._cuda_kernel(*args,
+                                  np.int32(threads),
+                                  time_kernel="time_stat" in debug_env,
+                                  block=(block_size, 1, 1),
+                                  grid=grid)
+
         if "time_stat" in debug_env:
-            print("Time to run kernel '{}' using {} threads: {}".format(
-                self.name, threads, ktime))
+            print("Time to run kernel '{}' using {} threads: {}".format(self.name, threads, ktime))
 
     def cuda_wrap_call(self, *args, **kwargs):
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
@@ -251,6 +256,9 @@ class LLVMBinaryFunction:
 
         # fill the buffer with NaN poison
         return np.full(out_shape, fill_value, dtype=out_base)
+
+    def np_buffer_for_retval(self):
+        return np.zeros((), dtype=self.np_retval_dtype)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
