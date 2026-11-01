@@ -1844,7 +1844,7 @@ class GridSearch(OptimizationFunction):
 
             with b.if_then(b.load(replace_ptr)):
                 b.store(idx, min_idx_ptr)
-                b.store(b.load(value_ptr), min_value_ptr)
+                pnlvm.helpers.memcpy(builder, min_value_ptr, value_ptr)
 
         min_idx = builder.load(min_idx_ptr)
         found_min = builder.icmp_signed("!=", min_idx, min_idx.type(-1))
@@ -1858,7 +1858,7 @@ class GridSearch(OptimizationFunction):
 
                 with b_false:
                     sample_ptr = builder.gep(samples_ptr, [min_idx])
-                    builder.store(b.load(sample_ptr), min_sample_ptr)
+                    pnlvm.helpers.memcpy(builder, min_sample_ptr, sample_ptr)
 
         builder.ret_void()
         return builder.function
@@ -1894,7 +1894,7 @@ class GridSearch(OptimizationFunction):
                 # Destination is a struct of 2d arrays
                 dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(dst_idx), ctx.int32_ty(0)])
                 src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
-                builder.store(builder.load(src), dst)
+                pnlvm.helpers.memcpy(builder, dst, src)
 
             # Assert that we have populated all inputs
             assert all(input_initialized), \
@@ -1940,7 +1940,7 @@ class GridSearch(OptimizationFunction):
                 if isinstance(dimension.type.pointee,  pnlvm.ir.ArrayType):
                     b, idx = stack.enter_context(pnlvm.helpers.array_ptr_loop(b, dimension, "loop_" + str(i)))
                     alloc_elem = b.gep(dimension, [ctx.int32_ty(0), idx])
-                    b.store(b.load(alloc_elem), arg_elem)
+                    pnlvm.helpers.memcpy(builder, arg_elem, alloc_elem)
 
                 elif isinstance(dimension.type.pointee, pnlvm.ir.LiteralStructType):
                     assert len(dimension.type.pointee) == 3
@@ -1981,8 +1981,10 @@ class GridSearch(OptimizationFunction):
         # Produce output
         out_sample_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         out_value_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        builder.store(builder.load(min_sample_ptr), out_sample_ptr)
-        builder.store(builder.load(min_value_ptr), out_value_ptr)
+
+        pnlvm.helpers.memcpy(builder, out_sample_ptr, min_sample_ptr)
+        pnlvm.helpers.memcpy(builder, out_value_ptr, min_value_ptr)
+
         return builder
 
     def _function(self,

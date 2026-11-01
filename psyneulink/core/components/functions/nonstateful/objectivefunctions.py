@@ -437,10 +437,10 @@ class Stability(ObjectiveFunction):
 
             assert transfer_params is None or transfer_params.type.pointee.elements == ()
 
-            builder.store(builder.load(dot_out), metric_in_transformed)
+            pnlvm.helpers.memcpy(builder, metric_in_transformed, dot_out)
 
         # Copy original variable
-        builder.store(builder.load(arg_in), metric_in_variable)
+        pnlvm.helpers.memcpy(builder, metric_in_variable, arg_in)
 
         # Distance Function
         metric_params, metric_state = ctx.get_param_or_state_ptr(builder,

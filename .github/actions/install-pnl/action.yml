@@ -111,7 +111,7 @@ runs:
         CACHED=`pip cache list | cut -f 2,3 -d- | tail -n+3`
         for P in $CACHED; do
           # Remove cached and not installed
-          if [ `echo $INSTALLED | grep -o $P | wc -l` == "0" ] ; then
+          if [ `echo $INSTALLED | grep -i -o $P | wc -l` == "0" ] ; then
             pip cache remove -v $P || true
           fi
         done
@@ -120,7 +120,7 @@ runs:
       if: ${{ steps.new_package.conclusion == 'success' && steps.new_package.outputs.new_package != '' }}
       shell: bash
       run: |
-        if [ $(pip list | grep -o ${{ steps.new_package.outputs.new_package }} | wc -l) != "0" ] ; then
+        if [ $(pip list | grep -i -o ${{ steps.new_package.outputs.new_package }} | wc -l) != "0" ] ; then
           pip show ${{ steps.new_package.outputs.new_package }} | grep 'Version' | tee installed_version.deps
           cmp -s new_version.deps installed_version.deps || echo "::error::Package version restricted by dependencies: ${{ steps.new_package.outputs.new_package }}"
           diff new_version.deps installed_version.deps
