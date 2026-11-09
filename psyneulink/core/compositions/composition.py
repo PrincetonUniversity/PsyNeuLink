@@ -3199,6 +3199,7 @@ import warnings
 import weakref
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
+from os import PathLike
 
 import graph_scheduler
 import numpy as np
@@ -5767,7 +5768,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         modulation=modulation,
                         variable=(OWNER_VALUE, functools.partial(self.parameter_CIM.get_input_port_position, interface_input_port)),
                         transfer_function=Identity,
-                        modulates=receiver,
+                        # Preserve the transformation when rerouting a projection
+                        # from an enclosing Composition (e.g., a seed stream offset).
+                        modulates=ControlProjection(receiver=receiver, function=comp_projection.function),
                         name = PARAMETER_CIM_NAME + "_"  + owner.name + "_" + receiver.name,
                 )
                 self.parameter_CIM.add_ports([control_signal], context=context)
@@ -9843,12 +9846,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                          context=context)
         graph_receiver.parameter_CIM.add_ports([interface_input_port], context=context)
         # control signal for parameter CIM that will project directly to inner Composition's parameter
+        # An unspecified relay can arrive as a projection class, without an instantiated function.
+        projection_function = projection.function if isinstance(projection, ControlProjection) else None
         control_signal = ControlSignal(
             modulation=modulation,
             variable=(OWNER_VALUE, functools.partial(graph_receiver.parameter_CIM.get_input_port_position,
                                                      interface_input_port)),
             transfer_function=Identity,
-            modulates=receiver,
+            modulates=ControlProjection(receiver=receiver, function=projection_function),
             name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
         )
         if receiver.owner not in graph_receiver.nodes.data + graph_receiver.cims:
@@ -15068,6 +15073,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_projections_not_in_composition=False,
                    active_items=None,
                    output_fmt='pdf',
+                   directory: Optional[Union[PathLike, str]] = None,
+                   view: bool = True,
                    context=None,
                    **kwargs):
         """Patch to ShowGraph method
@@ -15094,6 +15101,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 show_projections_not_in_composition=show_projections_not_in_composition,
                                 active_items=active_items,
                                 output_fmt=output_fmt,
+                                directory=directory,
+                                view=view,
                                 context=context)
 
     def _set_up_animation(self, context):

@@ -390,9 +390,11 @@ def _random_state_getter(self, owning_component, context, modulated=False):
     # 'has_modulation' indicates that seed has an active modulatory projection
     # 'modulated' indicates that the modulated value is requested
     if has_modulation and modulated:
-        seed_value = [int(owning_component._get_current_parameter_value(seed_param, context).item())]
+        seed_value = owning_component._get_current_parameter_value(seed_param, context)
     else:
-        seed_value = [int(seed_param._get(context=context))]
+        seed_value = seed_param._get(context=context)
+
+    seed_value = [int(seed_value.item())]
 
     if seed_value == [DEFAULT_SEED()]:
         raise FunctionError(

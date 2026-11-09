@@ -4642,7 +4642,10 @@ class TestMiscTrainingFunctionality:
            autodiff_mode is not pnl.ExecutionMode.PyTorch and \
            optimizer_type == 'sgd' and \
            learning_rate == 10:
-            expected = [[[0.9918830394744873]], [[0.9982172846794128]], [[0.9978305697441101]], [[0.9994590878486633]]]
+            # macos: [[[0.99188304]], [[0.9982174]], [[0.99783057]], [[0.9994591]]]
+            # linux: [[[0.99188304]], [[0.9982173]], [[0.99783057]], [[0.9994591]]]
+            # the expected value for the second element is between the two above
+            expected = [[[0.99188304]], [[0.99821735]], [[0.99783057]], [[0.9994591]]]
 
         # FIXME: LLVM version is broken with learning rate == 1.5
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
