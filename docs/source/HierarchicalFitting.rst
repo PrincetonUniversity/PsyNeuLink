@@ -225,6 +225,18 @@ sampler, so intervals come out of the draws themselves::
     )
     results = pec.run()
 
+**The model is the one EM fits, with priors on the group.** Each parameter is sampled on an
+unbounded scale, ``z``, and mapped into its search range by
+``lower + (upper - lower) / (1 + exp(-z))``, so ``z = 0`` is the middle of the range and no draw
+falls outside it. On that scale a participant's value is normally distributed around the group
+mean for that parameter (or around the value their group-level predictors give), with one
+standard deviation per parameter. The group means, and the coefficients of any predictors, have
+a ``Normal(0, 5)`` prior, which is weak: values of ``z`` beyond about 5 in either direction are
+already within one percent of a bound. The logarithm of each group standard deviation has a
+``Normal(0, 1)`` prior, which centres the spread of participants at 1 on the ``z`` scale and
+puts 95% of its weight between about 0.14 and 7. The priors are fixed, and the widths used are
+recorded in ``results.settings``.
+
 **Every participant's model must be scored by a trained estimator** (see
 :ref:`Neural Likelihoods <NeuralLikelihood>`). The sampler needs the gradient of the score
 with respect to the parameters, which simulating a model does not give. It also needs tens
@@ -245,6 +257,10 @@ posterior; any divergences at all mean the sampler could not follow it somewhere
 draws are biased in a direction it cannot report. Raising ``target_accept`` is the usual
 response to divergences, and more draws to the rest. A hierarchical posterior usually needs
 more draws than one with as many parameters that is not hierarchical.
+
+:download:`hierarchical_sampling.py <../../Scripts/Examples/ParameterEstimation/hierarchical/hierarchical_sampling.py>`
+is a complete example: it trains or loads an estimator, samples a group, checks convergence and
+prints the estimates with their intervals.
 
 
 .. _Hierarchical_Fitting_Running:
