@@ -829,11 +829,18 @@ def test_a_sampled_fit_reports_its_draws_estimates_and_convergence(trained_artif
     assert results.subject_draws.shape == (2, 25, n_subjects, n_params)
     assert results.subject_parameters.shape == (n_subjects, n_params)
     assert list(results.group_parameters.columns) == [
-        "mean_z", "sd_z", "value", "lower_95", "upper_95", "lower", "upper"
+        "mean_z", "mean_z_sd", "sd_z", "value", "lower_95", "upper_95", "lower", "upper"
     ]
     # Estimates stay inside the range the participants' models search.
     assert np.all(results.subject_draws >= np.array(RATE_BOUNDS[0]).min())
+    # The settings record what the fit ran with, including what was left at its default.
     assert results.settings["sampler"] == "nuts"
+    assert results.settings["subject_id"] == "subject"
+    assert results.settings["sampler_options"] == {
+        "draws": 25, "warmup": 25, "chains": 2, "seed": 0, "max_tree_depth": 3,
+        "target_accept": 0.8,
+    }
+    assert "max_iterations" not in results.settings
     assert pec.fit_results is results
 
     # Two group means and two log scales; 25 draws cannot have converged, and the result says so.
