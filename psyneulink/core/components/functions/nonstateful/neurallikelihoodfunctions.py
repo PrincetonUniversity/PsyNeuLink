@@ -189,18 +189,29 @@ class NeuralLikelihood:
             cond = torch.cat([cond, feats], dim=-1)
         return cond
 
-    def trial_log_prob(self, theta, outcomes, trial_features=None) -> torch.Tensor:
+    def encode_outcomes(self, outcomes) -> torch.Tensor:
+        """Outcomes in the estimator's own layout, to score repeatedly without re-encoding.
+
+        Pass the result back to `trial_log_prob` as ``encoded=True``.  Sampling scores the same
+        trials tens of thousands of times, and the encoding does not change between them.
+        """
+        m = self.metadata
+        return _encode_outcomes(outcomes, m.categorical, m.categories, m.outcome_names)
+
+    def trial_log_prob(self, theta, outcomes, trial_features=None, *,
+                       encoded=False) -> torch.Tensor:
         """Per-trial log densities, differentiable with respect to ``theta``.
 
         ``theta`` is one vector of parameters for every trial, or one row of them per trial.
+        ``outcomes`` is the observed data, or the output of `encode_outcomes` when ``encoded`` is
+        True.
         """
         theta_t = (
             theta
             if isinstance(theta, torch.Tensor)
             else torch.as_tensor(np.asarray(theta, dtype=float), dtype=torch.float32)
         )
-        m = self.metadata
-        x = _encode_outcomes(outcomes, m.categorical, m.categories, m.outcome_names)
+        x = outcomes if encoded else self.encode_outcomes(outcomes)
         cond = self._conditioning(theta_t.to(torch.float32), trial_features, x.shape[0])
         return self._estimator.log_prob(x, condition=cond).reshape(-1)
 
