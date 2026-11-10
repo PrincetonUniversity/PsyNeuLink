@@ -1,4 +1,5 @@
 import copy
+from decimal import Decimal
 
 import optuna.samplers
 from fastkde import fastKDE
@@ -1401,15 +1402,37 @@ class PECOptimizationFunction(OptimizationFunction):
         bounds, with a step size as well.
 
         Returns:
-            A dict mapping parameter names to (lower, upper) bounds.
-            A dict mapping parameter names to step sizes.
+            A dict mapping parameter names to (lower, upper, step) tuples.
         """
+
+        def constant_step(samples):
+            samples = np.asarray(samples)
+            precision = np.finfo(samples.dtype).eps if np.issubdtype(samples.dtype, np.floating) else np.finfo(float).eps
+            values = np.asarray(samples, dtype=float)
+            if len(values) < 2:
+                raise ValueError("Each parameter grid must contain at least two samples")
+
+            differences = np.diff(values)
+            if not np.all(differences > 0):
+                raise ValueError("Parameter grid samples must be strictly increasing")
+
+            # Optuna computes the grid extent using decimal representations. Avoid
+            # rounding the step upward, which can exclude the last grid point.
+            decimal_step = (Decimal(str(values[-1])) - Decimal(str(values[0]))) / (len(values) - 1)
+            step = float(decimal_step)
+            if Decimal(str(step)) > decimal_step:
+                step = float(np.nextafter(step, 0.))
+
+            # Allow roundoff at the input precision without rounding small steps to zero.
+            if not np.allclose(differences, step, rtol=1e-9, atol=precision * np.max(np.abs(values))):
+                raise ValueError("Step size for each parameter must be constant")
+            return step
 
         if self.owner is not None:
 
             if not self.owner.depends_on:
                 bounds = [(float(min(s)), float(max(s))) for s in self.owner.fit_parameters.values()]
-                steps = [np.unique(np.diff(s).round(decimals=5)) for s in self.owner.fit_parameters.values()]
+                steps = [constant_step(s) for s in self.owner.fit_parameters.values()]
             else:
                 bounds = []
                 steps = []
@@ -1418,17 +1441,10 @@ class PECOptimizationFunction(OptimizationFunction):
                     if (param_name, mech) in self.owner.cond_levels:
                         for _ in self.owner.cond_levels[(param_name, mech)]:
                             bounds.append((float(min(s)), float(max(s))))
-                            steps.append(np.unique(np.diff(s).round(decimals=5)))
+                            steps.append(constant_step(s))
                     else:
                         bounds.append((float(min(s)), float(max(s))))
-                        steps.append(np.unique(np.diff(s).round(decimals=5)))
-
-            # We also check if step size is constant, if not we raise an error
-            for s in steps:
-                if len(s) > 1:
-                    raise ValueError("Step size for each parameter must be constant")
-
-            steps = [float(s[0]) for s in steps]
+                        steps.append(constant_step(s))
 
             return dict(
                 zip(

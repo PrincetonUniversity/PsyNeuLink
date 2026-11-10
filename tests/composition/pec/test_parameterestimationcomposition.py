@@ -19,6 +19,70 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import (
 pytestmark = pytest.mark.usefixtures("set_threads_to_one")
 
 
+def _make_parameter_grid_pec(samples, conditional):
+    node = pnl.ProcessingMechanism(name="grid_node")
+    model = pnl.Composition(pathways=node)
+    data = pd.DataFrame({"value": [0., 1.]})
+    options = {}
+    if conditional:
+        data["condition"] = ["a", "b"]
+        options["depends_on"] = {("slope", node): "condition"}
+    pec = pnl.ParameterEstimationComposition(
+        model=model,
+        parameters={
+            ("slope", node): samples,
+            ("intercept", node): np.linspace(0., .3, 4),
+        },
+        outcome_variables=node,
+        data=data,
+        optimization_function=PECOptimizationFunction(method="differential_evolution", max_iterations=1),
+        **options,
+    )
+    return pec.controller.function, node.name
+
+
+@pytest.mark.parametrize("conditional", [False, True])
+@pytest.mark.parametrize("samples, expected_step", [
+    pytest.param(np.linspace(0., .0003, 301), 1e-6, id="small_step"),
+    pytest.param(np.linspace(.1, .1003, 301), 1e-6, id="small_step_with_offset"),
+    pytest.param(np.linspace(0., 3e-16, 4), 1e-16, id="very_small_step"),
+    pytest.param(np.linspace(.1, .4, 4), .1, id="decimal_roundoff"),
+    pytest.param(np.linspace(0., 1., 7), 1 / 6, id="fractional_step"),
+    pytest.param(np.linspace(0., 1., 12), 1 / 11, id="fractional_step_rounds_up"),
+    pytest.param(np.linspace(.1, .4, 4, dtype=np.float32), .1, id="float32_samples"),
+    pytest.param([1, 2, 3], 1., id="integer_samples"),
+])
+def test_fit_parameter_grid_preserves_steps_and_endpoints(samples, expected_step, conditional):
+    function, name = _make_parameter_grid_pec(samples, conditional)
+    bounds = function.fit_param_bounds
+    slope_names = [f"{name}.slope[a]", f"{name}.slope[b]"] if conditional else [f"{name}.slope"]
+    assert list(bounds) == [*slope_names, f"{name}.intercept"]
+    assert bounds[f"{name}.intercept"] == (0., .3, .1)
+    for parameter in slope_names:
+        lower, upper, step = bounds[parameter]
+        assert (lower, upper) == (float(samples[0]), float(samples[-1]))
+        assert step > 0
+        assert step == pytest.approx(expected_step, rel=1e-7, abs=0.)
+        distribution = optuna.distributions.FloatDistribution(lower, upper, step=step)
+        # The optimizer must retain the final grid point, even for repeating fractions.
+        assert distribution.high == pytest.approx(upper, rel=1e-12, abs=0.)
+        assert round((distribution.high - lower) / step) == len(samples) - 1
+
+
+@pytest.mark.parametrize("conditional", [False, True])
+@pytest.mark.parametrize("samples, error", [
+    pytest.param([0., 1e-6, 3e-6], "must be constant", id="nonuniform"),
+    pytest.param([0., 1e-16, 3e-16], "must be constant", id="nonuniform_tiny"),
+    pytest.param([3e-6, 2e-6, 1e-6], "strictly increasing", id="descending"),
+    pytest.param([1e-6, 1e-6, 1e-6], "strictly increasing", id="repeated"),
+    pytest.param([1.], "at least two samples", id="singleton"),
+])
+def test_fit_parameter_grid_rejects_invalid_spacing(samples, error, conditional):
+    function, _ = _make_parameter_grid_pec(samples, conditional)
+    with pytest.raises(ValueError, match=error):
+        function.fit_param_bounds
+
+
 def _run_ddm_with_params(
     starting_value,
     rate,
