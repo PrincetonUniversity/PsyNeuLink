@@ -79,14 +79,23 @@ def memcpy(builder, dst, src):
 
     obj_size = builder.call(obj_size_f, [sized_buffer_char_ptr, bool_ty(0), bool_ty(1), bool_ty(0)])
 
-    # The parameters are: destination, sources, size, volatile
-    memcpy_ty = ir.FunctionType(ir.VoidType(), [char_ptr_ty, char_ptr_ty, obj_size.type, bool_ty])
-    memcpy_f = builder.function.module.declare_intrinsic("llvm.memcpy", [], memcpy_ty)
+    size_limit = debug_env.get("memcpy_size", 16)
+    is_small = builder.icmp_unsigned("<=", obj_size, obj_size.type(size_limit))
 
-    char_ptr_src = builder.bitcast(src, char_ptr_ty)
-    char_ptr_dst = builder.bitcast(dst, char_ptr_ty)
+    with builder.if_else(is_small) as (then, otherwise):
+        with then:
+            data = builder.load(src)
+            builder.store(data, dst)
 
-    builder.call(memcpy_f, [char_ptr_dst, char_ptr_src, obj_size, bool_ty(0)])
+        with otherwise:
+            # The parameters are: destination, sources, size, volatile
+            memcpy_ty = ir.FunctionType(ir.VoidType(), [char_ptr_ty, char_ptr_ty, obj_size.type, bool_ty])
+            memcpy_f = builder.function.module.declare_intrinsic("llvm.memcpy", [], memcpy_ty)
+
+            char_ptr_src = builder.bitcast(src, char_ptr_ty)
+            char_ptr_dst = builder.bitcast(dst, char_ptr_ty)
+
+            builder.call(memcpy_f, [char_ptr_dst, char_ptr_src, obj_size, bool_ty(0)])
 
     return builder
 
