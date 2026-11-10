@@ -30,6 +30,7 @@ narrows the posterior into a funnel that a sampler has to take very small steps 
 first does not.
 """
 
+import numbers
 from dataclasses import dataclass, field
 from enum import auto
 
@@ -129,8 +130,15 @@ class NUTSConfig:
     seed: int = 0
 
     def __post_init__(self):
-        if self.draws < 1 or self.warmup < 1:
-            raise ValueError("draws and warmup must both be at least 1")
+        for name in ("draws", "warmup", "chains", "max_tree_depth", "seed"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, numbers.Integral):
+                raise ValueError(f"{name} must be a whole number; got {value!r}")
+        # Convergence is judged by comparing the halves of each chain, two draws in each at least.
+        if self.draws < 4:
+            raise ValueError("draws must be at least 4")
+        if self.warmup < 1:
+            raise ValueError("warmup must be at least 1")
         if self.chains < 1:
             raise ValueError("chains must be at least 1")
         if not 0.0 < self.target_accept < 1.0:
