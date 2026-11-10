@@ -155,8 +155,8 @@ class NUTSDiagnostics:
         direction it cannot report.  Raising `NUTSConfig.target_accept` is the usual remedy.
 
     accept_rate, step_size : numpy.ndarray
-        Per chain, the mean acceptance probability over the kept draws, and the step size warmup
-        settled on.
+        Per chain, the mean acceptance probability over the kept draws, to compare with
+        `NUTSConfig.target_accept`, and the step size warmup settled on.
 
     warnings : tuple
         What the sampler reported, also issued as a `SamplingWarning`.
@@ -219,16 +219,27 @@ def run_nuts(log_prob, initial_points, config=None):
         kernel = NUTS(potential_fn=lambda params: -log_prob(params["q"]),
                       target_accept_prob=config.target_accept,
                       max_tree_depth=config.max_tree_depth)
+        reported = {}
+
+        # Read from the kernel at the last kept draw, since Pyro clears it when the run ends.
+        # MCMC.diagnostics() is not used: it also computes an effective sample size for every
+        # sampled value at once, in memory that grows with the square of the draws.
+        def record(kernel, params, stage, i, reported=reported):
+            if stage.startswith("Sample") and i == config.draws - 1:
+                reported["divergences"] = len(kernel.diagnostics()["divergences"])
+                # Pyro's "acceptance rate" is the share of draws that moved; the mean acceptance
+                # probability, which target_accept is tuned against, is what it logs.
+                reported["accept_rate"] = float(kernel.logging()["acc. prob"])
+
         mcmc = MCMC(kernel, num_samples=config.draws, warmup_steps=config.warmup,
-                    initial_params={"q": start}, disable_progbar=True)
+                    initial_params={"q": start}, disable_progbar=True, hook_fn=record)
         # Each chain seeded from config.seed, without changing the caller's random state.
         with torch.random.fork_rng():
             torch.manual_seed(config.seed + index)
             mcmc.run()
         chains.append(mcmc.get_samples()["q"].detach().numpy())
-        reported = mcmc.diagnostics()
-        divergences.append(len(reported["divergences"]["chain 0"]))
-        accepts.append(float(reported["acceptance rate"]["chain 0"]))
+        divergences.append(reported["divergences"])
+        accepts.append(reported["accept_rate"])
         steps.append(float(kernel.step_size))
 
     messages = []

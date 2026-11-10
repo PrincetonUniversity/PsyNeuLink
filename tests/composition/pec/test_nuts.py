@@ -64,6 +64,29 @@ def test_sampler_reports_a_clean_run_on_a_smooth_target(gaussian_draws):
     assert draws.shape == (2, 500, 3)
 
 
+def test_sampler_reports_the_mean_acceptance_probability():
+    # Tuned towards a low target, the acceptance probability settles well below the share of
+    # draws that move the chain, which is the other thing a sampler can call its acceptance.
+    config = NUTSConfig(draws=300, warmup=300, chains=1, target_accept=0.5, seed=2)
+    draws, diagnostics = run_nuts(_gaussian_target(), _starts(1, 3), config)
+    moved = np.mean(np.any(np.diff(draws[0], axis=0) != 0, axis=1))
+    assert diagnostics.accept_rate[0] < moved - 0.1
+
+
+def test_sampler_does_not_compute_convergence_for_every_value(monkeypatch):
+    # Pyro's own summary of a run holds memory that grows with the square of the draws for
+    # every sampled value, which a group of participants makes prohibitive.
+    from pyro.infer import MCMC
+
+    def refuse(self):
+        raise AssertionError("MCMC.diagnostics() was called")
+
+    monkeypatch.setattr(MCMC, "diagnostics", refuse)
+    config = NUTSConfig(draws=20, warmup=20, chains=1, seed=3)
+    _, diagnostics = run_nuts(_gaussian_target(), _starts(1, 3), config)
+    assert diagnostics.divergences.tolist() == [0]
+
+
 def test_one_seed_samples_the_same_draws():
     config = NUTSConfig(draws=20, warmup=20, chains=1, seed=3)
     first, _ = run_nuts(_gaussian_target(), _starts(1, 3), config)
