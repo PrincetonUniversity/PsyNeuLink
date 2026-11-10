@@ -55,15 +55,17 @@ def _make_parameter_grid_pec(samples, conditional):
 def test_fit_parameter_grid_preserves_steps_and_endpoints(samples, expected_step, conditional):
     function, name = _make_parameter_grid_pec(samples, conditional)
     bounds = function.fit_param_bounds
+    distributions = function.fit_param_distributions
     slope_names = [f"{name}.slope[a]", f"{name}.slope[b]"] if conditional else [f"{name}.slope"]
     assert list(bounds) == [*slope_names, f"{name}.intercept"]
-    assert bounds[f"{name}.intercept"] == (0., .3, .1)
+    assert bounds[f"{name}.intercept"] == (0., .3)
     for parameter in slope_names:
-        lower, upper, step = bounds[parameter]
+        lower, upper = bounds[parameter]
+        distribution = distributions[parameter]
+        step = distribution.step
         assert (lower, upper) == (float(samples[0]), float(samples[-1]))
         assert step > 0
         assert step == pytest.approx(expected_step, rel=1e-7, abs=0.)
-        distribution = optuna.distributions.FloatDistribution(lower, upper, step=step)
         # The optimizer must retain the final grid point, even for repeating fractions.
         assert distribution.high == pytest.approx(upper, rel=1e-12, abs=0.)
         assert round((distribution.high - lower) / step) == len(samples) - 1
@@ -80,7 +82,7 @@ def test_fit_parameter_grid_preserves_steps_and_endpoints(samples, expected_step
 def test_fit_parameter_grid_rejects_invalid_spacing(samples, error, conditional):
     function, _ = _make_parameter_grid_pec(samples, conditional)
     with pytest.raises(ValueError, match=error):
-        function.fit_param_bounds
+        function.fit_param_distributions
 
 
 def _run_ddm_with_params(

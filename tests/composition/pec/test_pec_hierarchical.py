@@ -530,7 +530,7 @@ def test_em_rejects_mismatched_design_matrix():
 class _StubOptimizationFunction:
     def __init__(self, names, bounds):
         self.fit_param_names = list(names)
-        self.fit_param_bounds = {n: (lo, hi, 0.1) for n, (lo, hi) in zip(names, bounds)}
+        self._continuous_fit_param_bounds = dict(zip(names, bounds))
 
 
 class _StubController:

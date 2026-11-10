@@ -1,0 +1,173 @@
+"""PEC search-space semantics at the optimizer and simulation boundaries."""
+
+import numpy as np
+import optuna
+import pandas as pd
+import pytest
+
+import psyneulink as pnl
+from psyneulink.core.components.functions.nonstateful.parameterspace import _parse_parameter_space
+from psyneulink.core.compositions.hierarchical.subjectlikelihood import ParameterSchema
+
+pytestmark = pytest.mark.usefixtures("set_threads_to_one")
+
+CONTINUOUS = {"bounds": (0., 3e-6)}
+GRID = {"bounds": (0., 3e-6), "step": 1e-6}
+CHOICES = {"values": [0., 1e-6, 3e-6]}
+
+
+def _make_pec(spec, conditional=False):
+    node = pnl.ProcessingMechanism(name="node")
+    model = pnl.Composition(pathways=node)
+    data = pd.DataFrame({"value": [0., 1.]})
+    options = {}
+    if conditional:
+        data["condition"] = ["a", "b"]
+        options["depends_on"] = {("slope", node): "condition"}
+    return pnl.ParameterEstimationComposition(
+        model=model,
+        parameters={("slope", node): spec, ("intercept", node): np.linspace(0., .3, 4)},
+        outcome_variables=node,
+        data=data,
+        optimization_function=pnl.PECOptimizationFunction(method="differential_evolution", max_iterations=8),
+        **options,
+    )
+
+
+class _ImmediateClient:
+    """Record distributed submissions, evaluating an analytic objective locally."""
+
+    def __init__(self):
+        self.submitted = []
+        self.released = False
+
+    def nthreads(self):
+        return {"worker": 1}
+
+    def scatter(self, data, **kwargs):
+        return data
+
+    def submit(self, fn, factory, values, *args, **kwargs):
+        self.submitted.append(list(values))
+        return -sum(v * v for v in values)
+
+    def gather(self, futures):
+        return futures
+
+    def cancel(self, data):
+        self.released = True
+
+
+@pytest.mark.parametrize("spec", [CONTINUOUS, GRID, CHOICES], ids=["continuous", "grid", "choices"])
+@pytest.mark.parametrize("conditional", [False, True])
+def test_serial_and_distributed_search_use_the_same_domains(spec, conditional):
+    pec = _make_pec(spec, conditional)
+    function = pec.controller.function
+    names = function.fit_param_names
+    serial = optuna.create_study(sampler=optuna.samplers.RandomSampler(seed=7), direction="maximize")
+    distributed = optuna.create_study(sampler=optuna.samplers.RandomSampler(seed=7), direction="maximize")
+    evaluated = []
+
+    def objective(*values):
+        evaluated.append(list(values))
+        return -sum(v * v for v in values)
+
+    serial_result = function._fit_optuna(objective, serial, display_iter=False)
+    function._distributed_options = {"pec_factory": lambda data: None, "max_concurrent_evaluations": 1}
+    client = _ImmediateClient()
+    distributed_result = function._fit_optuna_distributed(distributed, client)
+
+    assert serial_result == distributed_result
+    assert evaluated == client.submitted
+    assert client.released
+    assert len(evaluated) == 8
+    assert list(function.fit_param_bounds) == names
+    if spec == CONTINUOUS:
+        schema = ParameterSchema.from_pec(pec, "test model")
+        assert schema.lower == tuple(bound[0] for bound in function.fit_param_bounds.values())
+        assert schema.upper == tuple(bound[1] for bound in function.fit_param_bounds.values())
+    for index, name in enumerate(names[:-1]):
+        values = np.array([trial.params[name] for trial in serial.trials])
+        np.testing.assert_array_equal(values, np.array(evaluated)[:, index])
+        if "values" in spec:
+            assert set(values) <= set(spec["values"])
+        elif "step" in spec:
+            np.testing.assert_allclose(values / spec["step"], np.round(values / spec["step"]))
+        else:
+            assert np.all((values > 0.) & (values < 3e-6))
+            assert serial.trials[0].distributions[name].step is None
+
+
+@pytest.mark.parametrize("method, spec", [
+    pytest.param("differential_evolution", CONTINUOUS, id="de_continuous"),
+    pytest.param("differential_evolution", [0., 1e-6, 3e-6], id="de_legacy_irregular"),
+    pytest.param("optuna", CONTINUOUS, id="optuna_continuous"),
+    pytest.param("optuna", GRID, id="optuna_grid"),
+    pytest.param("optuna", CHOICES, id="optuna_choices"),
+])
+def test_parameter_spaces_reach_model_simulations(method, spec):
+    node = pnl.TransferMechanism(name="node", noise=pnl.NormalDist(standard_deviation=0.))
+    model = pnl.Composition(pathways=node)
+    evaluated = []
+
+    def objective(sim_data):
+        value = float(np.mean(sim_data))
+        evaluated.append(value)
+        return (value - 8e-7) ** 2
+
+    pec = pnl.ParameterEstimationComposition(
+        model=model,
+        parameters={("slope", node): spec},
+        outcome_variables=node,
+        objective_function=objective,
+        optimization_function=pnl.PECOptimizationFunction(
+            method=optuna.samplers.RandomSampler(seed=7) if method == "optuna" else method,
+            max_iterations=8 if method == "optuna" else 1,
+            direction="minimize",
+        ),
+    )
+    pec.run(inputs={node: [[1.]]})
+    fitted = next(iter(pec.optimized_parameter_values.values()))
+    assert pec.optimal_value == pytest.approx((fitted - 8e-7) ** 2, abs=1e-25)
+    assert len(evaluated) >= 8
+    assert all(0. <= v <= 3e-6 for v in evaluated)
+    if spec == CHOICES:
+        assert set(evaluated) <= set(CHOICES["values"])
+    elif spec == GRID:
+        np.testing.assert_allclose(np.array(evaluated) / 1e-6, np.round(np.array(evaluated) / 1e-6))
+    else:
+        assert any(0. < v < 3e-6 and v not in CHOICES["values"] for v in evaluated)
+
+
+@pytest.mark.parametrize("spec", [GRID, CHOICES], ids=["grid", "choices"])
+def test_continuous_solvers_reject_explicit_discrete_spaces(spec):
+    pec = _make_pec(spec)
+    function = pec.controller.function
+    # Bounds remain available for input preparation and likelihood scoring.
+    assert next(iter(function.fit_param_bounds.values())) == (0., 3e-6)
+    with pytest.raises(ValueError, match="require an Optuna optimizer"):
+        function._fit_differential_evolution(lambda *values: 0.)
+    function._distributed_options = {"pec_factory": lambda data: None}
+    with pytest.raises(ValueError, match="require an Optuna optimizer"):
+        function._fit_differential_evolution_distributed(None, _ImmediateClient())
+    with pytest.raises(ValueError, match="require an Optuna optimizer"):
+        ParameterSchema.from_pec(pec, "test model")
+
+
+@pytest.mark.parametrize("spec", [
+    {}, {"bounds": (0., 1.), "values": [0., 1.]}, {"bound": (0., 1.)},
+    {"bounds": (1., 0.)}, {"bounds": (0., 1., 2.)}, {"bounds": (0., np.inf)},
+    {"bounds": (0., 1.), "step": 0.}, {"bounds": (0., 1.), "step": -1.},
+    {"bounds": (0., 1.), "step": np.nan}, {"values": []}, {"values": [np.nan]},
+    {"values": [[0., 1.]]}, [], [0., np.inf],
+])
+def test_invalid_parameter_spaces_are_rejected(spec):
+    with pytest.raises(ValueError):
+        _parse_parameter_space(spec)
+
+
+def test_explicit_step_uses_upper_bound_as_a_cap():
+    with pytest.warns(UserWarning, match="not divisible"):
+        distribution = _parse_parameter_space({"bounds": (0., 1.), "step": .3}).optuna_distribution()
+    assert distribution.high == .9
+    assert distribution.step == .3

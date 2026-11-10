@@ -62,8 +62,9 @@ sections describe arguments specific to each mode.
 
     * **parameters** - specifies the `parameters <ParameterEstimationComposition.parameters>` of the `model
       <ParameterEstimationComposition.model>` to be estimated.  These are specified in a dict, in which the key
-      of each entry specifies a parameter to estimate, and its value is a list values to sample for that
-      parameter.
+      of each entry specifies a parameter to estimate, and its value specifies continuous bounds, a regular grid,
+      or exact choices. For example, ``{"bounds": (0.1, 1.0)}`` specifies a continuous range. See **parameters**
+      in the class reference for the supported forms and the interpretation of legacy sample arrays.
 
     * **outcome_variables** - specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model
       <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used to evaluate the
@@ -180,12 +181,11 @@ is a pandas DataFrame with columns matching the requested outcome variables.
 
 Data fitting with SciPy differential evolution::
 
-    import numpy as np
     import psyneulink as pnl
 
     pec = pnl.ParameterEstimationComposition(
         nodes=comp,
-        parameters={("threshold", decision): np.linspace(0.1, 1.0, 10)},
+        parameters={("threshold", decision): {"bounds": (0.1, 1.0)}},
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],
             decision.output_ports[pnl.RESPONSE_TIME],
@@ -212,7 +212,7 @@ Parameter optimization with an Optuna sampler::
 
     pec = pnl.ParameterEstimationComposition(
         nodes=comp,
-        parameters={("threshold", decision): np.linspace(0.1, 1.0, 10)},
+        parameters={("threshold", decision): {"bounds": (0.1, 1.0), "step": 0.1}},
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],
             decision.output_ports[pnl.RESPONSE_TIME],
@@ -322,6 +322,7 @@ from psyneulink.core.globals.context import (
 )
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
+from psyneulink.core.components.functions.nonstateful.parameterspace import _parse_parameter_space
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -377,8 +378,19 @@ class ParameterEstimationComposition(Composition):
     parameters :
         specifies the `parameters <ParameterEstimationComposition.parameters>` of the `model
         <ParameterEstimationComposition.model>` to be estimated.  These are specified in a dict, in which the key
-        of each entry specifies a parameter to estimate, and its value is a list values to sample for that
-        parameter.
+        of each entry specifies a parameter to estimate, and its value specifies its search space:
+
+        * ``{"bounds": (lower, upper)}`` searches continuously within the bounds.
+        * ``{"bounds": (lower, upper), "step": step}`` specifies an Optuna grid starting at
+          ``lower``. The last grid point is the largest one no greater than ``upper``.
+        * ``{"values": [value, ...]}`` specifies exact numeric choices for Optuna, including
+          irregularly spaced choices. These are categorical choices to the sampler.
+
+        Bounds and values must be finite; a step must be positive. Explicit grids and choices
+        require Optuna and are rejected by continuous solvers, including hierarchical fitting.
+        Existing lists and arrays remain supported: continuous solvers use their minimum and
+        maximum, while Optuna requires an increasing, uniformly spaced grid. A two-element
+        tuple retains this legacy meaning; use the explicit bounds form for continuous Optuna search.
 
     depends_on :
         A dictionary that specifies which parameters depend on a condition. The keys of the dictionary are the
@@ -510,16 +522,10 @@ class ParameterEstimationComposition(Composition):
         ParameterEstimationComposition's constructor is not specified, `model` returns the
         ParameterEstimationComposition itself.
 
-    parameters : list[Parameters]
-        determines the parameters of the `model <ParameterEstimationComposition.model>` used for
-        `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`
-        (see `control <OptimizationControlMechanism.control>` for additional details).
-
-    parameter_ranges_or_priors : List[Union[Iterator, Function, ist or Value]
-        determines the range of values evaluated for each `parameter <ParameterEstimationComposition.parameters>`.
-        These are assigned as the `allocation_samples <ControlSignal.allocation_samples>` for the `ControlSignal`
-        assigned to the ParameterEstimationComposition's `OptimizationControlMechanism` corresponding to each of the
-        specified `parameters <ParameterEstimationComposition.parameters>`.
+    fit_parameters : dict
+        stores the **parameters** specification, mapping each ``(parameter_name, mechanism)`` to its
+        continuous bounds, grid, exact choices, or legacy sample array. See the **parameters** argument
+        for the supported forms and optimizer-specific behavior.
 
     outcome_variables : list[Composition Output Nodes]
         determines the `OUTPUT` `Nodes <Composition_Nodes>` of the `model <ParameterEstimationComposition.model>`,
@@ -1493,10 +1499,11 @@ class ParameterEstimationComposition(Composition):
         # Names are compared without the mechanism, whose name depends on construction order.
         included = self.likelihood_include_mask
         categorical = np.asarray(self.data_categorical_dims, dtype=bool).tolist()
+        spaces = [_parse_parameter_space(spec) for spec in self.fit_parameters.values()]
         likelihood.metadata.check_matches(
             _reported_names([f"{mech.name}.{name}" for name, mech in self.fit_parameters]),
-            [float(min(values)) for values in self.fit_parameters.values()],
-            [float(max(values)) for values in self.fit_parameters.values()],
+            [space.lower for space in spaces],
+            [space.upper for space in spaces],
             tuple(str(c) for c in self.data.columns),
             categorical,
         )
