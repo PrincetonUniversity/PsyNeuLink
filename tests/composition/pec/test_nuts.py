@@ -97,11 +97,16 @@ def test_one_seed_samples_the_same_draws():
 def test_sampler_checks_it_was_given_one_start_per_chain():
     from psyneulink.core.compositions.hierarchical.nuts import NUTSError
     with pytest.raises(NUTSError, match="2 chain"):
-        run_nuts(_gaussian_target(), _starts(3, 3), NUTSConfig(chains=2, draws=2, warmup=2))
+        run_nuts(_gaussian_target(), _starts(3, 3), NUTSConfig(chains=2, draws=4, warmup=2))
 
 
 @pytest.mark.parametrize("kwargs, match", [
-    ({"draws": 0}, "at least 1"),
+    # Fewer than four draws cannot be split into the halves convergence is judged from.
+    ({"draws": 3}, "at least 4"),
+    # Counts that are not whole numbers, which would otherwise fail part-way through a run.
+    ({"draws": 4.0}, "whole number"),
+    ({"max_tree_depth": float("nan")}, "whole number"),
+    ({"chains": True}, "whole number"),
     ({"warmup": 0}, "at least 1"),
     ({"chains": 0}, "at least 1"),
     ({"target_accept": 1.0}, "strictly between"),

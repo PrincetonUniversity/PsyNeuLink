@@ -703,6 +703,10 @@ class ParameterEstimationComposition(Composition):
             unknown = set(sampler_options) - accepted
             if unknown:
                 return f"has no {sorted(unknown)}; valid options are {sorted(accepted)}"
+            try:
+                NUTSConfig(**sampler_options)
+            except ValueError as error:
+                return str(error)
             return None
 
         def _validate_max_iterations(self, max_iterations):

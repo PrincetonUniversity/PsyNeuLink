@@ -864,7 +864,7 @@ def test_sampling_refuses_a_simulated_likelihood(trained_artifact):
         fit_method="hierarchical",
         hierarchical_options={
             "subject_id": "subject", "sampler": "nuts",
-            "sampler_options": {"draws": 2, "warmup": 2, "chains": 1, "max_tree_depth": 2},
+            "sampler_options": {"draws": 4, "warmup": 2, "chains": 1, "max_tree_depth": 2},
         },
         distributed_options={"pec_factory": simulated_participant},
     )

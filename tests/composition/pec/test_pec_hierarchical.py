@@ -1428,6 +1428,7 @@ def test_settings_are_independent_between_compositions():
     ("curvature", "banded"),
     ("sampler", "gibbs"),
     ("sampler_options", {"iterations": 10}),
+    ("sampler_options", {"draws": 3}),
     ("max_iterations", 0),
     ("tol", 0.0),
     ("variance_floor", -1.0),
