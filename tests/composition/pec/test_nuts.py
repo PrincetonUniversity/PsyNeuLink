@@ -246,6 +246,12 @@ def test_sampling_recovers_the_group_it_was_generated_from():
     rmse = float(np.sqrt(np.mean((sampled.mean(axis=0) - theta_true) ** 2)))
     assert rmse < 0.1
 
+    # sd_z is how far participants spread around the group mean, and mean_z_sd how well the
+    # mean itself is known, which with 25 participants is several times smaller.
+    group = _results_from(draws, posterior).group_parameters
+    assert np.allclose(group["sd_z"], scale, rtol=0.4)
+    assert np.all(group["mean_z_sd"] < 0.5 * group["sd_z"])
+
 
 # ===========================================================================
 # The results of a sampled fit
@@ -277,3 +283,57 @@ def test_chains_that_disagree_about_a_participant_are_not_converged(group):
     assert np.all(by_subject.drop(0) < 1.05)
     assert results.worst_r_hat == by_subject.max()
     assert not results.converged
+
+
+def _em_results(n_subjects=6):
+    from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
+        HierarchicalPECResults,
+    )
+    from psyneulink.core.compositions.hierarchical.laplaceem import (
+        fit_laplace_em,
+        make_inprocess_estep_runner,
+    )
+    from psyneulink.core.compositions.hierarchical.transforms import BoundedTransform
+
+    observed = np.random.default_rng(0).uniform(LOWER + 0.3, UPPER - 0.3, size=(n_subjects, 2))
+
+    def log_likelihood(theta, s):
+        return float(-0.5 * np.sum(((np.asarray(theta) - observed[s]) / 0.1) ** 2))
+
+    transform = BoundedTransform(lower=LOWER, upper=UPPER)
+    runner = make_inprocess_estep_runner(log_likelihood, transform)
+    em = fit_laplace_em(runner, n_subjects, 2, max_iterations=3)
+    return HierarchicalPECResults.from_em(em, transform, ("a", "b"), tuple(range(n_subjects)))
+
+
+def _sampled_results(n_subjects=6):
+    terms, *_ = _make_group(n_subjects=n_subjects)
+    posterior = HierarchicalNeuralPosterior(terms, LOWER, UPPER)
+    draws = np.random.default_rng(0).normal(size=(2, 50, posterior.size))
+    return _results_from(draws, posterior)
+
+
+@pytest.mark.parametrize("build", [_em_results, _sampled_results])
+def test_em_and_sampled_results_report_shared_quantities_alike(build):
+    # A fit can be switched between EM and sampling, so what both report is named and laid out
+    # the same way and means the same thing.
+    results = build()
+    n_subjects, n_params = 6, 2
+
+    assert results.fit_param_names == ("a", "b")
+    assert results.subject_labels == tuple(range(n_subjects))
+    assert results.predictor_names == ("intercept",)
+    assert results.beta.shape == (1, n_params)
+    assert results.sigma.shape == (n_params,)
+
+    group = results.group_parameters
+    assert {"mean_z", "sd_z", "value", "lower", "upper"} <= set(group.columns)
+    np.testing.assert_allclose(group["mean_z"], results.beta[0])
+    # sigma is a variance, and sd_z the standard deviation it implies.
+    np.testing.assert_allclose(group["sd_z"], np.sqrt(results.sigma))
+
+    assert results.subject_parameters.shape == (n_subjects, n_params)
+    assert {"subject", "parameter", "z_sd"} <= set(results.subject_posteriors.columns)
+    assert len(results.subject_posteriors) == n_subjects * n_params
+    assert isinstance(results.converged, bool)
+    assert isinstance(results.settings, dict)

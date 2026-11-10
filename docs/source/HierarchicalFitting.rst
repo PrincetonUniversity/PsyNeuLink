@@ -237,7 +237,9 @@ Participants sharing one estimator object are scored in a single call, so a fact
 loads the estimator once and reuses it is markedly faster than one that loads it again for
 each participant.
 
-Read ``results.convergence`` and ``results.diagnostics`` before the estimates. ``r_hat``
+Read ``results.convergence`` and ``results.diagnostics`` before the estimates.
+``convergence`` gives ``r_hat`` and ``ess`` for the group means and spreads, and
+``subject_posteriors`` gives them for each participant's parameters. ``r_hat``
 above about 1.01, or ``ess`` in the low hundreds, means the draws do not yet describe the
 posterior; any divergences at all mean the sampler could not follow it somewhere, and the
 draws are biased in a direction it cannot report. Raising ``target_accept`` is the usual
@@ -277,26 +279,48 @@ is a multi-node batch template.
 Results
 -------
 
-``run()`` returns a `HierarchicalPECResults`, or a `HierarchicalSamplingResults` when a
-sampler was used, also available afterwards as ``pec.fit_results``. The two report the same
-group and participant estimates; a sampled fit reports intervals taken from the draws in
-place of a Gaussian width, and adds the draws and the convergence diagnostics described in
+``run()`` returns the results of the fit: a `HierarchicalPECResults`, or a
+`HierarchicalSamplingResults` when a sampler was used. The same object is kept as
+``pec.fit_results``. ``pec.results`` holds only the participants' estimates, as an array with
+one row per participant and one column per parameter: the values of
+``fit_results.subject_parameters``.
+
+Both kinds of result report the following, and mean the same thing by them:
+
+* ``group_parameters`` has one row per parameter. ``mean_z`` is the group mean and ``sd_z``
+  the spread of participants around it, both in the unconstrained space. ``value`` is the
+  group mean in the model's units. Because the transform is monotone, ``value`` is the
+  **median** of the implied distribution of the parameter, not the mean of
+  ``subject_parameters``. Spread is reported only as ``sd_z``: a single standard deviation
+  in the model's units would misrepresent an interval the transform makes asymmetric near a
+  bound.
+* ``beta`` and ``sigma`` are the group means and **variances** as arrays, in the
+  unconstrained space; ``sd_z`` is the square root of ``sigma``.
+* ``subject_parameters`` gives one row per participant in the model's units.
+* ``subject_posteriors`` gives one row per participant and parameter, with the estimate and
+  its uncertainty in both spaces.
+* ``converged`` says whether the fit can be read as it stands, and ``settings`` records what
+  it ran with.
+
+They differ in how uncertainty is reported, and in what they keep of the fit itself.
+
+An EM fit reports each participant's best estimate, ``z_hat`` and ``theta_hat``, with a
+Gaussian width around it, ``z_sd`` and ``theta_sd``, and whether that participant's fit
+converged. ``em_history`` records each iteration alongside the group estimate that produced
+it. EM gives no uncertainty for the group estimate itself.
+
+A sampled fit reports each participant's posterior mean, ``z_mean`` and ``theta_mean``, with
+the interval the middle 95% of the draws fall in, and the ``r_hat`` and ``ess`` of those
+draws. ``group_parameters`` gains ``mean_z_sd``, how uncertain the group mean is, which is
+not ``sd_z``: with many participants a group mean can be known precisely while participants
+still differ widely. It also gains ``lower_95`` and ``upper_95``, the interval for ``value``.
+``convergence``, ``diagnostics`` and the draws themselves are described in
 :ref:`Hierarchical_Fitting_Sampling`.
 
-``group_parameters`` has one row per parameter: ``mean_z`` and ``sd_z`` are the group
-estimate and spread in the unconstrained space, and ``value`` is that mean mapped into the
-model's units. Because the transform is monotone, ``value`` is the **median** of the
-implied distribution of the parameter, not the mean of ``subject_parameters``. Spread is
-reported only as ``sd_z``: a single standard deviation in the model's units would
-misrepresent an interval the transform makes asymmetric near a bound.
-
-``subject_parameters`` gives one row per participant in the model's units, and
-``subject_posteriors`` one row per participant and parameter, with uncertainty in both
-spaces and whether that participant's fit converged. ``em_history`` records each iteration
-alongside the group estimate that produced it.
-
-Convergence is judged by how far the group estimate moves, not by the objective, which is
-not monotone under an approximate E-step.
+For an EM fit, convergence is judged by how far the group estimate moves, not by the
+objective, which is not monotone under an approximate E-step. For a sampled fit, it requires
+``r_hat`` below 1.01 for every group quantity and every participant's parameters, and a run
+with no divergences.
 
 
 .. _Hierarchical_Fitting_Limitations:
@@ -341,7 +365,7 @@ Class Reference
    :members: posterior_variance, sigma
 
 .. autoclass:: psyneulink.core.compositions.hierarchical.hierarchicalresults.HierarchicalSamplingResults
-   :members: sigma, converged
+   :members: beta, sigma, worst_r_hat, converged
 
 .. autoclass:: psyneulink.core.compositions.hierarchical.nuts.NUTSConfig
 

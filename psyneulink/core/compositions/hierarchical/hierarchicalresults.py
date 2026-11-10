@@ -259,10 +259,11 @@ class HierarchicalSamplingResults:
         The parameter, participant and predictor axes, in the order every array here uses.
 
     group_parameters : pandas.DataFrame
-        One row per parameter. ``mean_z`` and ``sd_z`` summarize the group mean in unconstrained
-        units; ``value`` is the posterior median in the model's units, and ``lower_95`` and
-        ``upper_95`` the interval the middle 95% of the draws fall in. ``lower`` and ``upper``
-        restate the search range, as they do for an EM fit.
+        One row per parameter. ``mean_z`` and ``sd_z`` are the group mean and the spread of
+        participants around it, in unconstrained units, as they are for an EM fit; ``mean_z_sd``
+        is how uncertain the group mean itself is. ``value`` is the posterior median of the group
+        mean in the model's units, and ``lower_95`` and ``upper_95`` the interval the middle 95%
+        of its draws fall in. ``lower`` and ``upper`` restate the search range.
 
     subject_parameters : pandas.DataFrame
         One row per participant, one column per parameter: the posterior mean in the model's
@@ -287,7 +288,8 @@ class HierarchicalSamplingResults:
         ``(chains, draws, n_subjects, n_params)`` participant parameters in the model's units.
 
     settings : dict
-        What the fit was asked to do.
+        What the fit was asked to do: the sampler and every one of its settings, defaults
+        included, and the priors on the group.
     """
 
     fit_param_names: Tuple[str, ...]
@@ -307,9 +309,14 @@ class HierarchicalSamplingResults:
     settings: Dict[str, Any] = field(default_factory=dict)
 
     @property
+    def beta(self):
+        """Posterior mean of the group means ``(n_predictors, n_params)``, unconstrained."""
+        return self.group_draws.mean(axis=(0, 1))
+
+    @property
     def sigma(self):
-        """Posterior mean of the group's standard deviation of each parameter, unconstrained."""
-        return self.scale_draws.reshape(-1, self.scale_draws.shape[-1]).mean(axis=0)
+        """Posterior mean of the group variances ``(n_params,)``, unconstrained."""
+        return (self.scale_draws ** 2).mean(axis=(0, 1))
 
     @property
     def worst_r_hat(self):
@@ -384,7 +391,9 @@ class HierarchicalSamplingResults:
         group_parameters = pd.DataFrame(
             {
                 "mean_z": mean_z.mean(axis=0),
-                "sd_z": mean_z.std(axis=0, ddof=1),
+                "mean_z_sd": mean_z.std(axis=0, ddof=1),
+                # The spread of participants, from the group variance, as for an EM fit.
+                "sd_z": np.sqrt((scale_draws ** 2).mean(axis=(0, 1))),
                 "value": np.median(group_value, axis=0),
                 "lower_95": np.quantile(group_value, 0.025, axis=0),
                 "upper_95": np.quantile(group_value, 0.975, axis=0),

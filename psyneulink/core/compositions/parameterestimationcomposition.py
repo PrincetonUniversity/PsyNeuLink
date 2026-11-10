@@ -310,6 +310,8 @@ from psyneulink.core.compositions.hierarchical.laplaceem import (
     make_inprocess_estep_runner,
 )
 from psyneulink.core.compositions.hierarchical.nuts import (
+    BETA_PRIOR_SD,
+    LOG_SCALE_PRIOR_SD,
     HierarchicalNeuralPosterior,
     NUTSConfig,
     Sampler,
@@ -1298,7 +1300,16 @@ class ParameterEstimationComposition(Composition):
 
         self.fit_results = HierarchicalSamplingResults.from_draws(
             draws, diagnostics, posterior, provider.fit_param_names,
-            self._subject_split.labels, settings=dict(options),
+            self._subject_split.labels,
+            # What applied to this fit: the EM settings did not, and the sampler's are recorded
+            # in full, so the ones left at their defaults are there too.
+            settings={
+                "subject_id": self._subject_id,
+                "sampler": options["sampler"],
+                "sampler_options": dataclasses.asdict(config),
+                "group_mean_prior_sd": BETA_PRIOR_SD,
+                "log_scale_prior_sd": LOG_SCALE_PRIOR_SD,
+            },
         )
         self.optimized_parameter_values = dict(
             zip(provider.fit_param_names, self.fit_results.group_parameters["value"].to_numpy())
