@@ -245,3 +245,35 @@ def test_sampling_recovers_the_group_it_was_generated_from():
     ])
     rmse = float(np.sqrt(np.mean((sampled.mean(axis=0) - theta_true) ** 2)))
     assert rmse < 0.1
+
+
+# ===========================================================================
+# The results of a sampled fit
+# ===========================================================================
+def _results_from(draws, posterior):
+    from psyneulink.core.compositions.hierarchical.hierarchicalresults import (
+        HierarchicalSamplingResults,
+    )
+    from psyneulink.core.compositions.hierarchical.nuts import NUTSDiagnostics
+
+    chains = draws.shape[0]
+    clean = NUTSDiagnostics(np.zeros(chains, dtype=int), np.full(chains, 0.8), np.ones(chains))
+    return HierarchicalSamplingResults.from_draws(
+        draws, clean, posterior, ("a", "b"), tuple(range(posterior.n_subjects))
+    )
+
+
+def test_chains_that_disagree_about_a_participant_are_not_converged(group):
+    terms, *_ = group
+    posterior = HierarchicalNeuralPosterior(terms, LOWER, UPPER)
+    draws = np.random.default_rng(0).normal(size=(2, 400, posterior.size))
+    # The chains agree about the group, and differ only in one participant's parameters.
+    draws[1, :, posterior._scale_end:posterior._scale_end + 2] += 3.0
+    results = _results_from(draws, posterior)
+
+    assert results.convergence["r_hat"].max() < 1.01
+    by_subject = results.subject_posteriors.groupby("subject")["r_hat"].max()
+    assert by_subject.idxmax() == 0 and by_subject.max() > 1.1
+    assert np.all(by_subject.drop(0) < 1.05)
+    assert results.worst_r_hat == by_subject.max()
+    assert not results.converged

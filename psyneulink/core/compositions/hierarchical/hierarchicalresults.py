@@ -269,12 +269,14 @@ class HierarchicalSamplingResults:
         units.
 
     subject_posteriors : pandas.DataFrame
-        One row per participant and parameter, with the estimate and its interval in both spaces.
+        One row per participant and parameter, with the estimate and its interval in both spaces,
+        and the ``r_hat`` and ``ess`` of that participant's draws.
 
     convergence : pandas.DataFrame
         Per group-level quantity, ``r_hat`` and ``ess``: whether the chains agree, and how many
         independent draws they are worth. A fit whose ``r_hat`` exceeds about 1.01, or whose
-        ``ess`` is in the low hundreds, has not yet described the posterior.
+        ``ess`` is in the low hundreds, has not yet described the posterior. The same two are
+        reported for each participant in `subject_posteriors`.
 
     diagnostics : NUTSDiagnostics
         What the sampler did. Read ``diagnostics.warnings`` before the estimates.
@@ -310,16 +312,19 @@ class HierarchicalSamplingResults:
         return self.scale_draws.reshape(-1, self.scale_draws.shape[-1]).mean(axis=0)
 
     @property
+    def worst_r_hat(self):
+        """The largest ``r_hat`` of any group-level quantity or participant parameter."""
+        return float(max(self.convergence["r_hat"].max(), self.subject_posteriors["r_hat"].max()))
+
+    @property
     def converged(self):
-        """Whether the chains agree and the sampler had nothing to report.
+        """Whether the chains agree, for the group and for every participant, and the sampler
+        had nothing to report.
 
         A fit that is not converged is still returned, so that it can be inspected; its estimates
         should not be read as describing the posterior.
         """
-        return bool(
-            self.convergence["r_hat"].max() < 1.01
-            and not self.diagnostics.warnings
-        )
+        return bool(self.worst_r_hat < 1.01 and not self.diagnostics.warnings)
 
     @classmethod
     def from_draws(cls, draws, diagnostics, posterior, fit_param_names, subject_labels,
@@ -357,13 +362,15 @@ class HierarchicalSamplingResults:
 
         # Each draw is read back through the posterior that produced it, rather than by
         # re-deriving the layout here, so the two cannot drift apart.
-        group, scale, subject = [], [], []
+        group, scale, subject, subject_z = [], [], [], []
         for row in flat:
             position = torch.as_tensor(row, dtype=torch.float64)
             beta, _, _ = posterior.unpack(position)
             group.append(beta.numpy().copy())
             scale.append(posterior.group_scale(position).numpy())
-            subject.append(posterior.to_natural(posterior.subject_z(position)).numpy())
+            z = posterior.subject_z(position)
+            subject_z.append(z.numpy())
+            subject.append(posterior.to_natural(z).numpy())
 
         shape = (n_chains, n_draws)
         group_draws = np.stack(group).reshape(*shape, posterior.n_predictors, posterior.n_params)
@@ -393,7 +400,8 @@ class HierarchicalSamplingResults:
             subject_mean, index=pd.Index(labels, name="subject"), columns=list(names)
         )
 
-        z_draws = np.log((flat_subject - lower) / (upper - flat_subject))
+        z_draws = np.stack(subject_z)
+        r_hat, ess = _convergence(z_draws.reshape(*shape, -1))
         posteriors = pd.DataFrame({
             # As objects, as for an EM fit, so that identifiers such as 1 and "1" stay distinct.
             "subject": np.repeat(np.asarray(labels, dtype=object), len(names)),
@@ -403,9 +411,16 @@ class HierarchicalSamplingResults:
             "theta_mean": subject_mean.ravel(),
             "theta_lower_95": np.quantile(flat_subject, 0.025, axis=0).ravel(),
             "theta_upper_95": np.quantile(flat_subject, 0.975, axis=0).ravel(),
+            "r_hat": r_hat,
+            "ess": ess,
         })
 
-        convergence = _group_convergence(draws, posterior, names, predictor_names)
+        quantities = [f"{predictor}.{name}" for predictor in predictor_names for name in names]
+        quantities += [f"log_scale.{name}" for name in names]
+        r_hat, ess = _convergence(draws[:, :, :posterior._scale_end])
+        convergence = pd.DataFrame(
+            {"r_hat": r_hat, "ess": ess}, index=pd.Index(quantities, name="quantity")
+        )
 
         return cls(
             fit_param_names=names,
@@ -428,25 +443,20 @@ class HierarchicalSamplingResults:
         return (
             f"<HierarchicalSamplingResults: {len(self.subject_labels)} participants, "
             f"{len(self.fit_param_names)} parameters, {chains} chains of {draws} draws, "
-            f"{status} (worst r_hat {self.convergence['r_hat'].max():.3f}, "
+            f"{status} (worst r_hat {self.worst_r_hat:.3f}, "
             f"{int(self.diagnostics.divergences.sum())} divergence(s))>"
         )
 
 
-def _group_convergence(draws, posterior, names, predictor_names):
-    """R-hat and effective sample size for each group-level quantity.
-
-    One row per group mean and group scale; participants' parameters are left out, to keep the
-    table to the quantities a fit is judged by.
-    """
+def _convergence(draws):
+    """Split R-hat and effective sample size of each column of ``(chains, draws, n)`` draws."""
     import torch
     from pyro.ops.stats import effective_sample_size, split_gelman_rubin
 
-    group_slice = torch.as_tensor(draws[:, :, :posterior._scale_end])
-    labels = [f"{predictor}.{name}" for predictor in predictor_names for name in names]
-    labels += [f"log_scale.{name}" for name in names]
-    return pd.DataFrame(
-        {"r_hat": split_gelman_rubin(group_slice).numpy(),
-         "ess": effective_sample_size(group_slice).numpy()},
-        index=pd.Index(labels, name="quantity"),
-    )
+    draws = torch.as_tensor(draws)
+    # One column at a time: Pyro's effective sample size holds (draws / 2) ** 2 values per
+    # column at once, which for every participant's parameters together is gigabytes.
+    ess = torch.cat([
+        effective_sample_size(draws[:, :, k:k + 1]) for k in range(draws.shape[-1])
+    ])
+    return split_gelman_rubin(draws).numpy(), ess.numpy()
