@@ -374,6 +374,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, parameter_keywords
 from psyneulink.core.components.functions.function import FunctionError, get_param_value_for_keyword
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
@@ -715,7 +716,7 @@ class ParameterPort(Port_Base):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
         builder = super()._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
         value_ptr = ctx.get_state_space(builder, self, state, VALUE)
-        builder.store(builder.load(arg_out), value_ptr)
+        builder = pnlvm.helpers.memcpy(builder, value_ptr, arg_out)
         return builder
 
     @check_user_specified

@@ -3481,10 +3481,10 @@ class Mechanism_Base(Mechanism):
                                                                       self.parameters.function,
                                                                       param_struct_ptr=m_base_params,
                                                                       state_struct_ptr=m_state)
-        # A transfer function processes the reset integrator value using its
-        # previously sampled parameters, without executing ParameterPorts.
-        # StatefulFunction.reset itself still reads current control allocations
-        # for controlled initializers (e.g. DDM non_decision_time).
+        # After resetting an auxiliary integrator, Python's Mechanism.reset()
+        # calls the main transfer function without updating ParameterPorts.
+        # Match that path using their last sampled values. When the main
+        # function itself is being reset, retain the existing initializer handling.
         reinit_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
                                                                     builder,
                                                                     m_base_params,
