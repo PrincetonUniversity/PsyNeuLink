@@ -3102,7 +3102,7 @@ class Mechanism_Base(Mechanism):
 
         return ip_output, builder
 
-    def _gen_llvm_param_ports_for_obj(self, ctx, builder, mech_params, mech_state, mech_input, *, obj, params_in, params_out=None, recursive=False):
+    def _gen_llvm_param_ports_for_obj(self, ctx, builder, mech_params, mech_state, mech_input, *, obj, params_in, params_out=None, recursive=False, use_cached=False):
 
         # This should be faster than 'obj._get_compilation_params'
         compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
@@ -3143,7 +3143,8 @@ class Mechanism_Base(Mechanism):
                                                                                 obj=nested_component,
                                                                                 params_in=src,
                                                                                 params_out=dst,
-                                                                                recursive=True)
+                                                                                recursive=True,
+                                                                                use_cached=use_cached)
                     assert nested_params is dst, "Nested components need to copy non-modulated parameters"
 
                 continue
@@ -3156,6 +3157,21 @@ class Mechanism_Base(Mechanism):
                 # Run parameter port on the base value
                 assert self._parameter_ports[parameter].source == parameter, \
                     "Unexpected parameter ({}) {} source {}".format(p, parameter, self._parameter_ports[parameter].source)
+
+                if use_cached:
+                    _, ports_state = ctx.get_param_or_state_ptr(builder, self, "_parameter_ports",
+                                                               param_struct_ptr=mech_params,
+                                                               state_struct_ptr=mech_state, history=None)
+                    port = self._parameter_ports[parameter]
+                    port_state = builder.gep(ports_state, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(self._parameter_ports.index(port))])
+                    value_ptr = ctx.get_param_or_state_ptr(builder, port, VALUE, state_struct_ptr=port_state)
+                    if value_ptr.type != dst.type:
+                        # ParameterPort values may carry an extra singleton dimension.
+                        assert value_ptr.type.pointee == pnlvm.ir.ArrayType(dst.type.pointee, 1)
+                        value_ptr = builder.gep(value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                    builder = pnlvm.helpers.memcpy(builder, dst, value_ptr)
+                    continue
 
                 def _get_modulated_param_output_ptr(b, i):
                     assert i == 0
@@ -3465,13 +3481,18 @@ class Mechanism_Base(Mechanism):
                                                                       self.parameters.function,
                                                                       param_struct_ptr=m_base_params,
                                                                       state_struct_ptr=m_state)
+        # After resetting an auxiliary integrator, Python's Mechanism.reset()
+        # calls the main transfer function without updating ParameterPorts.
+        # Match that path using their last sampled values. When the main
+        # function itself is being reset, retain the existing initializer handling.
         reinit_params, builder = self._gen_llvm_param_ports_for_obj(ctx,
                                                                     builder,
                                                                     m_base_params,
                                                                     m_state,
                                                                     m_arg_in,
                                                                     obj=self.parameters.function._get_value_for_codegen(),
-                                                                    params_in=reinit_base_params)
+                                                                    params_in=reinit_base_params,
+                                                                    use_cached="reset" not in func_tags)
 
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
 
