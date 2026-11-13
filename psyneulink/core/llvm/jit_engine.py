@@ -149,10 +149,7 @@ def _ptx_jit_constructor():
 
     ptx_target_machine = ptx_target.create_target_machine(cpu=ptx_sm, opt=opt_level, features=use_ptx)
 
-    # The threshold of '64' is empirically selected on GF 3050
-    extra_opts = {'inlining_threshold': 64}
-
-    ptx_pass_builder = _create_pass_builder(ptx_target_machine, opt_level, extra_opts)
+    ptx_pass_builder = _create_pass_builder(ptx_target_machine, opt_level)
 
     return ptx_target_machine, ptx_pass_builder
 

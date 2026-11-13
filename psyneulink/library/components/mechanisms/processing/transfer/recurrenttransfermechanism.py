@@ -1297,5 +1297,5 @@ class RecurrentTransferMechanism(TransferMechanism):
         ret = super()._gen_llvm_output_ports(ctx, builder, value, mech_params, mech_state, mech_in, mech_out)
 
         old_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=mech_state)
-        builder.store(builder.load(mech_out), old_val_ptr)
+        pnlvm.helpers.memcpy(builder, old_val_ptr, mech_out)
         return ret
