@@ -318,6 +318,9 @@ def cleanup(check_leaks:bool=False):
         for c in {e._composition for e in CompExecution.active_executions}:
             c._compilation_data.execution.values.clear()
             c._compilation_data.execution.history.clear()
+            # COMMAND_LINE execution also retains the cache in the Parameter
+            # log. Release those native pointers along with values/history.
+            c._compilation_data.execution.log.clear()
 
         # The set of active executions should be empty
         for e in CompExecution.active_executions:
