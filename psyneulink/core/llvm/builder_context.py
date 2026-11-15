@@ -31,11 +31,15 @@ from . import codegen
 from . import helpers
 from .debug import debug_env
 
-__all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function']
+__all__ = ['LLVMBuilderContext', '_pending_generated_ir_modules', '_find_llvm_function']
 
 
-_modules: Set[ir.Module] = set()
+
+# All generated modules for quick access to ir.FunctionType
 _all_generated_ir_modules: Set[ir.Module] = set()
+
+# Generated modules that have not been parsed or compiled
+_pending_generated_ir_modules: Set[ir.Module] = set()
 _struct_count = 0
 
 
@@ -128,7 +132,7 @@ class LLVMBuilderContext:
     def __exit__(self, e_type, e_value, e_traceback):
         assert len(self._modules) > 0
         module = self._modules.pop()
-        _modules.add(module)
+        _pending_generated_ir_modules.add(module)
         _all_generated_ir_modules.add(module)
 
     @property

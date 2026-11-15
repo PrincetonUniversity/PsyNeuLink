@@ -133,8 +133,9 @@ def _llvm_build(target_generation=_binary_generation + 1):
         print("STAGING GENERATION: {} -> {}".format(_binary_generation, target_generation))
 
     for e in _get_engines():
-        e.stage_compilation(_modules)
-    _modules.clear()
+        e.stage_compilation(_pending_generated_ir_modules)
+
+    _pending_generated_ir_modules.clear()
 
     # update binary generation
     _binary_generation = target_generation
@@ -288,7 +289,7 @@ def cleanup(check_leaks:bool=False):
     global _ptx_engine
     _ptx_engine = None
 
-    _modules.clear()
+    _pending_generated_ir_modules.clear()
     _all_generated_ir_modules.clear()
 
     LLVMBinaryFunction.get.cache_clear()
