@@ -165,12 +165,18 @@ def _try_parse_module(module):
     # "assembly" in this case is LLVM IR assembly.
     # This is intentional design decision to ease
     # compatibility between LLVM versions.
+    start = time.perf_counter()
     try:
         mod = binding.parse_assembly(module_text_ir)
         mod.verify()
     except Exception as e:
         print("ERROR: llvm parsing failed: {}".format(e))
         mod = None
+
+    finish = time.perf_counter()
+
+    if "time_stat" in debug_env:
+        print("Time to parse LLVM modules '{}': {}".format(module.name, finish - start))
 
     return mod
 
@@ -295,14 +301,9 @@ class jit_engine:
         while self._staged_modules:
             m = self._staged_modules.pop(0)
 
-            start = time.perf_counter()
             new_mod = _try_parse_module(m)
             new_mod.triple = self._target_machine.triple
             new_mod.data_layout = str(self._target_machine.target_data)
-            finish = time.perf_counter()
-
-            if "time_stat" in debug_env:
-                print("Time to parse LLVM modules '{}': {}".format(m.name, finish - start))
 
             self.__parsed_modules += 1
             if new_mod is not None:
