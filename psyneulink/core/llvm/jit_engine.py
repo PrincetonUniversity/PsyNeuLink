@@ -186,7 +186,7 @@ class jit_engine:
         # all instances of jit_engine
         self.__debug_env = debug_env
 
-        self.staged_modules = set()
+        self._staged_modules = []
 
         # Track few statistics:
         self.__optimized_modules = 0
@@ -280,7 +280,7 @@ class jit_engine:
         return self._jit_pass_builder
 
     def stage_compilation(self, modules):
-        self.staged_modules |= modules
+        self._staged_modules += modules
 
     # Unfortunately, this needs to be done for every jit_engine.
     # Linking step in opt_and_add_bin_module invalidates 'mod_bundle',
@@ -292,8 +292,8 @@ class jit_engine:
         mod_bundle.triple = self._target_machine.triple
         mod_bundle.data_layout = str(self._target_machine.target_data)
 
-        while self.staged_modules:
-            m = self.staged_modules.pop()
+        while self._staged_modules:
+            m = self._staged_modules.pop(0)
 
             start = time.perf_counter()
             new_mod = _try_parse_module(m)
