@@ -187,7 +187,6 @@ class jit_engine:
         self.__debug_env = debug_env
 
         self.staged_modules = set()
-        self.compiled_modules = set()
 
         # Track few statistics:
         self.__optimized_modules = 0
@@ -309,7 +308,6 @@ class jit_engine:
             if new_mod is not None:
                 mod_bundle.link_in(new_mod)
                 mod_bundle.name = m.name  # Set the name of the last module
-                self.compiled_modules.add(m)
 
         self.opt_and_append_bin_module(mod_bundle)
 

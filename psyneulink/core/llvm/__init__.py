@@ -114,14 +114,6 @@ class ExecutionMode(enum.Flag):
 _binary_generation = 0
 
 
-def _compiled_modules() -> Set[ir.Module]:
-    return set().union(*(e.compiled_modules for e in _get_engines()))
-
-
-def _staged_modules() -> Set[ir.Module]:
-    return set().union(*(e.staged_modules for e in _get_engines()))
-
-
 def _llvm_build(target_generation=_binary_generation + 1):
     global _binary_generation
     if target_generation <= _binary_generation:
@@ -152,12 +144,13 @@ class LLVMBinaryFunction:
         LLVMBuilderContext.get_current()
 
         # Compile any pending modules
+        # We could skip compilation if the function is in already compiled modules,
+        # but that happens rarely
         _llvm_build(LLVMBuilderContext._llvm_generation)
+        assert len(_pending_generated_ir_modules) == 0, _pending_generated_ir_modules
 
         # Function signature
-        # We could skip compilation if the function is in _compiled_models,
-        # but that happens rarely
-        f = _find_llvm_function(self.name, _compiled_modules() | _staged_modules())
+        f = _find_llvm_function(self.name)
 
         # Create ctype function instance
         start = time.perf_counter()
