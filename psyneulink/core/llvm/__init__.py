@@ -23,7 +23,7 @@ from llvmlite import ir
 
 from . import codegen
 from .builder_context import *
-from .builder_context import _all_modules, _convert_llvm_ir_to_ctype, _convert_llvm_ir_to_dtype
+from .builder_context import _all_generated_ir_modules, _convert_llvm_ir_to_ctype, _convert_llvm_ir_to_dtype
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
@@ -289,7 +289,7 @@ def cleanup(check_leaks:bool=False):
     _ptx_engine = None
 
     _modules.clear()
-    _all_modules.clear()
+    _all_generated_ir_modules.clear()
 
     LLVMBinaryFunction.get.cache_clear()
     LLVMBinaryFunction.from_obj.cache_clear()
