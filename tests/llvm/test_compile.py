@@ -1,3 +1,4 @@
+import ctypes
 import numpy as np
 import pytest
 
@@ -25,9 +26,8 @@ def test_recompile():
 
     bin_f(ct_vec, ct_mat, x, y, ct_res)
 
-    # Rebuild and try again
-    # This is not a public API
-    pnlvm._llvm_build()
+    # Rebuild and try again.
+    pnlvm._llvm_build(pnlvm._binary_generation + 1)
 
     rebuild_res = np.empty_like(llvm_res)
     ct_res = rebuild_res.ctypes.data_as(bin_f.c_func.argtypes[4])
@@ -35,8 +35,12 @@ def test_recompile():
     bin_f(ct_vec, ct_mat, x, y, ct_res)
     assert np.array_equal(orig_res, rebuild_res)
 
-    # Get a new pointer
+    # Get a new function
     bin_f2 = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm', ctype_ptr_args=(0, 1, 4))
+
+    # Check that the new function pointer is different
+    assert ctypes.cast(bin_f.c_func, ctypes.c_void_p).value != ctypes.cast(bin_f2.c_func, ctypes.c_void_p).value
+
     new_res = np.empty_like(llvm_res)
     ct_res = new_res.ctypes.data_as(bin_f2.c_func.argtypes[4])
 

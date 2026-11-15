@@ -114,11 +114,13 @@ class ExecutionMode(enum.Flag):
 _binary_generation = 0
 
 
-def _llvm_build(target_generation=_binary_generation + 1):
+def _llvm_build(target_generation):
     global _binary_generation
+
     if target_generation <= _binary_generation:
         if "compile" in debug_env:
             print("SKIPPING COMPILATION: {} -> {}".format(_binary_generation, target_generation))
+
         return
 
     if "compile" in debug_env:
@@ -129,8 +131,11 @@ def _llvm_build(target_generation=_binary_generation + 1):
 
     _pending_generated_ir_modules.clear()
 
-    # update binary generation
+    # Update binary generation
     _binary_generation = target_generation
+
+    # Clear cache of binary functions
+    LLVMBinaryFunction.get.cache_clear()
 
 
 class LLVMBinaryFunction:
@@ -188,6 +193,7 @@ class LLVMBinaryFunction:
             _cpu_engine.compile_staged()
             ptr = _cpu_engine._engine.get_function_address(self.name)
             self.__c_func = self.__c_func_type(ptr)
+
         return self.__c_func
 
     def __call__(self, *args, **kwargs):
