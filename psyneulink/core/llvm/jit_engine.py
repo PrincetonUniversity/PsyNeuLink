@@ -112,7 +112,7 @@ def _cpu_jit_constructor():
     # And an execution engine with a builtins backing module
     builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.get_current().float_ty)
 
-    backing_mod = _try_parse_module(builtins_module)
+    backing_mod = _parse_module(builtins_module)
     backing_mod.triple = cpu_target_machine.triple
     backing_mod.data_layout = str(cpu_target_machine.target_data)
     backing_mod.verify()
@@ -154,7 +154,7 @@ def _ptx_jit_constructor():
     return ptx_target_machine, ptx_pass_builder
 
 
-def _try_parse_module(module):
+def _parse_module(module):
     module_text_ir = str(module)
 
     if "dump-llvm-gen" in debug_env:
@@ -165,12 +165,15 @@ def _try_parse_module(module):
     # "assembly" in this case is LLVM IR assembly.
     # This is intentional design decision to ease
     # compatibility between LLVM versions.
-    try:
-        mod = binding.parse_assembly(module_text_ir)
-        mod.verify()
-    except Exception as e:
-        print("ERROR: llvm parsing failed: {}".format(e))
-        mod = None
+    start = time.perf_counter()
+
+    mod = binding.parse_assembly(module_text_ir)
+    mod.verify()
+
+    finish = time.perf_counter()
+
+    if "time_stat" in debug_env:
+        print("Time to parse LLVM modules '{}': {}".format(module.name, finish - start))
 
     return mod
 
@@ -180,28 +183,27 @@ class jit_engine:
         self._jit_engine = None
         self._jit_pass_builder = None
         self._jit_target_machine = None
-        self.__mod = None
+
+        # Keep all functions runnable by the engine in a single module
+        self.__engine_mod = None
 
         # Add an extra reference to make sure it's not destroyed before
         # all instances of jit_engine
         self.__debug_env = debug_env
 
-        self.staged_modules = set()
-        self.compiled_modules = set()
+        self._staged_modules = []
 
         # Track few statistics:
         self.__optimized_modules = 0
         self.__linked_modules = 0
-        self.__parsed_modules = 0
 
     def __del__(self):
         if "stat" in self.__debug_env:
             s = type(self).__name__
             print("Total optimized modules in '{}': {}".format(s, self.__optimized_modules))
             print("Total linked modules in '{}': {}".format(s, self.__linked_modules))
-            print("Total parsed modules in '{}': {}".format(s, self.__parsed_modules))
 
-    def opt_and_add_bin_module(self, module):
+    def optimize_module(self, module):
         assert module.triple == self._target_machine.triple, \
             "Triple mismatch: {} vs. {}".format(module.triple, self._target_machine.triple)
         assert module.data_layout == str(self._target_machine.target_data), \
@@ -225,6 +227,9 @@ class jit_engine:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.S', 'w') as dump_file:
                 dump_file.write(self._target_machine.emit_assembly(module))
 
+        self.__optimized_modules += 1
+
+    def add_module_to_engine(self, module):
         start = time.perf_counter()
         self._engine.add_module(module)
         self._engine.finalize_object()
@@ -233,31 +238,13 @@ class jit_engine:
         if "time_stat" in debug_env:
             print("Time to finalize LLVM module bundle '{}': {}".format(module.name, finish - start))
 
-        self.__optimized_modules += 1
-
-    def _remove_bin_module(self, module):
+    def remove_module_from_engine(self, module):
         if module is not None:
             self._engine.remove_module(module)
 
-    def opt_and_append_bin_module(self, module):
-        mod_name = module.name
-        if self.__mod is None:
-            self.__mod = module
-        else:
-            self._remove_bin_module(self.__mod)
-            # Linking here invalidates 'module'
-            self.__mod.link_in(module)
-            self.__linked_modules += 1
-
-        if "dump-llvm-gen" in debug_env:
-            with open(mod_name + '.linked.ll', 'w') as dump_file:
-                dump_file.write(str(self.__mod))
-
-        self.opt_and_add_bin_module(self.__mod)
-
     def clean_module(self):
-        self._remove_bin_module(self.__mod)
-        self.__mod = None
+        self.remove_module_from_engine(self.__engine_mod)
+        self.__engine_mod = None
 
     @property
     def _engine(self):
@@ -281,37 +268,36 @@ class jit_engine:
         return self._jit_pass_builder
 
     def stage_compilation(self, modules):
-        self.staged_modules |= modules
+        self._staged_modules += modules
 
-    # Unfortunately, this needs to be done for every jit_engine.
-    # Linking step in opt_and_add_bin_module invalidates 'mod_bundle',
-    # so it can't be linked multiple times (in multiple engines).
-    # These modules are still using 'unknown-unknown-unknown' triple
+    # This needs to be done for every jit_engine to set the triple and layout.
+    # The staged modules are still using 'unknown-unknown-unknown' triple.
     def compile_staged(self):
-        # Parse generated modules and link them
-        mod_bundle = binding.parse_assembly("")
-        mod_bundle.triple = self._target_machine.triple
-        mod_bundle.data_layout = str(self._target_machine.target_data)
+        if self.__engine_mod is None:
+            self.__engine_mod = binding.parse_assembly("")
+            self.__engine_mod.triple = self._target_machine.triple
+            self.__engine_mod.data_layout = str(self._target_machine.target_data)
 
-        while self.staged_modules:
-            m = self.staged_modules.pop()
+        else:
+            self.remove_module_from_engine(self.__engine_mod)
 
-            start = time.perf_counter()
-            new_mod = _try_parse_module(m)
+        # Link staged modules
+        while self._staged_modules:
+            new_mod = self._staged_modules.pop(0)
             new_mod.triple = self._target_machine.triple
             new_mod.data_layout = str(self._target_machine.target_data)
-            finish = time.perf_counter()
 
-            if "time_stat" in debug_env:
-                print("Time to parse LLVM modules '{}': {}".format(m.name, finish - start))
+            self.__engine_mod.name = new_mod.name  # Set the name of the last module
+            self.__engine_mod.link_in(new_mod)
+            self.__linked_modules += 1
 
-            self.__parsed_modules += 1
-            if new_mod is not None:
-                mod_bundle.link_in(new_mod)
-                mod_bundle.name = m.name  # Set the name of the last module
-                self.compiled_modules.add(m)
 
-        self.opt_and_append_bin_module(mod_bundle)
+        if "dump-llvm-gen" in debug_env:
+            with open(self.__engine_mod.name + '.linked.ll', 'w') as dump_file:
+                dump_file.write(str(self.__engine_mod))
+
+        self.optimize_module(self.__engine_mod)
+        self.add_module_to_engine(self.__engine_mod)
 
 
 class cpu_jit_engine(jit_engine):
@@ -413,8 +399,9 @@ class ptx_jit_engine(jit_engine):
         kernel = self._engine._find_kernel(name + "_cuda_kernel")
         if kernel is None:
             function = _find_llvm_function(name)
-            wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
-            self.stage_compilation({wrapper_mod})
+            gen_wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
+            parsed_wrapper_mod = _parse_module(gen_wrapper_mod)
+            self.stage_compilation([parsed_wrapper_mod])
             self.compile_staged()
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
 #            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
