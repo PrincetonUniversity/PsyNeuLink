@@ -183,7 +183,9 @@ class jit_engine:
         self._jit_engine = None
         self._jit_pass_builder = None
         self._jit_target_machine = None
-        self.__mod = None
+
+        # Keep all functions runnable by the engine in a single module
+        self.__engine_mod = None
 
         # Add an extra reference to make sure it's not destroyed before
         # all instances of jit_engine
@@ -225,6 +227,8 @@ class jit_engine:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.S', 'w') as dump_file:
                 dump_file.write(self._target_machine.emit_assembly(module))
 
+        self.__optimized_modules += 1
+
         start = time.perf_counter()
         self._engine.add_module(module)
         self._engine.finalize_object()
@@ -233,31 +237,13 @@ class jit_engine:
         if "time_stat" in debug_env:
             print("Time to finalize LLVM module bundle '{}': {}".format(module.name, finish - start))
 
-        self.__optimized_modules += 1
-
-    def _remove_bin_module(self, module):
+    def _remove_bin_module_from_engine(self, module):
         if module is not None:
             self._engine.remove_module(module)
 
-    def opt_and_append_bin_module(self, module):
-        mod_name = module.name
-        if self.__mod is None:
-            self.__mod = module
-        else:
-            self._remove_bin_module(self.__mod)
-            # Linking here invalidates 'module'
-            self.__mod.link_in(module)
-            self.__linked_modules += 1
-
-        if "dump-llvm-gen" in debug_env:
-            with open(mod_name + '.linked.ll', 'w') as dump_file:
-                dump_file.write(str(self.__mod))
-
-        self.opt_and_add_bin_module(self.__mod)
-
     def clean_module(self):
-        self._remove_bin_module(self.__mod)
-        self.__mod = None
+        self._remove_bin_module_from_engine(self.__engine_mod)
+        self.__engine_mod = None
 
     @property
     def _engine(self):
@@ -286,20 +272,30 @@ class jit_engine:
     # This needs to be done for every jit_engine to set the triple and layout.
     # The staged modules are still using 'unknown-unknown-unknown' triple.
     def compile_staged(self):
-        # Link staged modules
-        mod_bundle = binding.parse_assembly("")
-        mod_bundle.triple = self._target_machine.triple
-        mod_bundle.data_layout = str(self._target_machine.target_data)
+        if self.__engine_mod is None:
+            self.__engine_mod = binding.parse_assembly("")
+            self.__engine_mod.triple = self._target_machine.triple
+            self.__engine_mod.data_layout = str(self._target_machine.target_data)
 
+        else:
+            self._remove_bin_module_from_engine(self.__engine_mod)
+
+        # Link staged modules
         while self._staged_modules:
             new_mod = self._staged_modules.pop(0)
             new_mod.triple = self._target_machine.triple
             new_mod.data_layout = str(self._target_machine.target_data)
 
-            mod_bundle.name = new_mod.name  # Set the name of the last module
-            mod_bundle.link_in(new_mod)
+            self.__engine_mod.name = new_mod.name  # Set the name of the last module
+            self.__engine_mod.link_in(new_mod)
+            self.__linked_modules += 1
 
-        self.opt_and_append_bin_module(mod_bundle)
+
+        if "dump-llvm-gen" in debug_env:
+            with open(self.__engine_mod.name + '.linked.ll', 'w') as dump_file:
+                dump_file.write(str(self.__engine_mod))
+
+        self.opt_and_add_bin_module(self.__engine_mod)
 
 
 class cpu_jit_engine(jit_engine):
