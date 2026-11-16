@@ -28,6 +28,7 @@ from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
+from .jit_engine import _parse_module
 from .warnings import *
 
 
@@ -126,8 +127,10 @@ def _llvm_build(target_generation):
     if "compile" in debug_env:
         print("STAGING GENERATION: {} -> {}".format(_binary_generation, target_generation))
 
+    parsed_modules = [_parse_module(m) for m in _pending_generated_ir_modules]
+
     for e in _get_engines():
-        e.stage_compilation(_pending_generated_ir_modules)
+        e.stage_compilation([m.clone() for m in parsed_modules])
 
     _pending_generated_ir_modules.clear()
 

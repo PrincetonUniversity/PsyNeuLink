@@ -112,7 +112,7 @@ def _cpu_jit_constructor():
     # And an execution engine with a builtins backing module
     builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.get_current().float_ty)
 
-    backing_mod = _try_parse_module(builtins_module)
+    backing_mod = _parse_module(builtins_module)
     backing_mod.triple = cpu_target_machine.triple
     backing_mod.data_layout = str(cpu_target_machine.target_data)
     backing_mod.verify()
@@ -154,7 +154,7 @@ def _ptx_jit_constructor():
     return ptx_target_machine, ptx_pass_builder
 
 
-def _try_parse_module(module):
+def _parse_module(module):
     module_text_ir = str(module)
 
     if "dump-llvm-gen" in debug_env:
@@ -166,12 +166,9 @@ def _try_parse_module(module):
     # This is intentional design decision to ease
     # compatibility between LLVM versions.
     start = time.perf_counter()
-    try:
-        mod = binding.parse_assembly(module_text_ir)
-        mod.verify()
-    except Exception as e:
-        print("ERROR: llvm parsing failed: {}".format(e))
-        mod = None
+
+    mod = binding.parse_assembly(module_text_ir)
+    mod.verify()
 
     finish = time.perf_counter()
 
@@ -197,14 +194,12 @@ class jit_engine:
         # Track few statistics:
         self.__optimized_modules = 0
         self.__linked_modules = 0
-        self.__parsed_modules = 0
 
     def __del__(self):
         if "stat" in self.__debug_env:
             s = type(self).__name__
             print("Total optimized modules in '{}': {}".format(s, self.__optimized_modules))
             print("Total linked modules in '{}': {}".format(s, self.__linked_modules))
-            print("Total parsed modules in '{}': {}".format(s, self.__parsed_modules))
 
     def opt_and_add_bin_module(self, module):
         assert module.triple == self._target_machine.triple, \
@@ -288,27 +283,21 @@ class jit_engine:
     def stage_compilation(self, modules):
         self._staged_modules += modules
 
-    # Unfortunately, this needs to be done for every jit_engine.
-    # Linking step in opt_and_add_bin_module invalidates 'mod_bundle',
-    # so it can't be linked multiple times (in multiple engines).
-    # These modules are still using 'unknown-unknown-unknown' triple
+    # This needs to be done for every jit_engine to set the triple and layout.
+    # The staged modules are still using 'unknown-unknown-unknown' triple.
     def compile_staged(self):
-        # Parse generated modules and link them
+        # Link staged modules
         mod_bundle = binding.parse_assembly("")
         mod_bundle.triple = self._target_machine.triple
         mod_bundle.data_layout = str(self._target_machine.target_data)
 
         while self._staged_modules:
-            m = self._staged_modules.pop(0)
-
-            new_mod = _try_parse_module(m)
+            new_mod = self._staged_modules.pop(0)
             new_mod.triple = self._target_machine.triple
             new_mod.data_layout = str(self._target_machine.target_data)
 
-            self.__parsed_modules += 1
-            if new_mod is not None:
-                mod_bundle.link_in(new_mod)
-                mod_bundle.name = m.name  # Set the name of the last module
+            mod_bundle.name = new_mod.name  # Set the name of the last module
+            mod_bundle.link_in(new_mod)
 
         self.opt_and_append_bin_module(mod_bundle)
 
@@ -412,8 +401,9 @@ class ptx_jit_engine(jit_engine):
         kernel = self._engine._find_kernel(name + "_cuda_kernel")
         if kernel is None:
             function = _find_llvm_function(name)
-            wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
-            self.stage_compilation({wrapper_mod})
+            gen_wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
+            parsed_wrapper_mod = _parse_module(gen_wrapper_mod)
+            self.stage_compilation([parsed_wrapper_mod])
             self.compile_staged()
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
 #            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
