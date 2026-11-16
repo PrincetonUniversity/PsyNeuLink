@@ -203,7 +203,7 @@ class jit_engine:
             print("Total optimized modules in '{}': {}".format(s, self.__optimized_modules))
             print("Total linked modules in '{}': {}".format(s, self.__linked_modules))
 
-    def opt_and_add_bin_module(self, module):
+    def optimize_module(self, module):
         assert module.triple == self._target_machine.triple, \
             "Triple mismatch: {} vs. {}".format(module.triple, self._target_machine.triple)
         assert module.data_layout == str(self._target_machine.target_data), \
@@ -229,6 +229,7 @@ class jit_engine:
 
         self.__optimized_modules += 1
 
+    def add_module_to_engine(self, module):
         start = time.perf_counter()
         self._engine.add_module(module)
         self._engine.finalize_object()
@@ -237,12 +238,12 @@ class jit_engine:
         if "time_stat" in debug_env:
             print("Time to finalize LLVM module bundle '{}': {}".format(module.name, finish - start))
 
-    def _remove_bin_module_from_engine(self, module):
+    def remove_module_from_engine(self, module):
         if module is not None:
             self._engine.remove_module(module)
 
     def clean_module(self):
-        self._remove_bin_module_from_engine(self.__engine_mod)
+        self.remove_module_from_engine(self.__engine_mod)
         self.__engine_mod = None
 
     @property
@@ -278,7 +279,7 @@ class jit_engine:
             self.__engine_mod.data_layout = str(self._target_machine.target_data)
 
         else:
-            self._remove_bin_module_from_engine(self.__engine_mod)
+            self.remove_module_from_engine(self.__engine_mod)
 
         # Link staged modules
         while self._staged_modules:
@@ -295,7 +296,8 @@ class jit_engine:
             with open(self.__engine_mod.name + '.linked.ll', 'w') as dump_file:
                 dump_file.write(str(self.__engine_mod))
 
-        self.opt_and_add_bin_module(self.__engine_mod)
+        self.optimize_module(self.__engine_mod)
+        self.add_module_to_engine(self.__engine_mod)
 
 
 class cpu_jit_engine(jit_engine):
