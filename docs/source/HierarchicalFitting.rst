@@ -81,7 +81,7 @@ callable that builds one participant's model from their rows::
         comp, decision = build_model()
         pec = ParameterEstimationComposition(
             nodes=[comp],
-            parameters={("rate", decision): np.linspace(-1.5, 1.5, 1000)},
+            parameters={("rate", decision): {"bounds": (-1.5, 1.5)}},
             outcome_variables=[decision.output_ports[DECISION_OUTCOME],
                                decision.output_ports[RESPONSE_TIME]],
             data=data,

@@ -11,8 +11,6 @@
 # FIX: SEED FOR noise PARAMETER OF TransferMechanism GETS ASSIGNED TO THE MECHANISM,
 #      BUT THERE DOES NOT SEEM TO BE A PARAMETER PORT ASSIGNED TO IT FOR THAT
 # FIX: ADD Parameters Class DEFINITION FOR ParameterEstimationComposition
-# FIX: CHANGE REFERENCES TO <`parameter <ParameterEstimationComposition.parameters>` values> AND THE LIKE TO
-#      <`parameter values <ParameterEstimationComposition.parameter_ranges_or_priors>`>
 # FIX: ADD TESTS:
 #      - FOR ERRORS IN parameters AND outcome_variables SPECIFICATIONS
 #      - GENERATES CORRECT SEED ITERATOR, control_signals AND THEIR projections
@@ -64,7 +62,7 @@ sections describe arguments specific to each mode.
       <ParameterEstimationComposition.model>` to be estimated.  These are specified in a dict, in which the key
       of each entry specifies a parameter to estimate, and its value specifies continuous bounds, a regular grid,
       or exact choices. For example, ``{"bounds": (0.1, 1.0)}`` specifies a continuous range. See **parameters**
-      in the class reference for the supported forms and the interpretation of legacy sample arrays.
+      in the class reference for the supported forms.
 
     * **outcome_variables** - specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model
       <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used to evaluate the
@@ -388,9 +386,8 @@ class ParameterEstimationComposition(Composition):
 
         Bounds and values must be finite; a step must be positive. Explicit grids and choices
         require Optuna and are rejected by continuous solvers, including hierarchical fitting.
-        Existing lists and arrays remain supported: continuous solvers use their minimum and
-        maximum, while Optuna requires an increasing, uniformly spaced grid. A two-element
-        tuple retains this legacy meaning; use the explicit bounds form for continuous Optuna search.
+        Bare lists, arrays, and tuples are not accepted as search spaces. See
+        :ref:`PEC_Parameter_Space_Migration` for migration from sample-array specifications.
 
     depends_on :
         A dictionary that specifies which parameters depend on a condition. The keys of the dictionary are the
@@ -524,7 +521,7 @@ class ParameterEstimationComposition(Composition):
 
     fit_parameters : dict
         stores the **parameters** specification, mapping each ``(parameter_name, mechanism)`` to its
-        continuous bounds, grid, exact choices, or legacy sample array. See the **parameters** argument
+        continuous bounds, grid, or exact choices. See the **parameters** argument
         for the supported forms and optimizer-specific behavior.
 
     outcome_variables : list[Composition Output Nodes]
@@ -604,19 +601,15 @@ class ParameterEstimationComposition(Composition):
         <OptimizationControlMechanism.noise_stream_policy>`). Independent streams are the PEC default; this changes
         seeded results for models with multiple random Components compared with the legacy 'shared_seed' policy.
 
-    optimized_parameter_values : list
+    optimized_parameter_values : dict
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the `model
         <ParameterEstimationComposition.model>` that best fit the `data <ParameterEstimationComposition.data>` when
         the ParameterEstimationComposition is used for `ParameterEstimationComposition_Data_Fitting`,
         or that optimize performance of the `model <ParameterEstimationComposition.model>` according to the
         `objective_function <ParameterEstimationComposition.objective_function>` when the
-        ParameterEstimationComposition is used for `ParameterEstimationComposition_Optimization`.  If `parameter values
-        <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
-        each item of `optimized_parameter_values` is the optimized value of the corresponding `parameter
-        <ParameterEstimationComposition.parameter>`. If `parameter values
-        <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as priors, then each item of
-        `optimized_parameter_values` is an array containing the values of the corresponding `parameter
-        <ParameterEstimationComposition.parameters>` the distribution of which were determined to be optimal.
+        ParameterEstimationComposition is used for `ParameterEstimationComposition_Optimization`.
+        Maps fitted parameter names to their optimized values; condition-dependent parameters have a
+        separate entry for each condition level.
 
     optimal_value : float
         contains the results returned by execution of `agent_rep <OptimizationControlMechanism.agent_rep>` for the
@@ -626,18 +619,11 @@ class ParameterEstimationComposition(Composition):
         contains the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the `model <ParameterEstimationComposition.model>` for every `TRIAL <TimeScale.TRIAL>` executed (see
         `Composition.results` for more details). If the ParameterEstimationComposition is used for
-        `ParameterEstimationComposition_Data_Fitting`, and `parameter values
-        <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
+        `ParameterEstimationComposition_Data_Fitting`, then
         each item of `results <Composition.results>` is an array of `output_values <Mechanism_Base.output_values>`
         (sampled over `num_estimates <ParameterEstimationComposition.num_estimates>`) obtained for the single
         optimized combination of `parameter <ParameterEstimationComposition.parameters>` values contained in the
         corresponding item of `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`.
-        If `parameter values <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as priors,
-        then each item of `results` is an array of `output_values <Mechanism_Base.output_values>` (sampled over
-        `num_estimates <ParameterEstimationComposition.num_estimates>`), each of which corresponds to a combination
-        of `parameter <ParameterEstimationComposition.parameters>` values that were used to generate those results;
-        it is the *distribution* of those `parameter <ParameterEstimationComposition.parameters>` values that were
-        found to best fit the data.
     """
 
     class Parameters(Composition.Parameters):
@@ -831,6 +817,13 @@ class ParameterEstimationComposition(Composition):
                 )
 
         self._validate_params(locals().copy())
+
+        # Reject invalid search spaces before adding control mechanisms to the user's model.
+        for (parameter_name, mechanism), spec in (parameters or {}).items():
+            try:
+                _parse_parameter_space(spec)
+            except (TypeError, ValueError) as error:
+                raise ValueError(f"Invalid search space for {mechanism.name}.{parameter_name}: {error}") from error
 
         # IMPLEMENTATION NOTE: this currently assigns pec as ocm.agent_rep (rather than model) to satisfy LLVM
         # Assign model as nested Composition of PEC

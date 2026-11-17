@@ -258,7 +258,7 @@ def test_input_columns_from_input_ports_are_the_same_however_they_are_listed():
 # --------------------------------------------------------------- PEC wiring
 
 
-def _ddm_pec(data, depends_on=None, explicit_bounds=False, **kwargs):
+def _ddm_pec(data, depends_on=None, **kwargs):
     """A drift-diffusion model fitted to ``data``, and inputs of 1 for each of its trials.
 
     ``depends_on`` maps the name of a parameter to the column of ``data`` it depends on; the other
@@ -276,7 +276,7 @@ def _ddm_pec(data, depends_on=None, explicit_bounds=False, **kwargs):
     pec = pnl.ParameterEstimationComposition(
         nodes=[comp],
         parameters={
-            (name, decision): {"bounds": bounds} if explicit_bounds else np.linspace(*bounds, 100)
+            (name, decision): {"bounds": bounds}
             for name, bounds in BOUNDS.items()
         },
         outcome_variables=[
@@ -581,10 +581,9 @@ def test_excluded_trials_do_not_reach_the_estimator(ddm_data, toy_likelihood):
 
 
 @pytest.mark.composition
-@pytest.mark.parametrize("explicit_bounds", [False, True])
-def test_a_fit_scores_with_the_estimator(ddm_data, toy_likelihood, explicit_bounds):
+def test_a_fit_scores_with_the_estimator(ddm_data, toy_likelihood):
     likelihood, _ = toy_likelihood
-    pec, inputs = _ddm_pec(ddm_data, explicit_bounds=explicit_bounds, likelihood_estimator="neural",
+    pec, inputs = _ddm_pec(ddm_data, likelihood_estimator="neural",
                            likelihood_estimator_kwargs={"artifact": likelihood},
                            optimization_function=pnl.PECOptimizationFunction(
                                method="differential_evolution", max_iterations=2))

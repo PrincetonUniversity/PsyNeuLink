@@ -1584,7 +1584,7 @@ def test_an_ordinary_fit_is_unaffected_by_the_solver_settings():
     pec = pnl.ParameterEstimationComposition(
         name="ordinary",
         nodes=[comp],
-        parameters={("drift_rate", decision): np.linspace(0.1, 0.5, 5)},
+        parameters={("drift_rate", decision): {"bounds": (0.1, 0.5)}},
         outcome_variables=[decision.output_ports[pnl.DECISION_VARIABLE]],
         objective_function=lambda x: 0.0,
         optimization_function="differential_evolution",

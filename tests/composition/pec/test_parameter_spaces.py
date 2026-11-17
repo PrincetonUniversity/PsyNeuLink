@@ -26,7 +26,7 @@ def _make_pec(spec, conditional=False):
         options["depends_on"] = {("slope", node): "condition"}
     return pnl.ParameterEstimationComposition(
         model=model,
-        parameters={("slope", node): spec, ("intercept", node): np.linspace(0., .3, 4)},
+        parameters={("slope", node): spec, ("intercept", node): {"bounds": (0., .3)}},
         outcome_variables=node,
         data=data,
         optimization_function=pnl.PECOptimizationFunction(method="differential_evolution", max_iterations=8),
@@ -100,7 +100,6 @@ def test_serial_and_distributed_search_use_the_same_domains(spec, conditional):
 
 @pytest.mark.parametrize("method, spec", [
     pytest.param("differential_evolution", CONTINUOUS, id="de_continuous"),
-    pytest.param("differential_evolution", [0., 1e-6, 3e-6], id="de_legacy_irregular"),
     pytest.param("optuna", CONTINUOUS, id="optuna_continuous"),
     pytest.param("optuna", GRID, id="optuna_grid"),
     pytest.param("optuna", CHOICES, id="optuna_choices"),
@@ -164,6 +163,53 @@ def test_continuous_solvers_reject_explicit_discrete_spaces(spec):
 def test_invalid_parameter_spaces_are_rejected(spec):
     with pytest.raises(ValueError):
         _parse_parameter_space(spec)
+
+
+@pytest.mark.parametrize("spec", [[0., 1.], (0., 1.), np.linspace(0., 1., 5)],
+                         ids=["list", "tuple", "array"])
+@pytest.mark.parametrize("method", ["differential_evolution", optuna.samplers.RandomSampler, None],
+                         ids=["de", "optuna", "scoring_only"])
+def test_bare_samples_fail_before_modifying_the_model(spec, method):
+    node = pnl.ProcessingMechanism(name="node")
+    model = pnl.Composition(pathways=node)
+    with pytest.raises(ValueError, match="node.slope:.*explicit dictionaries") as error:
+        pnl.ParameterEstimationComposition(
+            model=model,
+            parameters={("slope", node): spec},
+            outcome_variables=node,
+            data=pd.DataFrame({"value": [0., 1.]}),
+            optimization_function=pnl.PECOptimizationFunction(method=method),
+        )
+    for form in ("'bounds'", "'step'", "'values'"):
+        assert form in str(error.value)
+    assert list(model.nodes) == [node]
+    assert model.controller is None
+
+
+@pytest.mark.parametrize("conditional", [False, True])
+@pytest.mark.parametrize("bounds, step", [
+    ((0., .0003), 1e-6),
+    ((.1, .1003), 1e-6),
+    ((0., 3e-16), 1e-16),
+])
+def test_explicit_grid_step_is_passed_through_without_rounding(bounds, step, conditional):
+    pec = _make_pec({"bounds": bounds, "step": step}, conditional)
+    function = pec.controller.function
+    names = ["node.slope[a]", "node.slope[b]"] if conditional else ["node.slope"]
+    assert function.fit_param_names == [*names, "node.intercept"]
+    for name in names:
+        assert function.fit_param_bounds[name] == bounds
+        distribution = function.fit_param_distributions[name]
+        assert distribution.step == step
+        assert (distribution.low, distribution.high) == bounds
+
+
+@pytest.mark.parametrize("values", [[.25], np.array([.9, .1, .25], dtype=np.float32)],
+                         ids=["singleton", "unordered_float32"])
+def test_exact_choices_preserve_supplied_values(values):
+    pec = _make_pec({"values": values})
+    distribution = pec.controller.function.fit_param_distributions["node.slope"]
+    assert distribution.choices == tuple(float(value) for value in values)
 
 
 def test_explicit_step_uses_upper_bound_as_a_cap():

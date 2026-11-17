@@ -97,9 +97,9 @@ def build_ddm_pec(data):
         name="pec_dask_test",
         nodes=[comp],
         parameters={
-            ("rate", decision): np.linspace(*FIT_BOUNDS["rate"], 1000),
-            ("threshold", decision): np.linspace(*FIT_BOUNDS["threshold"], 1000),
-            ("non_decision_time", decision): np.linspace(*FIT_BOUNDS["non_decision_time"], 1000),
+            ("rate", decision): {"bounds": FIT_BOUNDS["rate"]},
+            ("threshold", decision): {"bounds": FIT_BOUNDS["threshold"]},
+            ("non_decision_time", decision): {"bounds": FIT_BOUNDS["non_decision_time"]},
         },
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],
@@ -472,7 +472,7 @@ def _make_pec_with(optimization_function, data, decision, comp, **pec_kwargs):
     return pnl.ParameterEstimationComposition(
         nodes=[comp],
         parameters={
-            (name, decision): np.linspace(lo, hi, 1000)
+            (name, decision): {"bounds": (lo, hi)}
             for name, (lo, hi) in _FIT_PARAMS_SPEC.items()
         },
         outcome_variables=[
@@ -620,9 +620,9 @@ def _make_driver_pec(data, optimizer, name, crn=True):
         name=name,
         nodes=[comp],
         parameters={
-            ("rate", decision): np.linspace(*FIT_BOUNDS["rate"], 1000),
-            ("threshold", decision): np.linspace(*FIT_BOUNDS["threshold"], 1000),
-            ("non_decision_time", decision): np.linspace(*FIT_BOUNDS["non_decision_time"], 1000),
+            ("rate", decision): {"bounds": FIT_BOUNDS["rate"]},
+            ("threshold", decision): {"bounds": FIT_BOUNDS["threshold"]},
+            ("non_decision_time", decision): {"bounds": FIT_BOUNDS["non_decision_time"]},
         },
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],

@@ -73,7 +73,7 @@ def build_pec(data, **kwargs):
     pec = pnl.ParameterEstimationComposition(
         nodes=[comp],
         parameters={
-            (name, decision): np.linspace(*FIT_RANGES[name], 1000) for name in FIT_RANGES
+            (name, decision): {"bounds": FIT_RANGES[name]} for name in FIT_RANGES
         },
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],

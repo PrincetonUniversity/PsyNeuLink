@@ -107,10 +107,10 @@ def fit_parameters(comp):
     congruenceWeighting = get_node(comp, "Automaticity-weighted Stimulus Input [w*S1, w*S2]")
     decisionMaker = get_node(comp, "DDM")
     return {
-        ("gain", controlModule): np.linspace(*FIT_BOUNDS["gain"], 1000),
-        ("slope", congruenceWeighting): np.linspace(*FIT_BOUNDS["slope"], 1000),
-        ("threshold", decisionMaker): np.linspace(*FIT_BOUNDS["threshold"], 1000),
-        ("non_decision_time", decisionMaker): np.linspace(*FIT_BOUNDS["non_decision_time"], 1000),
+        ("gain", controlModule): {"bounds": FIT_BOUNDS["gain"]},
+        ("slope", congruenceWeighting): {"bounds": FIT_BOUNDS["slope"]},
+        ("threshold", decisionMaker): {"bounds": FIT_BOUNDS["threshold"]},
+        ("non_decision_time", decisionMaker): {"bounds": FIT_BOUNDS["non_decision_time"]},
     }
 
 

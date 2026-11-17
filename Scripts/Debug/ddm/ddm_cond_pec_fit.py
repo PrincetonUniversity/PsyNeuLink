@@ -98,9 +98,9 @@ trial_inputs = data_to_fit['inputs'].to_numpy().reshape(-1, 1)
 data_to_fit = data_to_fit.drop(columns='inputs')
 
 fit_parameters = {
-    ("rate", comp.nodes['DDM']): np.linspace(-0.5, 0.5, 1000),
-    ("non_decision_time", comp.nodes['DDM']): np.linspace(0.0, 1.0, 1000),
-    ("threshold", comp.nodes['DDM']): np.linspace(0.1, 1.0, 1000),
+    ("rate", comp.nodes['DDM']): {"bounds": (-0.5, 0.5)},
+    ("non_decision_time", comp.nodes['DDM']): {"bounds": (0.0, 1.0)},
+    ("threshold", comp.nodes['DDM']): {"bounds": (0.1, 1.0)},
 }
 
 pec = pnl.ParameterEstimationComposition(

@@ -41,7 +41,7 @@ def _make_pec(*, policy=None, estimates=8, seed=29, same_seed=True, nested=False
 
     options = {} if policy is None else {'noise_stream_policy': policy}
     pec = pnl.ParameterEstimationComposition(
-        model=model, parameters={('slope', source): np.array([0., 1.])},
+        model=model, parameters={('slope', source): {"values": [0., 1.]}},
         outcome_variables=readouts if nested else nodes,
         optimization_function=pnl.PECOptimizationFunction(
             method=optuna.samplers.GridSampler({f'{source.name}.slope': [0., 1.]}, seed=0),
