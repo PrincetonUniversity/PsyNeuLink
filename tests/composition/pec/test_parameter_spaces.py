@@ -29,7 +29,7 @@ def _make_pec(spec, conditional=False):
         parameters={("slope", node): spec, ("intercept", node): {"bounds": (0., .3)}},
         outcome_variables=node,
         data=data,
-        optimization_function=pnl.PECOptimizationFunction(method="differential_evolution", max_iterations=8),
+        optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.RandomSampler, max_iterations=8),
         **options,
     )
 
@@ -144,13 +144,71 @@ def test_continuous_solvers_reject_explicit_discrete_spaces(spec):
     function = pec.controller.function
     # Bounds remain available for input preparation and likelihood scoring.
     assert next(iter(function.fit_param_bounds.values())) == (0., 3e-6)
-    with pytest.raises(ValueError, match="Continuous solvers do not support explicit grids or choices"):
-        function._fit_differential_evolution(lambda *values: 0.)
-    function._distributed_options = {"pec_factory": lambda data: None}
-    with pytest.raises(ValueError, match="Continuous solvers do not support explicit grids or choices"):
-        function._fit_differential_evolution_distributed(None, _ImmediateClient())
-    with pytest.raises(ValueError, match="Continuous solvers do not support explicit grids or choices"):
+    with pytest.raises(ValueError, match=r"node\.slope: continuous solvers"):
         ParameterSchema.from_pec(pec, "test model")
+
+
+@pytest.mark.parametrize("method", ["shorthand", "distributed"])
+def test_de_rejects_a_discrete_parameter_before_modifying_model(method):
+    node = pnl.ProcessingMechanism(name="node")
+    model = pnl.Composition(pathways=node)
+    optimizer = "differential_evolution"
+    if method == "distributed":
+        optimizer = pnl.PECOptimizationFunction(method=optimizer, distributed=True)
+    with pytest.raises(ValueError, match=r"node\.intercept: continuous solvers"):
+        pnl.ParameterEstimationComposition(
+            model=model, outcome_variables=node, objective_function=np.sum, optimization_function=optimizer,
+            parameters={("slope", node): CONTINUOUS, ("intercept", node): GRID},
+        )
+    assert list(model.nodes) == [node]
+
+
+@pytest.mark.parametrize("distributed", [False, True])
+def test_sampler_cannot_override_pec_grid(distributed):
+    function = _make_pec({"bounds": (0., 1.), "step": .5}).controller.function
+    study = optuna.create_study(direction="maximize", sampler=optuna.samplers.RandomSampler(seed=7))
+    # A valid first trial and an off-grid second trial in the same distributed batch.
+    for value in (.5, .25):
+        study.enqueue_trial({"node.slope": value})
+    evaluated = []
+    client = _ImmediateClient()
+    with pytest.raises(ValueError, match=r"0\.25 for node\.slope is outside"):
+        if distributed:
+            function._distributed_options = {"pec_factory": lambda data: None, "max_concurrent_evaluations": 2}
+            function._fit_optuna_distributed(study, client)
+        else:
+            def evaluate(*values):
+                evaluated.append(values[0])
+                return 0.
+            function._fit_optuna(evaluate, study, display_iter=False)
+    assert evaluated == ([] if distributed else [.5])
+    assert client.submitted == []
+    assert all(t.state.is_finished() for t in study.trials)
+
+
+def test_grid_sampler_cannot_evaluate_an_off_grid_point():
+    function = _make_pec({"bounds": (0., 1.), "step": .5}).controller.function
+    sampler = optuna.samplers.GridSampler({"node.slope": [.25], "node.intercept": [0.]})
+    with pytest.raises(ValueError, match=r"0\.25 for node\.slope is outside"):
+        function._fit_optuna(lambda *args: pytest.fail("Evaluated an off-grid point"), sampler, display_iter=False)
+
+
+def test_small_step_at_nonzero_offset_accepts_sampler_grid_points():
+    function = _make_pec({"bounds": (1., 1.000000000001), "step": 1e-14}).controller.function
+    result = function._fit_optuna(lambda slope, intercept: slope, optuna.samplers.RandomSampler(seed=7),
+                                  display_iter=False)
+    assert 1. < result["fitted_params"]["node.slope"] <= 1.000000000001
+
+
+def test_resumed_study_cannot_return_a_best_trial_outside_current_bounds():
+    function = _make_pec(CONTINUOUS).controller.function
+    study = optuna.create_study(direction="maximize")
+    study.add_trial(optuna.trial.create_trial(
+        params={"node.slope": 2., "node.intercept": 0.}, value=10.,
+        distributions={name: optuna.distributions.FloatDistribution(0., 2.) for name in function.fit_param_names},
+    ))
+    with pytest.raises(ValueError, match=r"2\.0 for node\.slope is outside"):
+        function._fit_optuna(lambda *args: 0., study, display_iter=False)
 
 
 @pytest.mark.parametrize("spec", [
@@ -158,7 +216,10 @@ def test_continuous_solvers_reject_explicit_discrete_spaces(spec):
     {"bounds": (1., 0.)}, {"bounds": (0., 1., 2.)}, {"bounds": (0., np.inf)},
     {"bounds": (0., 1.), "step": 0.}, {"bounds": (0., 1.), "step": -1.},
     {"bounds": (0., 1.), "step": np.nan}, {"values": []}, {"values": [np.nan]},
-    {"values": [[0., 1.]]}, [], [0., np.inf],
+    {"values": [[0., 1.]]}, {"values": np.array([1 + 2j])},
+    {"values": np.array([np.complex128(1 + 2j)], dtype=object)},
+    {"bounds": (0., 1.), "step": None}, {"bounds": (0., 1.), "step": [0.1]},
+    [], [0., np.inf],
 ])
 def test_invalid_parameter_spaces_are_rejected(spec):
     with pytest.raises(ValueError):

@@ -13,7 +13,7 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     OptimizationFunctionError,
     SEARCH_SPACE,
 )
-from psyneulink.core.components.functions.nonstateful.parameterspace import _parse_parameter_space
+from psyneulink.core.components.functions.nonstateful.parameterspace import _checked_optuna_params, _parse_parameter_space
 from psyneulink.core.globals.parameters import SharedParameter, check_user_specified
 from psyneulink.core.globals.utilities import try_extract_0d_array_item
 
@@ -449,6 +449,21 @@ def _dask_map(client, func, iterable):
     return list(client.gather(futures))
 
 
+def _suggest_pec_params(trial, distributions):
+    for name, dist in distributions.items():
+        if isinstance(dist, optuna.distributions.CategoricalDistribution):
+            trial.suggest_categorical(name, dist.choices)
+        else:
+            trial.suggest_float(name, dist.low, dist.high, step=dist.step)
+    # Fixed/enqueued values and GridSampler can override the declared distribution.
+    return _checked_optuna_params(trial.params, distributions)
+
+
+def _optuna_result(study, distributions):
+    best = study.best_trial
+    return {"fitted_params": _checked_optuna_params(best.params, distributions), "optimal_value": best.value}
+
+
 def _run_ask_tell_rounds(study, distributions, param_order, batch, n_trials,
                          submit_one, gather):
     """Synchronous batched ask/tell loop for a distributed optuna study.
@@ -463,8 +478,24 @@ def _run_ask_tell_rounds(study, distributions, param_order, batch, n_trials,
     remaining = n_trials
     while remaining > 0:
         size = min(batch, remaining)
-        trials = [study.ask(distributions) for _ in range(size)]
-        futures = [submit_one([t.params[name] for name in param_order]) for t in trials]
+        trials = []
+        candidates = []
+        try:
+            for _ in range(size):
+                trial = study.ask()
+                trials.append(trial)
+                params = _suggest_pec_params(trial, distributions)
+                candidates.append([params[name] for name in param_order])
+        except Exception:
+            # No member of this batch has been submitted. Finish every trial we opened,
+            # even when a user-supplied sampler also raises in its after_trial callback.
+            for trial in trials:
+                try:
+                    study.tell(trial, state=optuna.trial.TrialState.FAIL)
+                except Exception:
+                    logger.exception("Failed to finalize Optuna trial %s", trial.number)
+            raise
+        futures = [submit_one(candidate) for candidate in candidates]
         values = gather(futures)
         for trial, value in zip(trials, values):
             study.tell(trial, value)
@@ -1214,13 +1245,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 # the current values for the parameter rather than them being passed
                 # directly. So we need to wrap the wrapper
                 def objfunc_wrapper_wrapper(trial):
-                    for name, distribution in distributions.items():
-                        if isinstance(distribution, optuna.distributions.CategoricalDistribution):
-                            trial.suggest_categorical(name, distribution.choices)
-                        else:
-                            trial.suggest_float(name, distribution.low, distribution.high, step=distribution.step)
-
-                    return objfunc_wrapper([trial.params[name] for name in distributions])
+                    return objfunc_wrapper(list(_suggest_pec_params(trial, distributions).values()))
 
                 self._best_params = {}
 
@@ -1254,16 +1279,7 @@ class PECOptimizationFunction(OptimizationFunction):
                     callbacks=[progress_callback],
                 )
 
-            # Bind the fitted parameters to their names
-            fitted_params = {name: study.best_params[name] for name in distributions}
-
-        # Save all the results
-        output_dict = {
-            "fitted_params": fitted_params,
-            "optimal_value": study.best_value,
-        }
-
-        return output_dict
+        return _optuna_result(study, distributions)
 
     def _resolve_pec_factory(self):
         """Return the user's ``pec_factory`` or raise an actionable error."""
@@ -1361,10 +1377,7 @@ class PECOptimizationFunction(OptimizationFunction):
         finally:
             client.cancel(data_f)
 
-        fitted_params = dict(
-            zip(param_order, [study.best_params[name] for name in param_order])
-        )
-        return {"fitted_params": fitted_params, "optimal_value": study.best_value}
+        return _optuna_result(study, distributions)
 
     @property
     def fit_param_names(self) -> List[str]:
@@ -1413,7 +1426,7 @@ class PECOptimizationFunction(OptimizationFunction):
     @property
     def _continuous_fit_param_bounds(self):
         """Bounds for continuous solvers; explicit discrete restrictions cannot be discarded."""
-        return {name: space.continuous_bounds() for name, space in self._fit_param_spaces.items()}
+        return {name: space.continuous_bounds(name) for name, space in self._fit_param_spaces.items()}
 
     @property
     def fit_param_distributions(self):

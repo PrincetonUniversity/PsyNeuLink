@@ -57,6 +57,11 @@ Optuna, which changes sampler behavior compared with a numeric grid. Choose
 are supported only by the Optuna backend; differential evolution and hierarchical
 fitting reject them.
 
+PEC raises a ``ValueError`` before evaluating an Optuna proposal outside the
+declared space. This also applies to values queued with ``study.enqueue_trial()``.
+When resuming a study, its best trial must fit the current spaces for PEC to
+return it as the result.
+
 Code that reads ``PECOptimizationFunction.fit_param_bounds`` should now unpack
 ``(lower, upper)`` pairs. Optuna distributions, including steps or choices, are
 available through ``fit_param_distributions``.

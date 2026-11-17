@@ -819,11 +819,15 @@ class ParameterEstimationComposition(Composition):
         self._validate_params(locals().copy())
 
         # Reject invalid search spaces before adding control mechanisms to the user's model.
+        method = getattr(optimization_function, "method", optimization_function)
         for (parameter_name, mechanism), spec in (parameters or {}).items():
+            name_in_model = f"{mechanism.name}.{parameter_name}"
             try:
-                _parse_parameter_space(spec)
-            except (TypeError, ValueError) as error:
-                raise ValueError(f"Invalid search space for {mechanism.name}.{parameter_name}: {error}") from error
+                space = _parse_parameter_space(spec)
+            except (TypeError, ValueError, OverflowError) as error:
+                raise ValueError(f"Invalid search space for {name_in_model}: {error}") from error
+            if method == "differential_evolution":
+                space.continuous_bounds(name_in_model)
 
         # IMPLEMENTATION NOTE: this currently assigns pec as ocm.agent_rep (rather than model) to satisfy LLVM
         # Assign model as nested Composition of PEC
