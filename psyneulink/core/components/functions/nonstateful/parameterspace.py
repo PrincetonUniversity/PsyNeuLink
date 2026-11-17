@@ -26,7 +26,7 @@ class _ParameterSpace:
     def continuous_bounds(self):
         if self.step is not None or self.values is not None:
             raise ValueError(
-                "Explicit grids and choices require an Optuna optimizer; "
+                "Continuous solvers do not support explicit grids or choices; "
                 "use {'bounds': (lower, upper)} for continuous fitting"
             )
         return self.bounds
@@ -49,8 +49,8 @@ def _parse_parameter_space(spec):
         raise ValueError(
             "PEC parameter spaces must be explicit dictionaries; bare sample lists, arrays, and tuples "
             "are no longer supported. Use {'bounds': (lower, upper)} for continuous fitting, "
-            "{'bounds': (lower, upper), 'step': step} for an Optuna grid, "
-            "or {'values': samples} for exact Optuna choices."
+            "{'bounds': (lower, upper), 'step': step} for a grid, "
+            "or {'values': samples} for exact choices."
         )
     if set(spec) == {'values'}:
         values = _numeric_values(spec['values'])

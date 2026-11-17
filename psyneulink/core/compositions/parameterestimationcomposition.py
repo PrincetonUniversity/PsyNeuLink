@@ -379,13 +379,13 @@ class ParameterEstimationComposition(Composition):
         of each entry specifies a parameter to estimate, and its value specifies its search space:
 
         * ``{"bounds": (lower, upper)}`` searches continuously within the bounds.
-        * ``{"bounds": (lower, upper), "step": step}`` specifies an Optuna grid starting at
+        * ``{"bounds": (lower, upper), "step": step}`` specifies a grid starting at
           ``lower``. The last grid point is the largest one no greater than ``upper``.
-        * ``{"values": [value, ...]}`` specifies exact numeric choices for Optuna, including
-          irregularly spaced choices. These are categorical choices to the sampler.
+        * ``{"values": [value, ...]}`` specifies exact numeric choices, including
+          irregularly spaced choices. Optuna treats these as categorical choices.
 
-        Bounds and values must be finite; a step must be positive. Explicit grids and choices
-        require Optuna and are rejected by continuous solvers, including hierarchical fitting.
+        Bounds and values must be finite; a step must be positive. Currently, only the Optuna
+        backend supports grids and exact choices; continuous solvers, including hierarchical fitting, reject them.
         Bare lists, arrays, and tuples are not accepted as search spaces. See
         :ref:`PEC_Parameter_Space_Migration` for migration from sample-array specifications.
 

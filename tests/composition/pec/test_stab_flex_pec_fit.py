@@ -458,7 +458,7 @@ def test_stab_flex_cond_fit():
     responseGate = get_node(comp, "RESPONSE_GATE")
 
     fit_parameters = {
-        # Keep the historical Optuna grid explicit for this seeded regression.
+        # Keep the historical grid explicit for this seeded regression.
         ("gain", controlModule): {"bounds": (1.0, 10.0), "step": .00901},
         ("slope", congruenceWeighting): {"bounds": (0.0, 0.1), "step": .0001},
         ("threshold", decisionMaker): {"bounds": (0.01, 0.5), "step": .00049},

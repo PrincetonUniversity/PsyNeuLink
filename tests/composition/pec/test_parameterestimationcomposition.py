@@ -280,7 +280,7 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expect
         ("threshold", decision): {"bounds": (0.01, 0.5)},  # Threshold
     }
     if opt_method != "differential_evolution":
-        # Preserve the Optuna grid used by the seeded optimizer regression.
+        # Preserve the grid used by the seeded optimizer regression.
         fit_parameters[("threshold", decision)]["step"] = 0.05444
 
     pec = pnl.ParameterEstimationComposition(

@@ -144,12 +144,12 @@ def test_continuous_solvers_reject_explicit_discrete_spaces(spec):
     function = pec.controller.function
     # Bounds remain available for input preparation and likelihood scoring.
     assert next(iter(function.fit_param_bounds.values())) == (0., 3e-6)
-    with pytest.raises(ValueError, match="require an Optuna optimizer"):
+    with pytest.raises(ValueError, match="Continuous solvers do not support explicit grids or choices"):
         function._fit_differential_evolution(lambda *values: 0.)
     function._distributed_options = {"pec_factory": lambda data: None}
-    with pytest.raises(ValueError, match="require an Optuna optimizer"):
+    with pytest.raises(ValueError, match="Continuous solvers do not support explicit grids or choices"):
         function._fit_differential_evolution_distributed(None, _ImmediateClient())
-    with pytest.raises(ValueError, match="require an Optuna optimizer"):
+    with pytest.raises(ValueError, match="Continuous solvers do not support explicit grids or choices"):
         ParameterSchema.from_pec(pec, "test model")
 
 

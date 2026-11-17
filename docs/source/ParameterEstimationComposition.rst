@@ -38,7 +38,7 @@ Differential evolution has always searched continuously between the endpoints;
 the intermediate samples did not restrict its candidates. Hierarchical fitting
 also requires continuous bounds. Optuna supports continuous bounds as well.
 
-For an Optuna grid, specify the spacing directly::
+For a grid, specify the spacing directly::
 
     parameters = {("threshold", decision): {"bounds": (0.1, 1.0), "step": 0.1}}
 
@@ -53,8 +53,9 @@ For exact allowed values, including irregularly spaced values, use::
 
 NumPy arrays are accepted inside ``"values"``. These are categorical choices to
 Optuna, which changes sampler behavior compared with a numeric grid. Choose
-``"step"`` when numeric grid spacing is intended. Explicit grids and choices are
-rejected by differential evolution and hierarchical fitting.
+``"step"`` when numeric grid spacing is intended. Currently, grids and exact choices
+are supported only by the Optuna backend; differential evolution and hierarchical
+fitting reject them.
 
 Code that reads ``PECOptimizationFunction.fit_param_bounds`` should now unpack
 ``(lower, upper)`` pairs. Optuna distributions, including steps or choices, are
