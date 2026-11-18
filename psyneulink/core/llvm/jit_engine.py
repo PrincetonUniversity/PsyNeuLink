@@ -225,7 +225,7 @@ class jit_engine:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.opt.ll', 'w') as dump_file:
                 dump_file.write(str(module))
 
-        # This prints generated x86 assembly
+        # This prints generated assembly
         if "dump-asm" in self.__debug_env:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.S', 'w') as dump_file:
                 dump_file.write(self._target_machine.emit_assembly(module))

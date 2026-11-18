@@ -438,23 +438,28 @@ class LLVMBuilderContext:
         if len(flags.operands) == 0:
             flags.add(d_version)
             flags.add(di_version)
+
         cu = mod.add_named_metadata("llvm.dbg.cu")
         di_file = mod.add_debug_info("DIFile", {
             "filename": os.path.basename(path),
             "directory": os.path.dirname(path),
         })
-        di_func_type = mod.add_debug_info("DISubroutineType", {
-            # None as `null`
-            "types": mod.add_metadata([None]),
-        })
+
         di_compileunit = mod.add_debug_info("DICompileUnit", {
             "language": ir.DIToken("DW_LANG_Python"),
             "file": di_file,
             "producer": "PsyNeuLink",
             "runtimeVersion": 0,
             "isOptimized": False,
+            "emissionKind": ir.DIToken("DebugDirectivesOnly"),
         }, is_distinct=True)
         cu.add(di_compileunit)
+
+        di_func_type = mod.add_debug_info("DISubroutineType", {
+            # None as `null`
+            "types": mod.add_metadata([None]),
+        })
+
         di_func = mod.add_debug_info("DISubprogram", {
             "name": func.name,
             "file": di_file,
@@ -466,6 +471,7 @@ class LLVMBuilderContext:
         di_loc = mod.add_debug_info("DILocation", {
             "line": 0, "column": 0, "scope": di_func,
         })
+
         return di_loc
 
     @staticmethod
