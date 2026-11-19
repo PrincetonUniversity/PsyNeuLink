@@ -205,7 +205,6 @@ class LLVMBinaryFunction:
     @property
     def _cuda_kernel(self):
         if self.__cuda_kernel is None:
-            _ptx_engine.compile_staged()
             self.__cuda_kernel = _ptx_engine.get_kernel(self.name)
         return self.__cuda_kernel
 

@@ -401,11 +401,18 @@ class ptx_jit_engine(jit_engine):
     def get_kernel(self, name):
         kernel = self._engine._find_kernel(name + "_cuda_kernel")
         if kernel is None:
+            # The kernel function is created below and compiled immediately.
+            # If it's not present, then it's not generated
             function = _find_llvm_function(name)
+
+            # Do not use BuilderContext, it stages its modules for all engines.
+            # That won't work as the wrapper uses PTX only intrinsics.
             gen_wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
             parsed_wrapper_mod = _parse_module(gen_wrapper_mod)
+
             self.stage_compilation([parsed_wrapper_mod])
             self.compile_staged()
+
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
 #            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
 
