@@ -508,7 +508,7 @@ def _generate_get_printf_address(module):
 
 def _generate_cpu_builtins_module(_float_ty):
     """Generate function wrappers for log, exp, and pow intrinsics."""
-    module = ir.Module(name="cpu_builtins")
+    module = ir.Module(name="pnl_builtins_cpu")
     for intrinsic in ('sin', 'cos', 'exp', 'log'):
         _generate_intrinsic_wrapper(module, intrinsic, _float_ty, [_float_ty])
 

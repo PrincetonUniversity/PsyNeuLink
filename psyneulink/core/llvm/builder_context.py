@@ -185,6 +185,8 @@ class LLVMBuilderContext:
     def init_builtins(self):
         start = time.perf_counter()
         with self as ctx:
+            self.module.name = "pnl_builtins"
+
             # Numeric
             pnlvm.builtins.setup_pnl_intrinsics(ctx)
             pnlvm.builtins.setup_csch(ctx)
@@ -292,13 +294,16 @@ class LLVMBuilderContext:
         obj_cache = self._cache.setdefault(obj, dict())
 
         self._stats["function_cache_requests"] += 1
-        if tags not in obj_cache:
+        if (function := obj_cache.get(tags, None)) is None:
             self._stats["function_cache_misses"] += 1
             with self:
-                obj_cache[tags] = obj._gen_llvm_function(ctx=self, tags=tags)
+                function = obj._gen_llvm_function(ctx=self, tags=tags)
+                obj_cache[tags] = function
                 self.check_used_params(obj, tags=tags)
 
-        return obj_cache[tags]
+                self.module.name = function.name
+
+        return function
 
     def import_llvm_function(self, fun, *, tags:frozenset=frozenset()) -> ir.Function:
         """
