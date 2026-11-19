@@ -20,7 +20,7 @@ import re
 import time
 import weakref
 
-from psyneulink._typing import Set
+from psyneulink._typing import List
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals import keywords as kw
 from psyneulink.core.globals.sampleiterator import SampleIterator
@@ -31,18 +31,22 @@ from . import codegen
 from . import helpers
 from .debug import debug_env
 
-__all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function']
+__all__ = ['LLVMBuilderContext', '_pending_generated_ir_modules', '_find_llvm_function']
 
 
-_modules: Set[ir.Module] = set()
-_all_modules: Set[ir.Module] = set()
+
+# All generated modules for quick access to ir.FunctionType
+_all_generated_ir_modules: List[ir.Module] = []
+
+# Generated modules that have not been parsed or compiled
+_pending_generated_ir_modules: List[ir.Module] = []
 _struct_count = 0
 
 
 @atexit.register
 def module_count():
     if "stat" in debug_env:
-        print("Active LLVM modules: ", len(_all_modules))
+        print("Active LLVM modules: ", len(_all_generated_ir_modules))
         print("Total ctype structures created: ", _struct_count)
 
 
@@ -128,8 +132,8 @@ class LLVMBuilderContext:
     def __exit__(self, e_type, e_value, e_traceback):
         assert len(self._modules) > 0
         module = self._modules.pop()
-        _modules.add(module)
-        _all_modules.add(module)
+        _pending_generated_ir_modules.append(module)
+        _all_generated_ir_modules.append(module)
 
     @property
     def module(self):
@@ -302,7 +306,8 @@ class LLVMBuilderContext:
         Create function declaration if it exists in a older module.
         """
         if isinstance(fun, str):
-            f = _find_llvm_function(fun, _all_modules | {self.module})
+            f = _find_llvm_function(fun, _all_generated_ir_modules + [self.module])
+
         else:
             f = self.gen_llvm_function(fun, tags=tags)
 
@@ -311,6 +316,7 @@ class LLVMBuilderContext:
             decl_f = ir.Function(self.module, f.type.pointee, f.name)
             assert decl_f.is_declaration
             return decl_f
+
         return f
 
     def get_random_state_ptr(self, builder, component, state, params):
@@ -619,7 +625,13 @@ class LLVMBuilderContext:
         assert False, "Don't know how to convert {}".format(type(t))
 
 
-def _find_llvm_function(name: str, mods=_all_modules) -> ir.Function:
+def _find_llvm_function(name: str, mods:List[ir.Module]=_all_generated_ir_modules) -> ir.Function:
+    """
+    Search modules for an ir.Function with given name.
+
+    Search _all_generated_ir_modules by default. The default value is a mutable
+    type, so it always works on the most recent set of modules.
+    """
     f = None
     for m in mods:
         if name in m.globals:
@@ -627,6 +639,7 @@ def _find_llvm_function(name: str, mods=_all_modules) -> ir.Function:
 
     if not isinstance(f, ir.Function):
         raise ValueError("No such function: {}".format(name))
+
     return f
 
 

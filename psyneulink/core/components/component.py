@@ -3747,9 +3747,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             for i, _ in enumerate(arr):
                 new_indices = indices + (i,)  # for error reporting
                 try:
-                    arr[i] = fill_recursively(arr[i], value[i], new_indices)
+                    fill_value = fill_recursively(arr[i], value[i], new_indices)
                 except (IndexError, TypeError):
-                    arr[i] = fill_recursively(arr[i], value, new_indices)
+                    fill_value = fill_recursively(arr[i], value, new_indices)
+
+                # Match the shape explicitly. Avoid implicit array->scalar conversion.
+                arr[i] = np.asarray(fill_value).reshape(arr[i].shape)
 
             return arr
 

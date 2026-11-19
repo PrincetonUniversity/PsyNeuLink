@@ -216,8 +216,10 @@ Class Reference
 """
 
 import pathlib
+import re
 import site
 import warnings
+from os import PathLike
 
 import numpy as np
 from beartype import beartype
@@ -300,7 +302,20 @@ _gv_executable_not_found_error_msg = (
 )
 
 
-def get_default_showgraph_dir():
+def get_showgraph_dir(directory: Optional[Union[PathLike, str]] = None) -> pathlib.Path:
+    """
+    Resolves user-specified directory argument with a default for storing output
+
+    Args:
+        directory (Optional[Union[PathLike, str]], optional): if specified, uses the **directory**.
+            Defaults to None.
+
+    Returns:
+        pathlib.Path: directory in which ShowGraph outputs will be placed
+    """
+    if directory is not None:
+        return pathlib.Path(directory)
+
     pnl_module_dir = pathlib.Path(psyneulink.__file__).parent.absolute()
     try:
         site_packages_dirs = site.getsitepackages()
@@ -447,6 +462,7 @@ class ShowGraph:
     COMMENT
 
     """
+    _NESTED_PREFIX = 'cluster_'
 
     def __init__(self,
                  composition,
@@ -544,6 +560,8 @@ class ShowGraph:
                    show_projections_not_in_composition: bool = False,
                    active_items=None,
                    output_fmt: Optional[Literal['pdf', 'gv', 'jupyter', 'gif', 'source']] = 'pdf',
+                   directory: Optional[Union[PathLike, str]] = None,
+                   view: bool = True,
                    context=None,
                    *args,
                    **kwargs):
@@ -563,6 +581,8 @@ class ShowGraph:
            show_projections_not_in_composition=False \
            active_items=None,                        \
            output_fmt='pdf',                         \
+           directory=None,                           \
+           view=True,                                \
            context=None)
 
         Show graphical display of Components in a Composition's graph.  See `show_graph <ShowGraph_show_graph_Method>`
@@ -696,6 +716,17 @@ class ShowGraph:
             'gif': return gif used for animation
             'source': return the source code for the graphviz object
             None : return None
+
+        directory : Optional[Union[PathLike, str]] : default None
+            if specified, rendered graph files are output in **directory**.
+            Otherwise, a default is used (the current directory; or, the
+            PsyNeuLink repo directory if using an editable install)
+
+        view : bool : default True
+            used with **output_fmt**='pdf'. Corresponds to the `view` argument
+            of `graphviz.Graph.render`. If True, the system also opens the
+            output file of the rendered graph when it is generated. Otherwise,
+            the file is created but not opened.
 
         Returns
         -------
@@ -968,6 +999,8 @@ class ShowGraph:
                                      active_items,
                                      show_controller,
                                      output_fmt,
+                                     directory,
+                                     view,
                                      context)
 
     def __call__(self, **args):
@@ -1064,7 +1097,7 @@ class ShowGraph:
                     rcvr._animate_num_trials = composition._animate_num_trials + 1
                 nested_comp_graph = rcvr._show_graph.show_graph(**nested_args)
 
-                nested_comp_graph.name = "cluster_" + rcvr.name
+                nested_comp_graph.name = self._NESTED_PREFIX + rcvr.name
                 rcvr_label = rcvr.name
 
                 # Assign color to nested_comp, including highlighting if it is the active_item
@@ -2670,6 +2703,8 @@ class ShowGraph:
                          active_items,
                          show_controller,
                          output_fmt,
+                         directory,
+                         view,
                          context
                          ):
 
@@ -2681,6 +2716,12 @@ class ShowGraph:
         composition = self.composition
         nodes = self._get_nodes(composition, context)
         projections = self._get_projections(composition, context)
+
+        node_attrs = {*G.node_attr, 'label'}
+        # use DOTALL because some node names have a line break between words
+        node_name_pat = re.compile(r'^["\']?(.*?)["\']?\s*\[({0})='.format('|'.join(node_attrs)), re.DOTALL)
+        subgraph_name_pat = re.compile(r'^subgraph ["\']?{0}(.*?)["\']?\s*{{'.format(self._NESTED_PREFIX), re.DOTALL)
+        graph_name_pat = re.compile(r'^graph \[label="(.*?)"', re.DOTALL)
 
         # Sort nodes for display
         def get_index_of_node_in_G_body(node, node_type: Literal['MECHANISM', 'Projection', 'Composition']):
@@ -2699,7 +2740,7 @@ class ShowGraph:
                         assert False, f'PROGRAM ERROR: node ({node.name}) not Mechanism or Projection in G.body'
                 elif (node_type in {COMPOSITION}
                       and item.lstrip().startswith('subgraph ')
-                      and f'cluster_{node.name}' in item):
+                      and f'{self._NESTED_PREFIX}{node.name}' in item):
                     return i
 
         def get_node_id_in_G_body(node):
@@ -2708,10 +2749,14 @@ class ShowGraph:
             if i is None:
                 return None
             item = G.body[i].strip()
-            quoted_items = item.split('"')[1::2]
-            if quoted_items:
-                return quoted_items[0]
-            return item.split(' [', 1)[0]
+
+            for pat in [subgraph_name_pat, graph_name_pat, node_name_pat]:
+                try:
+                    return pat.match(item).group(1)
+                except AttributeError:
+                    pass
+
+            raise ValueError(f'Failed to identify node id: {item}')
 
         def add_role_rank_constraints():
             """Constrain role-specific display layers at the bottom and top of the graph."""
@@ -2929,7 +2974,7 @@ class ShowGraph:
         if output_fmt == 'pdf':
             # G.format = 'svg'
             try:
-                G.view(composition.name.replace(" ", "-"), cleanup=True, directory=get_default_showgraph_dir().joinpath('PDFS'))
+                G.render(composition.name.replace(" ", "-"), cleanup=True, directory=get_showgraph_dir(directory).joinpath('PDFS'), view=view)
             except ExecutableNotFound as e:
                 raise ShowGraphError(_gv_executable_not_found_error_msg) from e
             except Exception as e:
@@ -2938,7 +2983,7 @@ class ShowGraph:
         # Generate images for animation
         elif output_fmt == 'gif':
             if composition.active_item_rendered or INITIAL_FRAME in active_items:
-                self._generate_gifs(G, active_items, context)
+                self._generate_gifs(G, active_items, directory, view, context)
 
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
@@ -3083,7 +3128,7 @@ class ShowGraph:
 
         if isinstance(composition._animate, dict):
             # Assign directory for animation files
-            default_dir = get_default_showgraph_dir().joinpath('GIFs', composition.name)
+            default_dir = get_showgraph_dir().joinpath('GIFs', composition.name)
             # try:
             #     rmtree(composition._animate_directory)
             # except:
@@ -3153,7 +3198,7 @@ class ShowGraph:
                                context=context,
                                )
 
-    def _generate_gifs(self, G, active_items, context):
+    def _generate_gifs(self, G, active_items, directory, view, context):
         # graphviz is currently only imported within methods
         from graphviz.backend.execute import ExecutableNotFound
 
@@ -3199,6 +3244,9 @@ class ShowGraph:
             raise ShowGraphError(
                 f"PROGRAM ERROR:  Unrecognized phase during execution of {composition.name}: {execution_phase.name}")
 
+        if directory is None:
+            directory = composition._animation_directory
+
         label = f'\n{composition.name}\n{phase_string}{time_string}\n'
         G.attr(label=label)
         G.attr(labelloc='b')
@@ -3206,13 +3254,13 @@ class ShowGraph:
         G.attr(fontsize='14')
         index = repr(composition._component_animation_execution_count)
         image_filename = '-'.join([repr(run_num), repr(trial_num), index])
-        image_file = pathlib.Path(composition._animation_directory, image_filename + '.gif')
+        image_file = pathlib.Path(directory, image_filename + '.gif')
         try:
             G.render(
                 filename=image_filename,
-                directory=composition._animation_directory,
+                directory=directory,
                 cleanup=True,
-                # view=True
+                view=view,
             )
         except ExecutableNotFound as e:
             raise ShowGraphError(_gv_executable_not_found_error_msg) from e

@@ -3531,7 +3531,7 @@ class OptimizationControlMechanism(ControlMechanism):
             #        output ports consume 1d arrays
             sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), op_idx])
             sample_dst = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.store(builder.load(sample_ptr), sample_dst)
+            pnlvm.helpers.memcpy(builder, sample_dst, sample_ptr)
 
             builder.call(op_f, [op_params, op_state, op_in, op_out])
 
@@ -3642,8 +3642,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return f
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context,
-                                  variable, out, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, out, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
 
         # The function returns (sample_optimal, value_optimal),
@@ -3658,8 +3657,8 @@ class OptimizationControlMechanism(ControlMechanism):
         # we need to pass extra arguments
         if len(fun.args) > 4:
             args += builder.function.args[-3:]
-        builder.call(fun, args)
 
+        builder.call(fun, args)
 
         # The mechanism also converts the value to array of arrays
         # e.g. [3 x double] -> [3 x [1 x double]]
@@ -3668,7 +3667,7 @@ class OptimizationControlMechanism(ControlMechanism):
         with pnlvm.helpers.array_ptr_loop(builder, out, id='mech_value_copy') as (b, idx):
             src = b.gep(value, [ctx.int32_ty(0), idx])
             dst = b.gep(out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
-            b.store(b.load(src), dst)
+            pnlvm.helpers.memcpy(builder, dst, src)
 
         return out, builder
 

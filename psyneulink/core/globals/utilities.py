@@ -1870,7 +1870,7 @@ class _SeededPhilox(np.random.Generator):
     def __init__(self, *args, **kwargs):
         # Extract seed
         self.used_seed = (kwargs.get('seed', None) or args[0])[:]
-        state = np.random.Philox([self.used_seed])
+        state = np.random.Philox(self.used_seed)
         super().__init__(state)
 
     def __deepcopy__(self, memo):

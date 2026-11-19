@@ -23,11 +23,12 @@ from llvmlite import ir
 
 from . import codegen
 from .builder_context import *
-from .builder_context import _all_modules, _convert_llvm_ir_to_ctype, _convert_llvm_ir_to_dtype
+from .builder_context import _all_generated_ir_modules, _convert_llvm_ir_to_ctype, _convert_llvm_ir_to_dtype
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
+from .jit_engine import _parse_module
 from .warnings import *
 
 
@@ -114,30 +115,30 @@ class ExecutionMode(enum.Flag):
 _binary_generation = 0
 
 
-def _compiled_modules() -> Set[ir.Module]:
-    return set().union(*(e.compiled_modules for e in _get_engines()))
-
-
-def _staged_modules() -> Set[ir.Module]:
-    return set().union(*(e.staged_modules for e in _get_engines()))
-
-
-def _llvm_build(target_generation=_binary_generation + 1):
+def _llvm_build(target_generation):
     global _binary_generation
+
     if target_generation <= _binary_generation:
         if "compile" in debug_env:
             print("SKIPPING COMPILATION: {} -> {}".format(_binary_generation, target_generation))
+
         return
 
     if "compile" in debug_env:
         print("STAGING GENERATION: {} -> {}".format(_binary_generation, target_generation))
 
-    for e in _get_engines():
-        e.stage_compilation(_modules)
-    _modules.clear()
+    parsed_modules = [_parse_module(m) for m in _pending_generated_ir_modules]
 
-    # update binary generation
+    for e in _get_engines():
+        e.stage_compilation([m.clone() for m in parsed_modules])
+
+    _pending_generated_ir_modules.clear()
+
+    # Update binary generation
     _binary_generation = target_generation
+
+    # Clear cache of binary functions
+    LLVMBinaryFunction.get.cache_clear()
 
 
 class LLVMBinaryFunction:
@@ -151,12 +152,13 @@ class LLVMBinaryFunction:
         LLVMBuilderContext.get_current()
 
         # Compile any pending modules
+        # We could skip compilation if the function is in already compiled modules,
+        # but that happens rarely
         _llvm_build(LLVMBuilderContext._llvm_generation)
+        assert len(_pending_generated_ir_modules) == 0, _pending_generated_ir_modules
 
         # Function signature
-        # We could skip compilation if the function is in _compiled_models,
-        # but that happens rarely
-        f = _find_llvm_function(self.name, _compiled_modules() | _staged_modules())
+        f = _find_llvm_function(self.name)
 
         # Create ctype function instance
         start = time.perf_counter()
@@ -194,6 +196,7 @@ class LLVMBinaryFunction:
             _cpu_engine.compile_staged()
             ptr = _cpu_engine._engine.get_function_address(self.name)
             self.__c_func = self.__c_func_type(ptr)
+
         return self.__c_func
 
     def __call__(self, *args, **kwargs):
@@ -288,8 +291,8 @@ def cleanup(check_leaks:bool=False):
     global _ptx_engine
     _ptx_engine = None
 
-    _modules.clear()
-    _all_modules.clear()
+    _pending_generated_ir_modules.clear()
+    _all_generated_ir_modules.clear()
 
     LLVMBinaryFunction.get.cache_clear()
     LLVMBinaryFunction.from_obj.cache_clear()

@@ -3816,12 +3816,10 @@ class SoftMax(TransferFunction):
             one_hot_in_data = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
             one_hot_in_dist = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
+            pnlvm.helpers.memcpy(builder, one_hot_in_data, arg_in)
+
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in_dist, gain=gain, exp_sum=exp_sum, builder=b, index=i)
-
-                dist_in = b.gep(arg_in, [ctx.int32_ty(0), i])
-                dist_out = b.gep(one_hot_in_data, [ctx.int32_ty(0), i])
-                b.store(b.load(dist_in), dist_out)
 
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
 
@@ -5230,6 +5228,8 @@ class TransferWithCosts(TransferFunction):
                 exp_out_len = 0 if self.parameters.enabled_cost_functions._get_value_for_codegen() == CostFunctions.NONE or flag != CostFunctions.INTENSITY else 1
                 assert len(cost_out.type.pointee) == exp_out_len, "Unexpected out sturct for {}: {}".format(flag, cost_out.type.pointee)
 
+        pnlvm.helpers.memcpy(builder, intensity_ptr, trans_out)
+
         # TODO: combine above costs via a call to combine_costs_fct
         # depends on: https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
         # This function is still used in OCM so track both state and parameters
@@ -5238,7 +5238,5 @@ class TransferWithCosts(TransferFunction):
                                                           self.parameters.combine_costs_fct,
                                                           param_struct_ptr=params,
                                                           state_struct_ptr=state)
-
-        builder.store(builder.load(trans_out), intensity_ptr)
 
         return builder

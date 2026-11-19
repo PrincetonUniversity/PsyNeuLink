@@ -2411,12 +2411,16 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                                                                          param_struct_ptr=params,
                                                                          state_struct_ptr=state)
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee, name="distance_function_arg_in")
-            builder.store(builder.load(var_key_ptr), builder.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            distance_arg_in_var = builder.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            distance_arg_in_compare = builder.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+            pnlvm.helpers.memcpy(builder, distance_arg_in_var, var_key_ptr)
 
             selection_arg_in = builder.alloca(pnlvm.ir.ArrayType(distance_f.args[3].type.pointee, max_entries), name="selection_function_arg_in")
             with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b, idx):
                 compare_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
-                b.store(b.load(compare_ptr), b.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)]))
+                pnlvm.helpers.memcpy(builder, distance_arg_in_compare, compare_ptr)
+
                 distance_arg_out = b.gep(selection_arg_in, [ctx.int32_ty(0), idx])
                 b.call(distance_f, [distance_params, distance_state, distance_arg_in, distance_arg_out])
 
@@ -2518,8 +2522,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 store_key_ptr = builder.gep(keys_ptr, [ctx.int32_ty(0), write_idx])
                 store_val_ptr = builder.gep(vals_ptr, [ctx.int32_ty(0), write_idx])
 
-                builder.store(builder.load(modified_key_ptr), store_key_ptr)
-                builder.store(builder.load(var_val_ptr), store_val_ptr)
+                pnlvm.helpers.memcpy(builder, store_key_ptr, modified_key_ptr)
+                pnlvm.helpers.memcpy(builder, store_val_ptr, var_val_ptr)
 
                 # Update counters
                 write_idx = builder.add(write_idx, write_idx.type(1))
