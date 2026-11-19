@@ -172,6 +172,9 @@ def _parse_module(module):
 
     finish = time.perf_counter()
 
+    # Set the name explicitly otherwise the parser assigns default ("<string>")
+    mod.name = module.name
+
     if "time_stat" in debug_env:
         print("Time to parse LLVM modules '{}': {}".format(module.name, finish - start))
 
