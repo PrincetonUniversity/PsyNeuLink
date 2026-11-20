@@ -367,6 +367,28 @@ class PECFactorySubjectLikelihood(SubjectLikelihoodProvider):
         pec, inputs = self._build(subject_index)
         return float(pec.log_likelihood(*np.asarray(theta, dtype=float), inputs=inputs))
 
+    def subject_terms(self, subject_index):
+        """One participant's trained estimator and the trials it scores, for sampling.
+
+        The EM driver needs only a number from a participant's model; a sampler needs the
+        estimator itself, so that it can differentiate the score.
+        """
+        from psyneulink.core.compositions.hierarchical.nuts import SubjectTerms
+        import torch
+
+        pec, inputs = self._build(subject_index)
+        likelihood, outcomes, features, parameter_index = pec.neural_likelihood_terms(inputs)
+        return SubjectTerms(
+            likelihood=likelihood,
+            # Encoded once rather than on every evaluation; see encode_outcomes.
+            outcomes=likelihood.encode_outcomes(outcomes),
+            parameter_index=torch.as_tensor(parameter_index),
+            trial_features=(
+                None if features is None
+                else torch.as_tensor(np.asarray(features, dtype=float), dtype=torch.float32)
+            ),
+        )
+
     def close(self):
         """Drop the cached models."""
         self._cache.clear()
