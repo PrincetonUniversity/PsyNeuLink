@@ -10,7 +10,7 @@ import numpy as np
 from psyneulink.core.batched.backend.triton.cache import interpret_scope
 from psyneulink.core.batched.backend.triton.runtime import (
     _check_step_caps, _compiler_launch_options, _import_torch_triton,
-    _load_kernel_module, _normalize_launch_options,
+    _load_kernel_module, _model_value_args, _normalize_launch_options,
 )
 from psyneulink.core.batched.backend.triton.state import retained_control_layout
 from psyneulink.core.batched.graph import COEVOLVING_GRAPH_FUSION
@@ -70,6 +70,7 @@ class _ConditionedRunner:
         self.seed = 0 if seed is None else int(seed)
         self.common_random = bool(common_random)
         self.launch = _normalize_launch_options(launch_options, interpret=False)
+        self.model_value_args = _model_value_args(torch, plan.ir, "cuda", self.launch)
         prepared = prepare_inputs(plan.ir, inputs, parameter_sets=rows,
                                   component_bindings=plan.component_bindings)
         graph = plan.ir.graph
@@ -112,7 +113,8 @@ class _ConditionedRunner:
         _check_step_caps(max_steps=plan.ir.max_steps, lca_max_steps=max(self.caps))
         with interpret_scope(False):
             module = _load_kernel_module(plan.ir, kernel_ir=plan.kernel_ir, interpret=False,
-                                         normal_rng=self.launch["normal_rng"], trial_schedule=self.launch["trial_schedule"])
+                                         normal_rng=self.launch["normal_rng"], trial_schedule=self.launch["trial_schedule"],
+                                         shared_kernel_parameters=self.launch.get("shared_kernel_parameters"))
         self.kernel = module.pnl_batched_coevolving_graph_kernel
         self.slots = diag_slots(plan.kernel_ir)
         _, state_width = retained_control_layout(graph)
@@ -146,6 +148,7 @@ class _ConditionedRunner:
                 self.out, *(() if self.diag is None else (self.diag,)),
                 initial, self.final_state, initial_states is not None, True,
                 self.total_lanes, 1, self.estimates, 1,
+                *self.model_value_args,
                 LCA_MAX_STEPS=self.caps[trial_index], MAX_STEPS=self.plan.ir.max_steps,
                 COMMON_RANDOM=self.common_random, SEED=self.seed, TRIAL_OFFSET=trial_index,
                 RNG_NUM_TRIALS=self.trials, BLOCK=self.launch["block_size"], **self.compiler_options,

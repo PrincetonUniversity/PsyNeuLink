@@ -40,7 +40,7 @@ from psyneulink.core.batched.backend.triton.emit.lanes import (
 )
 from psyneulink.core.batched.backend.triton.emit.ops import OpEmitMixin
 from psyneulink.core.batched.backend.triton.emit.trials import IndependentTrialEmitMixin, validate_trial_schedule
-from psyneulink.core.batched.backend.triton.state import retained_control_layout
+from psyneulink.core.batched.backend.triton.state import model_value_layout, retained_control_layout
 from psyneulink.core.batched.specs import ElementwiseFunctionSpec
 
 
@@ -53,9 +53,16 @@ _KERNEL_NAMES = {
 
 
 class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
-    def __init__(self, kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG, trial_schedule="synchronized"):
+    def __init__(self, kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG, trial_schedule="synchronized",
+                 shared_kernel_parameters=None):
         self.normal_rng = validate_normal_rng(normal_rng)
         self.trial_schedule = validate_trial_schedule(trial_schedule)
+        self.shared_parameters = frozenset(shared_kernel_parameters or ())
+        self.share_kernel = shared_kernel_parameters is not None and kernel.fusion_kind in (
+            STATEFUL_GRAPH_FUSION, COEVOLVING_GRAPH_FUSION,
+        )
+        if self.share_kernel:
+            _, self.state_value_offsets = model_value_layout(kernel.params, kernel.states)
         self.trial_reset_mask = None
         self.kernel = kernel
         self.graph = kernel.graph
@@ -174,10 +181,19 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
                 "SEED",
                 "TRIAL_OFFSET",
                 "RNG_NUM_TRIALS",
+                *self._batch_args(),
             )
         if self.kernel.fusion_kind == DDM_GRAPH_FUSION:
             return ("SEED",)
         return ()
+
+    def _batch_args(self) -> tuple[str, ...]:
+        if not self.share_kernel:
+            return ()
+        # The active lane count only masks the final block. Slices of packed
+        # trial inputs and parameter rows can have different pointer alignment.
+        return ("total_lanes", *(f"input_{i}" for i in range(len(self.kernel.inputs))),
+                *(f"param_{i}" for i in range(len(self.kernel.params))))
 
     def _signature_args(self) -> tuple[str, ...]:
         args = [f"input_{idx}" for idx, _ in enumerate(self.kernel.inputs)]
@@ -206,7 +222,7 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
             )
         args.extend(
             [
-                "total_lanes: tl.constexpr",
+                "total_lanes" if self.share_kernel else "total_lanes: tl.constexpr",
                 "num_subjects: tl.constexpr",
             ]
         )
@@ -216,6 +232,7 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
                 [
                     "num_estimates: tl.constexpr",
                     "num_trials",
+                    *(("model_values",) if self.share_kernel else ()),
                     "LCA_MAX_STEPS",
                     "MAX_STEPS: tl.constexpr",
                     "COMMON_RANDOM: tl.constexpr",
@@ -251,10 +268,14 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
             if param_spec.constant_value is not None:
                 if not trial_varying_only:
                     # Match the FP32 parameter-buffer ABI before constant folding.
-                    value = float_literal(np.float32(param_spec.constant_value))
-                    self._emit_trial_initializer(var, f"tl.full((BLOCK,), {value}, tl.float32)")
+                    if param_spec.name.rsplit(".", 1)[-1] in self.shared_parameters and self.share_kernel:
+                        expression = f"tl.broadcast_to(tl.load(model_values + {idx}), (BLOCK,))"
+                    else:
+                        value = float_literal(np.float32(param_spec.constant_value))
+                        expression = f"tl.full((BLOCK,), {value}, tl.float32)"
+                    self._emit_trial_initializer(var, expression)
                 continue
-            default = float_literal(param_spec.default)
+            default = f"tl.load(model_values + {idx})" if self.share_kernel else float_literal(param_spec.default)
             expression = (
                 f"tl.load(param_{idx} + "
                 f"param_idx * param_{idx}_set_stride + "
@@ -402,29 +423,25 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
 
     def _emit_state_initializer_value(self, state, index: int, value, output: str) -> None:
         initializer = state.function_initializer
+        if initializer is not None:
+            if len(initializer.input_value) <= index:
+                raise ValueError("Batched state function initializer input width does not match its state width.")
+            value = initializer.input_value[index]
+        if self.share_kernel:
+            offset = self.state_value_offsets[state.state_id] + index
+            initial = f"tl.broadcast_to(tl.load(model_values + {offset}), (BLOCK,))"
+        else:
+            initial = f"tl.full((BLOCK,), {float_literal(value)}, tl.float32)"
         if initializer is None:
-            self.builder.line(
-                f"{output} = tl.full((BLOCK,), {float_literal(value)}, tl.float32)"
-            )
+            self.builder.line(f"{output} = {initial}")
             return
-        self._emit_state_function_initializer(initializer, index, output)
-
-    def _emit_state_function_initializer(self, initializer, index: int, output: str) -> None:
         spec = self.kernel.op_specs.lookup_spec(initializer.spec_key)
         if not isinstance(spec, ElementwiseFunctionSpec) or spec.triton_template is None:
             raise ValueError(
                 "Batched state function initializer requires a registered "
                 f"elementwise Triton implementation, got '{initializer.spec_key}'."
             )
-        if len(initializer.input_value) <= index:
-            raise ValueError(
-                "Batched state function initializer input width does not match "
-                "its state width."
-            )
-        args = [
-            "tl.full((BLOCK,), "
-            f"{float_literal(initializer.input_value[index])}, tl.float32)"
-        ]
+        args = [initial]
         for binding in spec.params:
             try:
                 public_name = initializer.params[binding.arg]
@@ -483,7 +500,9 @@ class TritonGraphEmitter(IndependentTrialEmitMixin, LaneEmitMixin, OpEmitMixin):
         return value
 
 
-def triton_graph_kernel_source(kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG, trial_schedule="synchronized") -> str:
+def triton_graph_kernel_source(kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RNG, trial_schedule="synchronized",
+                               shared_kernel_parameters=None) -> str:
     """Emit inspectable Triton source for a generated graph kernel."""
 
-    return TritonGraphEmitter(kernel, normal_rng=normal_rng, trial_schedule=trial_schedule).emit()
+    return TritonGraphEmitter(kernel, normal_rng=normal_rng, trial_schedule=trial_schedule,
+                              shared_kernel_parameters=shared_kernel_parameters).emit()
