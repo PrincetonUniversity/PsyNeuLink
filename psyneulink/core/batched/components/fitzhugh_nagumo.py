@@ -54,9 +54,11 @@ def _supports(node):
         value = _finite_broadcast_scalar_parameter(integrator, name)
         if value is None or (name in {"time_step_size", "time_constant_v", "time_constant_w"} and value <= 0):
             return reject(f"invalid scalar {name}")
-    for name in ("initial_v", "initial_w", "t_0"):
-        if _finite_broadcast_scalar_parameter(integrator, name) != 0:
-            return reject("requires zero state initializers")
+    for name in ("initial_v", "initial_w"):
+        if _finite_broadcast_scalar_parameter(integrator, name) is None:
+            return reject(f"invalid scalar {name}")
+    if _finite_broadcast_scalar_parameter(integrator, "t_0") != 0:
+        return reject("requires zero t_0")
     if _raw_parameter(node, "termination_comparison_op") != ">=":
         return reject("requires >= termination")
     maximum = _finite_broadcast_scalar_parameter(node, "max_executions_before_finished")
@@ -80,7 +82,11 @@ def _attrs(node, composition):
     from psyneulink.core.batched.graph import _owner_value_selector_index
     steps = int(_raw_parameter(node, "termination_threshold")) if _raw_parameter(node, "execute_until_finished") else 1
     steps = min(steps, int(_raw_parameter(node, "max_executions_before_finished")))
-    return {"integration_steps": steps, "output_indices": tuple(_owner_value_selector_index(p) for p in node.output_ports)}
+    integrator = node.integrator_function
+    return {"integration_steps": steps, "output_indices": tuple(_owner_value_selector_index(p) for p in node.output_ports),
+            # initial_v / initial_w: the FHN state at construction and after an AtTrialStart reset
+            "fhn_initial_v": (_finite_broadcast_scalar_parameter(integrator, "initial_v"),),
+            "fhn_initial_w": (_finite_broadcast_scalar_parameter(integrator, "initial_w"),)}
 
 
 def _step(ctx, node, inputs, outputs, step_var, finished_var):
@@ -110,7 +116,9 @@ def _specialized(ports):
                      for name in _PARAMETERS)
         + tuple(ParamBinding(name, default=1.0 if name in {"slope", "scale"} else 0.0)
                 for name in ("slope", "intercept", "scale", "offset")),
-        states=tuple(StateDecl(name, width=1) for name in ("v", "w", "time")),
+        states=(StateDecl("v", width=1, initial_attribute="fhn_initial_v"),
+                StateDecl("w", width=1, initial_attribute="fhn_initial_w"),
+                StateDecl("time", width=1)),
         outputs=tuple(OutputDecl(name) for name in ports),
         supports=_supports, extract_attrs=_attrs, validate_outputs=_outputs_supported,
         triton_emit=_atomic, step_emit=_step, likelihood_contract=LikelihoodEffectContract(),

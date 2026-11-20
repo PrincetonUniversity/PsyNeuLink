@@ -219,13 +219,12 @@ def test_extended_lca_rejects_unrepresented_semantics(change):
     assert not BatchedCompositionCompiler.diagnose(c).model_supported
 
 
-@pytest.mark.parametrize("change", ["function", "method", "initializer", "selector", "noise"])
+@pytest.mark.parametrize("change", ["function", "method", "selector", "noise"])
 def test_fitzhugh_nagumo_rejects_unrepresented_semantics(change):
     fhn = pnl.TransferMechanism(
         input_shapes=1, integrator_mode=True,
         integrator_function=pnl.FitzHughNagumoIntegrator(
             integration_method="RK4" if change == "method" else "EULER",
-            initial_v=1. if change == "initializer" else 0.,
         ),
         function=pnl.Logistic() if change == "function" else pnl.Linear(),
         noise=.1 if change == "noise" else 0.,
@@ -235,6 +234,18 @@ def test_fitzhugh_nagumo_rejects_unrepresented_semantics(change):
     if change == "selector":
         fhn.output_port.function.parameters.slope.set(2.)
     assert not BatchedCompositionCompiler.diagnose(pnl.Composition(pathways=fhn)).model_supported
+
+
+def test_fitzhugh_nagumo_accepts_nonzero_initial_state():
+    # LC starts (and resets AtTrialStart) at its FHN rest point, not at (0, 0).
+    fhn = pnl.TransferMechanism(
+        input_shapes=1, integrator_mode=True,
+        integrator_function=pnl.FitzHughNagumoIntegrator(integration_method="EULER", initial_v=-.0451, initial_w=.0327),
+        function=pnl.Linear(),
+        termination_measure=pnl.TimeScale.PASS, termination_threshold=10,
+        output_ports=[{pnl.NAME: "w", pnl.VARIABLE: (pnl.OWNER_VALUE, 1)}],
+    )
+    assert BatchedCompositionCompiler.diagnose(pnl.Composition(pathways=fhn)).model_supported
 
 
 _DRIVER = Path(__file__).resolve().parents[3] / "Scripts/Debug/pec_batch_compile/dawa/dawa_batched_simulation.py"
