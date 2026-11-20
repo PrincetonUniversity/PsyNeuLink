@@ -1,7 +1,8 @@
 """Retained AdaptiveIntegrator state with a Logistic or Linear transfer readout.
 
-Linear readout added for the LC/ACC sensor (R1-SENSOR 2026-11-13): an integrator_mode TransferMechanism whose function is
-Linear publishes its raw running average (slope * state + intercept)."""
+A Linear readout publishes the raw running average of an integrator_mode
+TransferMechanism (slope * state + intercept).
+"""
 
 from functools import lru_cache
 
