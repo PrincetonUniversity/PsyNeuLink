@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from psyneulink.core.batched.backend.triton.cache import cached_kernel_source
 from psyneulink.core.batched.graph import (
     COEVOLVING_GRAPH_FUSION,
     DDM_GRAPH_FUSION,
@@ -504,5 +505,11 @@ def triton_graph_kernel_source(kernel: KernelIR, *, normal_rng=DEFAULT_NORMAL_RN
                                shared_kernel_parameters=None) -> str:
     """Emit inspectable Triton source for a generated graph kernel."""
 
-    return TritonGraphEmitter(kernel, normal_rng=normal_rng, trial_schedule=trial_schedule,
-                              shared_kernel_parameters=shared_kernel_parameters).emit()
+    def emit():
+        return TritonGraphEmitter(kernel, normal_rng=normal_rng, trial_schedule=trial_schedule,
+                                  shared_kernel_parameters=shared_kernel_parameters).emit()
+
+    if shared_kernel_parameters is None:
+        return emit()
+    variant = ("graph", normal_rng, trial_schedule, frozenset(shared_kernel_parameters))
+    return cached_kernel_source(kernel, variant, emit)
