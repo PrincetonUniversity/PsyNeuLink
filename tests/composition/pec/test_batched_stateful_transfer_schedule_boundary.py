@@ -109,13 +109,14 @@ def _make_two_node_model(
     projection_matrix: float = 1.0,
     follower_slope: float = 1.0,
     follower_intercept: float = 0.0,
+    producer_function_factory: Callable = lambda: pnl.Linear(slope=1.5, intercept=-0.2),
 ) -> _ScheduledModel:
     suffix = next(_BUILD_NUMBERS)
     producer = pnl.TransferMechanism(
         input_shapes=1,
         integrator_mode=True,
         integrator_function=integrator_factory(),
-        function=pnl.Linear(slope=1.5, intercept=-0.2),
+        function=producer_function_factory(),
         reset_stateful_function_when=reset_factory(),
         name=f"{name} producer {suffix}",
     )
@@ -243,6 +244,8 @@ def _repeated_adaptive_model():
         reset_factory=pnl.AtTrialStart,
         producer_condition_factory=pnl.Always,
         follower_condition_factory=lambda: pnl.AtPass(3),
+        # Exponential readout: no retained-state op, so the repeated schedule stays rejected.
+        producer_function_factory=lambda: pnl.Exponential(rate=0.5),
     )
 
 
@@ -270,7 +273,7 @@ def _implicit_dependency_adaptive_model():
             offset=0.0,
             noise=0.0,
         ),
-        function=pnl.Linear(slope=1.5, intercept=-0.2),
+        function=pnl.Exponential(rate=0.5),
         reset_stateful_function_when=pnl.AtTrialStart(),
         name=f"implicit dependency adaptive {suffix}",
     )
@@ -346,7 +349,7 @@ REJECTION_CASES = (
         provenance=(
             f"{_TRANSFER_RESET_LLVM_PROVENANCE}; {_AT_PASS_PROVENANCE}"
         ),
-        expected_values=np.array([[1.015234375], [-2.0609375], [0.5025390625]]),
+        expected_values=np.array([[1.4994196376402111], [0.5377763562220085], [1.2638715737287158]]),
         expected_trace=_three_trials(
             _STATEFUL,
             _STATEFUL,
@@ -368,7 +371,7 @@ REJECTION_CASES = (
         provenance=(
             f"{_TRANSFER_RESET_LLVM_PROVENANCE}; {_AT_PASS_PROVENANCE}"
         ),
-        expected_values=np.array([[0.625], [-0.5], [0.4375]]),
+        expected_values=np.array([[1.3165306748676215], [0.9048374180359596], [1.2367661135652848]]),
         expected_trace=_three_trials(
             _EMPTY,
             _EMPTY,

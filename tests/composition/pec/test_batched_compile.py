@@ -624,7 +624,8 @@ def test_batched_compiler_rejects_unsupported_custom_function():
 
 @pytest.mark.composition
 def test_batched_compiler_rejects_integrator_mode_transfer():
-    mech = pnl.TransferMechanism(input_shapes=1, integrator_mode=True, name="integ")
+    # Adaptive Logistic/Linear readouts have a retained-state op; Exponential has none.
+    mech = pnl.TransferMechanism(input_shapes=1, function=pnl.Exponential(), integrator_mode=True, name="integ")
     comp = pnl.Composition(pathways=mech)
     report = BatchedCompositionCompiler.diagnose(comp)
 
@@ -653,8 +654,9 @@ def test_batched_fires_once_integrating_transfer_is_supported():
 def test_batched_integrating_transfer_without_fire_once_schedule_is_rejected():
     # Reset each trial but NO fires-once schedule: it would accumulate within the
     # trial, so the stateless fold is unsound and the node must stay rejected.
+    # Exponential readout: no retained-state op exists to fall back on.
     mech = pnl.TransferMechanism(
-        input_shapes=1, integrator_mode=True,
+        input_shapes=1, function=pnl.Exponential(), integrator_mode=True,
         reset_stateful_function_when=pnl.AtTrialStart(), name="integ",
     )
     comp = pnl.Composition(pathways=mech)

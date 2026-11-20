@@ -277,6 +277,7 @@ class _RejectionCase:
 def _stateful_composition():
     mechanism = pnl.TransferMechanism(
         input_shapes=1,
+        function=pnl.Exponential(),
         integrator_mode=True,
         name="stateful schedule node",
     )

@@ -743,7 +743,9 @@ def test_integrating_transfer_rejects_reset_condition_name_impostor():
     assert lowering.graph is None
     assert any(
         diagnostic.component == mechanism.name
-        and diagnostic.reason
-        == "unsupported stateful transfer (integrator_mode) for batched v2"
+        and diagnostic.reason in {
+            "unsupported stateful transfer (integrator_mode) for batched v2",
+            "unsupported adaptive transfer semantics",
+        }
         for diagnostic in lowering.rejected_nodes
     )
