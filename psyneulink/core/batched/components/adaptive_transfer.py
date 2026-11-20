@@ -1,4 +1,7 @@
-"""Retained AdaptiveIntegrator state with a Logistic transfer readout."""
+"""Retained AdaptiveIntegrator state with a Logistic or Linear transfer readout.
+
+Linear readout added for the LC/ACC sensor (R1-SENSOR 2026-11-13): an integrator_mode TransferMechanism whose function is
+Linear publishes its raw running average (slope * state + intercept)."""
 
 from functools import lru_cache
 
@@ -10,7 +13,7 @@ from psyneulink.core.batched.specs import (
     spec_key,
 )
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.scheduling.condition import AtTrialStart, Never
 
@@ -62,6 +65,42 @@ def _atomic(ctx, node, inputs, outputs):
     return _step(ctx, node, inputs, outputs, "0", "0.0")
 
 
+def _step_linear(ctx, node, inputs, outputs, step_var, finished_var):
+    state = ctx.state(f"{node.name}.previous_value", 0)
+    rate, offset = (ctx.param(node, name) for name in ("integration_rate", "integrator_offset"))
+    ctx.line(f"{state} = tl.where({finished_var} == 0.0, "
+             f"(1.0 - {rate}) * {state} + {rate} * {inputs[0]} + {offset}, {state})")
+    slope, intercept = (ctx.param(node, p) for p in ("slope", "intercept"))
+    value = f"({slope} * {state} + {intercept})"
+    return (value,) * len(outputs)
+
+
+def _atomic_linear(ctx, node, inputs, outputs):
+    return _step_linear(ctx, node, inputs, outputs, "0", "0.0")
+
+
+_INTEGRATOR_PARAMS = (
+    ParamBinding("integration_rate", scope="mechanism", minimum=0.0, maximum=1.0,
+                 get=lambda n: _finite_broadcast_scalar_parameter(n.integrator_function, "rate")),
+    ParamBinding("integrator_offset", scope="mechanism", pnl_name="offset",
+                 get=lambda n: _finite_broadcast_scalar_parameter(n.integrator_function, "offset")),
+)
+
+
+@lru_cache(None)
+def _specialized_linear(ports):
+    return MechanismOpSpec(
+        TransferMechanism, Linear, display_name="Adaptive Linear transfer",
+        key=f"{spec_key(TransferMechanism)}:adaptive_linear:{ports!r}",
+        params=_INTEGRATOR_PARAMS + tuple(ParamBinding(name, default=1.0 if name == "slope" else 0.0)
+                                          for name in ("slope", "intercept")),
+        states=(StateDecl("previous_value", width=1, initial_attribute="integrator_initial"),),
+        outputs=tuple(OutputDecl(name) for name in ports),
+        supports=_supports, validate_outputs=_outputs_supported, extract_attrs=_attrs,
+        triton_emit=_atomic_linear, step_emit=_step_linear, likelihood_contract=LikelihoodEffectContract(),
+    )
+
+
 @lru_cache(None)
 def _specialized(ports):
     return MechanismOpSpec(
@@ -86,4 +125,8 @@ def resolve(node):
             and type(node.function) is Logistic and _raw_parameter(node, "integrator_mode", False)
             and len(node.input_ports) == 1 and node.input_port.value.size == 1):
         return _specialized(tuple(port.name for port in node.output_ports))
+    if (type(getattr(node, "integrator_function", None)) is AdaptiveIntegrator
+            and type(node.function) is Linear and _raw_parameter(node, "integrator_mode", False)
+            and len(node.input_ports) == 1 and node.input_port.value.size == 1):
+        return _specialized_linear(tuple(port.name for port in node.output_ports))
     return None
