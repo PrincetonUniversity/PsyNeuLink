@@ -13,6 +13,7 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     OptimizationFunctionError,
     SEARCH_SPACE,
 )
+from psyneulink.core.components.functions.nonstateful.parameterspace import _checked_optuna_params, _parse_parameter_space
 from psyneulink.core.globals.parameters import SharedParameter, check_user_specified
 from psyneulink.core.globals.utilities import try_extract_0d_array_item
 
@@ -448,6 +449,21 @@ def _dask_map(client, func, iterable):
     return list(client.gather(futures))
 
 
+def _suggest_pec_params(trial, distributions):
+    for name, dist in distributions.items():
+        if isinstance(dist, optuna.distributions.CategoricalDistribution):
+            trial.suggest_categorical(name, dist.choices)
+        else:
+            trial.suggest_float(name, dist.low, dist.high, step=dist.step)
+    # Fixed/enqueued values and GridSampler can override the declared distribution.
+    return _checked_optuna_params(trial.params, distributions)
+
+
+def _optuna_result(study, distributions):
+    best = study.best_trial
+    return {"fitted_params": _checked_optuna_params(best.params, distributions), "optimal_value": best.value}
+
+
 def _run_ask_tell_rounds(study, distributions, param_order, batch, n_trials,
                          submit_one, gather):
     """Synchronous batched ask/tell loop for a distributed optuna study.
@@ -462,8 +478,24 @@ def _run_ask_tell_rounds(study, distributions, param_order, batch, n_trials,
     remaining = n_trials
     while remaining > 0:
         size = min(batch, remaining)
-        trials = [study.ask(distributions) for _ in range(size)]
-        futures = [submit_one([t.params[name] for name in param_order]) for t in trials]
+        trials = []
+        candidates = []
+        try:
+            for _ in range(size):
+                trial = study.ask()
+                trials.append(trial)
+                params = _suggest_pec_params(trial, distributions)
+                candidates.append([params[name] for name in param_order])
+        except Exception:
+            # No member of this batch has been submitted. Finish every trial we opened,
+            # even when a user-supplied sampler also raises in its after_trial callback.
+            for trial in trials:
+                try:
+                    study.tell(trial, state=optuna.trial.TrialState.FAIL)
+                except Exception:
+                    logger.exception("Failed to finalize Optuna trial %s", trial.number)
+            raise
+        futures = [submit_one(candidate) for candidate in candidates]
         values = gather(futures)
         for trial, value in zip(trials, values):
             study.tell(trial, value)
@@ -1047,10 +1079,7 @@ class PECOptimizationFunction(OptimizationFunction):
         if self.distributed:
             return self._fit_differential_evolution_distributed(context, client)
 
-        bounds = self.fit_param_bounds
-
-        # We just need the upper and lower bounds for the differential evolution algorithm. The step size is not used.
-        bounds = list([(lb, ub) for name, (lb, ub, step) in bounds.items()])
+        bounds = list(self._continuous_fit_param_bounds.values())
 
         # Get a seed to pass to scipy for its search. Make this dependent on the seed of the
         # OCM
@@ -1141,7 +1170,7 @@ class PECOptimizationFunction(OptimizationFunction):
         worker_cores = _resolve_worker_cores(self._distributed_options)
         data = self.owner.composition.data
 
-        bounds = [(lb, ub) for name, (lb, ub, step) in self.fit_param_bounds.items()]
+        bounds = list(self._continuous_fit_param_bounds.values())
         seed_for_scipy = try_extract_0d_array_item(
             self._get_current_parameter_value('initial_seed', context)
         )
@@ -1185,6 +1214,8 @@ class PECOptimizationFunction(OptimizationFunction):
         if self.distributed:
             return self._fit_optuna_distributed(opt_func, client)
 
+        distributions = self.fit_param_distributions
+
         with Progress(
             "[progress.description]{task.description}",
             BarColumn(),
@@ -1214,10 +1245,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 # the current values for the parameter rather than them being passed
                 # directly. So we need to wrap the wrapper
                 def objfunc_wrapper_wrapper(trial):
-                    for name, (lower, upper, step) in self.fit_param_bounds.items():
-                        trial.suggest_float(name, lower, upper, step=step)
-
-                    return objfunc_wrapper(list(trial.params.values()))
+                    return objfunc_wrapper(list(_suggest_pec_params(trial, distributions).values()))
 
                 self._best_params = {}
 
@@ -1251,18 +1279,7 @@ class PECOptimizationFunction(OptimizationFunction):
                     callbacks=[progress_callback],
                 )
 
-            # Bind the fitted parameters to their names
-            fitted_params = dict(
-                zip(list(self.fit_param_names), study.best_params.values())
-            )
-
-        # Save all the results
-        output_dict = {
-            "fitted_params": fitted_params,
-            "optimal_value": study.best_value,
-        }
-
-        return output_dict
+        return _optuna_result(study, distributions)
 
     def _resolve_pec_factory(self):
         """Return the user's ``pec_factory`` or raise an actionable error."""
@@ -1317,19 +1334,12 @@ class PECOptimizationFunction(OptimizationFunction):
         identical to the serial fit; Dask changes only evaluation concurrency.
         Returns the same ``{"fitted_params", "optimal_value"}`` dict as the serial path.
         """
-        from optuna.distributions import FloatDistribution
-
         pec_factory = self._resolve_pec_factory()
         worker_cores = _resolve_worker_cores(self._distributed_options)
         data = self.owner.composition.data
 
         param_order = list(self.fit_param_names)
-        # Match the serial path's discretization so candidates land on the same grid
-        # (needed for parity with tell-order-independent samplers).
-        distributions = {
-            name: FloatDistribution(lower, upper, step=step)
-            for name, (lower, upper, step) in self.fit_param_bounds.items()
-        }
+        distributions = self.fit_param_distributions
 
         max_iterations = self.parameters.max_iterations.get()
         batch = self._resolve_batch_size(client, opt_func)
@@ -1367,10 +1377,7 @@ class PECOptimizationFunction(OptimizationFunction):
         finally:
             client.cancel(data_f)
 
-        fitted_params = dict(
-            zip(param_order, [study.best_params[name] for name in param_order])
-        )
-        return {"fitted_params": fitted_params, "optimal_value": study.best_value}
+        return _optuna_result(study, distributions)
 
     @property
     def fit_param_names(self) -> List[str]:
@@ -1395,49 +1402,38 @@ class PECOptimizationFunction(OptimizationFunction):
             return None
 
     @property
-    def fit_param_bounds(self) -> Dict[str, Tuple[float, float, float]]:
-        """
-        Get the allocation samples for just the fitting parameters. Whatever they are, turn them into upper and lower
-        bounds, with a step size as well.
-
-        Returns:
-            A dict mapping parameter names to (lower, upper) bounds.
-            A dict mapping parameter names to step sizes.
-        """
-
-        if self.owner is not None:
-
-            if not self.owner.depends_on:
-                bounds = [(float(min(s)), float(max(s))) for s in self.owner.fit_parameters.values()]
-                steps = [np.unique(np.diff(s).round(decimals=5)) for s in self.owner.fit_parameters.values()]
-            else:
-                bounds = []
-                steps = []
-                for param_name, mech in self.owner.fit_parameters.keys():
-                    s = self.owner.fit_parameters[(param_name, mech)]
-                    if (param_name, mech) in self.owner.cond_levels:
-                        for _ in self.owner.cond_levels[(param_name, mech)]:
-                            bounds.append((float(min(s)), float(max(s))))
-                            steps.append(np.unique(np.diff(s).round(decimals=5)))
-                    else:
-                        bounds.append((float(min(s)), float(max(s))))
-                        steps.append(np.unique(np.diff(s).round(decimals=5)))
-
-            # We also check if step size is constant, if not we raise an error
-            for s in steps:
-                if len(s) > 1:
-                    raise ValueError("Step size for each parameter must be constant")
-
-            steps = [float(s[0]) for s in steps]
-
-            return dict(
-                zip(
-                    self.fit_param_names,
-                    ((l, u, s) for (l, u), s in zip(bounds, steps)),
-                )
-            )
-        else:
+    def _fit_param_spaces(self):
+        if self.owner is None:
             return None
+        spaces = []
+        levels = self.owner.cond_levels or {}
+        for parameter, spec in self.owner.fit_parameters.items():
+            space = _parse_parameter_space(spec)
+            count = len(levels[parameter]) if self.owner.depends_on and parameter in levels else 1
+            spaces.extend([space] * count)
+        return dict(zip(self.fit_param_names, spaces))
+
+    @property
+    def fit_param_bounds(self) -> Dict[str, Tuple[float, float]]:
+        """Map fitted parameter names to (lower, upper), without inferring grid spacing.
+
+        Optimizer step sizes and exact choices are represented by ``fit_param_distributions``.
+        """
+        if self.owner is None:
+            return None
+        return {name: space.bounds for name, space in self._fit_param_spaces.items()}
+
+    @property
+    def _continuous_fit_param_bounds(self):
+        """Bounds for continuous solvers; explicit discrete restrictions cannot be discarded."""
+        return {name: space.continuous_bounds(name) for name, space in self._fit_param_spaces.items()}
+
+    @property
+    def fit_param_distributions(self):
+        """Optuna distributions, shared by serial and distributed fitting."""
+        if self.owner is None:
+            return None
+        return {name: space.optuna_distribution() for name, space in self._fit_param_spaces.items()}
 
     @handle_external_context(fallback_most_recent=True)
     def log_likelihood(self, *args, return_sim_data=False, context=None):

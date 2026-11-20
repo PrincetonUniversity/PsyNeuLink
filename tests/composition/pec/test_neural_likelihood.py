@@ -275,7 +275,10 @@ def _ddm_pec(data, depends_on=None, **kwargs):
     comp = pnl.Composition(pathways=decision)
     pec = pnl.ParameterEstimationComposition(
         nodes=[comp],
-        parameters={(name, decision): np.linspace(*bounds, 100) for name, bounds in BOUNDS.items()},
+        parameters={
+            (name, decision): {"bounds": bounds}
+            for name, bounds in BOUNDS.items()
+        },
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],
             decision.output_ports[pnl.RESPONSE_TIME],

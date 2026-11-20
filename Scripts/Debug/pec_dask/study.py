@@ -79,9 +79,9 @@ def pec_factory(data):
     pec = pnl.ParameterEstimationComposition(
         name="pec_worker", nodes=[comp],
         parameters={
-            ("rate", decision): np.linspace(*bounds["rate"], 1000),
-            ("threshold", decision): np.linspace(*bounds["threshold"], 1000),
-            ("non_decision_time", decision): np.linspace(*bounds["non_decision_time"], 1000),
+            ("rate", decision): {"bounds": bounds["rate"]},
+            ("threshold", decision): {"bounds": bounds["threshold"]},
+            ("non_decision_time", decision): {"bounds": bounds["non_decision_time"]},
         },
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],
@@ -117,9 +117,9 @@ def main():
     pec = pnl.ParameterEstimationComposition(
         name="ddm_mle", nodes=[comp],
         parameters={
-            ("rate", decision): np.linspace(*FIT_BOUNDS["rate"], 1000),
-            ("threshold", decision): np.linspace(*FIT_BOUNDS["threshold"], 1000),
-            ("non_decision_time", decision): np.linspace(*FIT_BOUNDS["non_decision_time"], 1000),
+            ("rate", decision): {"bounds": FIT_BOUNDS["rate"]},
+            ("threshold", decision): {"bounds": FIT_BOUNDS["threshold"]},
+            ("non_decision_time", decision): {"bounds": FIT_BOUNDS["non_decision_time"]},
         },
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],

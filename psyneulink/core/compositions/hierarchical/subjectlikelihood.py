@@ -128,7 +128,7 @@ class ParameterSchema:
         """Read the schema off a built `ParameterEstimationComposition`."""
         function = pec.controller.function
         qualified = tuple(function.fit_param_names)
-        bound_map = function.fit_param_bounds
+        bound_map = function._continuous_fit_param_bounds
         return cls(
             names=_comparable_names(qualified),
             reported=_reported_names(qualified),

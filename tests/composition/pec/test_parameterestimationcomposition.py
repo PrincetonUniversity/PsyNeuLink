@@ -73,7 +73,7 @@ model = pnl.Composition(
 pec = pnl.ParameterEstimationComposition(
     name="pec",
     model=model,
-    parameters={("slope", output_node): np.linspace(1.0, 3.0, 3)},
+    parameters={("slope", output_node): {"bounds": (1.0, 3.0)}},
     outcome_variables=output_node,
     objective_function=lambda x: np.sum(x),
     optimization_function=PECOptimizationFunction(method="differential_evolution"),
@@ -188,7 +188,7 @@ def test_pec_controller_defaults_to_llvm_execution_mode():
     pec = pnl.ParameterEstimationComposition(
         name="pec",
         model=model,
-        parameters={("slope", output_node): [1.0, 2.0]},
+        parameters={("slope", output_node): {"bounds": (1.0, 2.0)}},
         outcome_variables=output_node,
         objective_function=np.sum,
         optimization_function=PECOptimizationFunction(method="differential_evolution"),
@@ -277,8 +277,11 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expect
         return np.mean(sim_data[:, :, 0][:] / sim_data[:, :, 1][:])
 
     fit_parameters = {
-        ("threshold", decision): np.linspace(0.01, 0.5, 10),  # Threshold
+        ("threshold", decision): {"bounds": (0.01, 0.5)},  # Threshold
     }
+    if opt_method != "differential_evolution":
+        # Preserve the grid used by the seeded optimizer regression.
+        fit_parameters[("threshold", decision)]["step"] = 0.05444
 
     pec = pnl.ParameterEstimationComposition(
         name="pec",
@@ -387,9 +390,9 @@ def test_parameter_estimation_ddm_cond(func_mode):
     data_to_fit = data_to_fit.drop(columns='inputs')
 
     fit_parameters = {
-        ("rate", comp.nodes['DDM']): np.linspace(-0.5, 0.5, 1000),
-        ("non_decision_time", comp.nodes['DDM']): np.linspace(0.0, 1.0, 1000),
-        ("threshold", comp.nodes['DDM']): np.linspace(0.1, 1.0, 1000),
+        ("rate", comp.nodes['DDM']): {"bounds": (-0.5, 0.5)},
+        ("non_decision_time", comp.nodes['DDM']): {"bounds": (0.0, 1.0)},
+        ("threshold", comp.nodes['DDM']): {"bounds": (0.1, 1.0)},
     }
 
     pec = pnl.ParameterEstimationComposition(
@@ -475,9 +478,9 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     # parameters of the DDM.
 
     fit_parameters = {
-        ("rate", comp.nodes['DDM']): np.linspace(-0.5, 0.5, 1000),
-        ("threshold", comp.nodes['DDM']): np.linspace(0.5, 1.0, 1000),
-        ("non_decision_time", comp.nodes['DDM']): np.linspace(0.0, 1.0, 1000),
+        ("rate", comp.nodes['DDM']): {"bounds": (-0.5, 0.5)},
+        ("threshold", comp.nodes['DDM']): {"bounds": (0.5, 1.0)},
+        ("non_decision_time", comp.nodes['DDM']): {"bounds": (0.0, 1.0)},
     }
 
     pec = pnl.ParameterEstimationComposition(
@@ -538,9 +541,9 @@ def _make_ddm_log_likelihood_pec(num_trials=12, num_estimates=20,
         name="pec_log_likelihood",
         nodes=[comp],
         parameters={
-            ("rate", decision): np.linspace(-0.5, 0.5, 10),
-            ("threshold", decision): np.linspace(0.5, 1.0, 10),
-            ("non_decision_time", decision): np.linspace(0.0, 1.0, 10),
+            ("rate", decision): {"bounds": (-0.5, 0.5)},
+            ("threshold", decision): {"bounds": (0.5, 1.0)},
+            ("non_decision_time", decision): {"bounds": (0.0, 1.0)},
         },
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],
@@ -609,7 +612,7 @@ def test_a_pec_without_data_still_requires_a_search():
     with pytest.raises(TypeError, match="optimization_function"):
         pnl.ParameterEstimationComposition(
             nodes=[pnl.Composition(pathways=decision)],
-            parameters={("rate", decision): np.linspace(0.0, 1.0, 5)},
+            parameters={("rate", decision): {"bounds": (0.0, 1.0)}},
             outcome_variables=[decision.output_ports[pnl.DECISION_VARIABLE]],
             objective_function=lambda x: 0.0,
         )
@@ -659,7 +662,7 @@ def test_pec_log_likelihood_depends_on_accepts_expanded_parameters():
     pec = pnl.ParameterEstimationComposition(
         name="pec_log_likelihood_depends_on",
         nodes=[comp],
-        parameters={("threshold", decision): np.linspace(0.1, 1.0, 10)},
+        parameters={("threshold", decision): {"bounds": (0.1, 1.0)}},
         depends_on={("threshold", decision): 'condition'},
         outcome_variables=[
             decision.output_ports[pnl.DECISION_OUTCOME],
@@ -726,8 +729,8 @@ def test_pec_bad_outcome_var_spec():
     # parameters of the DDM.
 
     fit_parameters = {
-        ("rate", decision): np.linspace(0.0, 0.4, 1000),
-        ("threshold", decision): np.linspace(0.5, 1.0, 1000),
+        ("rate", decision): {"bounds": (0.0, 0.4)},
+        ("threshold", decision): {"bounds": (0.5, 1.0)},
     }
 
     with pytest.raises(KeyError) as ex:
@@ -829,7 +832,7 @@ def test_pec_lca(func_mode):
     # Construct and run PEC
     pec = pnl.ParameterEstimationComposition(
         nodes=comp,
-        parameters={("termination_threshold", input_mech): np.linspace(1, 10, 10)},
+        parameters={("termination_threshold", input_mech): {"bounds": (1, 10), "step": 1}},
         outcome_variables=[
             lca_mech.output_ports[1],
             lca_mech.output_ports[2],
@@ -888,7 +891,7 @@ def test_pec_lca_num_estimates_llvm_stochasticity(func_mode):
 
     pec = pnl.ParameterEstimationComposition(
         nodes=comp,
-        parameters={("termination_threshold", input_mech): np.linspace(1, 2, 3)},
+        parameters={("termination_threshold", input_mech): {"bounds": (1, 2)}},
         outcome_variables=[lca_mech.output_ports[pnl.DECISION_TIME]],
         objective_function=objective,
         optimization_function=pnl.PECOptimizationFunction(

@@ -85,10 +85,10 @@ decisionGate = comp.nodes["DECISION_GATE"]
 responseGate = comp.nodes["RESPONSE_GATE"]
 
 fit_parameters = {
-    ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
-    ("slope", congruenceWeighting): np.linspace(0.0, 0.1, 1000),  # Automaticity
-    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 1000),  # Threshold
-    ("non_decision_time", decisionMaker): np.linspace(0.1, 0.4, 1000),  # Threshold
+    ("gain", controlModule): {"bounds": (1.0, 10.0)},  # Gain
+    ("slope", congruenceWeighting): {"bounds": (0.0, 0.1)},  # Automaticity
+    ("threshold", decisionMaker): {"bounds": (0.01, 0.5)},  # Threshold
+    ("non_decision_time", decisionMaker): {"bounds": (0.1, 0.4)},  # Threshold
 }
 
 import optuna
