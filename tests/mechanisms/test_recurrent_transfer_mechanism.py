@@ -1032,7 +1032,8 @@ class TestStandardOutputPorts:
         # Get reference value
         e = pnl.Entropy(input_shapes=2)
         reference = e((0.5124973964842103,0.5124973964842103))
-        assert reference == 0.6851676585231217
+        # ENTROPY now computes Shannon entropy in bits of p=v/sum(v); equal inputs -> uniform -> 1 bit
+        assert reference == 1.0
 
         lca_mech = pnl.LCAMechanism( input_shapes=2, output_ports=[pnl.RESULT, pnl.ENTROPY])
         comp = pnl.Composition(lca_mech)

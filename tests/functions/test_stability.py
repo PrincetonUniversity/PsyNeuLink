@@ -12,10 +12,13 @@ hollow_matrix = Function.get_matrix(kw.HOLLOW_MATRIX, SIZE, SIZE)
 v1 = test_var
 v2 = np.dot(hollow_matrix * hollow_matrix, v1)
 norm = len(v1)
+# ENTROPY now computes Shannon entropy (in bits) of the normalized vector p = v / sum(v):
+# H = -sum(p * log2 p).  (normalize=True additionally divides by the vector length.)
+p = v1 / np.sum(v1)
 
 test_data = [
-    (kw.ENTROPY, False, -np.sum(v1 * np.log(v2))),
-    (kw.ENTROPY, True, -np.sum(v1 * np.log(v2)) / norm),
+    (kw.ENTROPY, False, -np.sum(p * np.log(p)) / np.log(2)),
+    (kw.ENTROPY, True, (-np.sum(p * np.log(p)) / np.log(2)) / norm),
     (kw.ENERGY, False, -np.sum(v1 * v2) / 2),
     (kw.ENERGY, True, (-np.sum(v1 * v2) / 2) / norm**2),
 ]
@@ -39,7 +42,9 @@ def test_basic(variable, metric, normalize, expected, benchmark, func_mode):
 
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(EX, variable)
-    np.testing.assert_allclose(res, expected)
+    # float32 entropy accrues ~1e-7 rounding (probability normalization + log); loosen tol there
+    rtol = 1e-5 if np.asarray(variable).dtype == np.float32 else 1e-7
+    np.testing.assert_allclose(res, expected, rtol=rtol)
     assert np.isscalar(res) or res.ndim == 0 or len(res) == 1
 
 

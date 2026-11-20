@@ -442,6 +442,23 @@ class Stability(ObjectiveFunction):
         # Copy original variable
         builder.store(builder.load(arg_in), metric_in_variable)
 
+        # Shannon entropy: overwrite both metric slots with p = v / sum(v),
+        # so CROSS_ENTROPY(p, p) computes -sum(p * log p). (The dot product above is
+        # left intact but unused for ENTROPY.)
+        if self.metric == ENTROPY:
+            n = arg_in.type.pointee.count
+            slot0 = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            slot1 = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            total_ptr = builder.alloca(ctx.float_ty)
+            builder.store(total_ptr.type.pointee(0.0), total_ptr)
+            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(n), "entropy_sum") as (b, idx):
+                b.store(b.fadd(b.load(total_ptr), b.load(b.gep(vec_in, [idx]))), total_ptr)
+            total = builder.load(total_ptr)
+            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(n), "entropy_norm") as (b, idx):
+                pv = b.fdiv(b.load(b.gep(vec_in, [idx])), total)
+                b.store(pv, b.gep(slot0, [ctx.int32_ty(0), idx]))
+                b.store(pv, b.gep(slot1, [ctx.int32_ty(0), idx]))
+
         # Distance Function
         metric_params, metric_state = ctx.get_param_or_state_ptr(builder,
                                                                  self,
@@ -450,6 +467,13 @@ class Stability(ObjectiveFunction):
                                                                  state_struct_ptr=state)
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
+
+        # Express entropy in bits by dividing by log(2) (compile-time constant; un-normalized)
+        if self.metric == ENTROPY:
+            out = arg_out
+            if out.type.pointee != ctx.float_ty:
+                out = builder.gep(out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.fdiv(builder.load(out), ctx.float_ty(float(np.log(2)))), out)
         return builder
 
     def _function(self,
@@ -484,7 +508,19 @@ class Stability(ObjectiveFunction):
         if self.transfer_fct is not None:
             transformed = self.transfer_fct(transformed)
 
+        # Shannon entropy (in bits): treat v as a probability distribution
+        # (p = v / sum(v)), compute -sum(p * log p) via CROSS_ENTROPY(p, p),
+        # then divide by log(2) to express the (un-normalized) entropy in bits.
+        if self.metric == ENTROPY:
+            total = np.sum(current)
+            if total != 0:
+                current = current / total
+            transformed = current
+
         result = self.metric_fct(variable=[current, transformed], context=context)
+
+        if self.metric == ENTROPY:
+            result = result / np.log(2)
 
         return self.convert_output_type(result)
 

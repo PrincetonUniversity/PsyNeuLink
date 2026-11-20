@@ -151,6 +151,54 @@ def test_gaussian_lca_has_the_leaky_integrator_noise_scale(batched_backend):
     assert np.max(np.abs(correlation - np.eye(4))) < .06
 
 
+def _entropy_network(width):
+    response = pnl.LCAMechanism(
+        input_shapes=width, function=pnl.Logistic(gain=1.1, bias=-0.1),
+        leak=0.3, competition=0.2, self_excitation=0.0,
+        noise=pnl.NormalDist(standard_deviation=0.0),
+        time_step_size=0.1, termination_threshold=0.68,
+        execute_until_finished=False, reset_stateful_function_when=pnl.AtTrialStart(),
+        output_ports=[pnl.RESULT, pnl.MAX_VAL, pnl.ENTROPY, pnl.ENERGY, pnl.DECISION_TIME],
+    )
+    readout = pnl.ProcessingMechanism(input_shapes=1)
+    composition = pnl.Composition()
+    composition.add_nodes([response, readout])
+    composition.add_projection(sender=response.output_ports[pnl.ENTROPY], receiver=readout)
+    composition.scheduler.add_condition(readout, pnl.WhenFinished(response))
+    return composition, response, readout
+
+
+@pytest.mark.parametrize("width", [2, 4])
+def test_scheduled_lca_entropy_readout_matches_python(batched_backend, width):
+    c, response, readout = _entropy_network(width)
+    inputs = {response: np.array([[3., 1., 0.2, -0.1], [0.2, 3., -0.1, 0.4], [1., 1., 1., 1.]])[:, :width]}
+    ports = tuple(response.output_ports) + (readout.output_port,)
+    plan = BatchedCompositionCompiler.compile(c, backend=batched_backend, max_steps=64, outputs=ports)
+    actual = plan.run(inputs, [{}], num_estimates=3, strict_truncation=True).values[0, 0]
+    expected = _python_outputs(c, inputs, ports)
+    entropy = expected[:, width + 1]
+    p = expected[:, :width] / expected[:, :width].sum(axis=1, keepdims=True)
+    np.testing.assert_allclose(entropy, -np.sum(p * np.log2(p), axis=1), rtol=1e-12)
+    assert np.all((entropy > 0) & (entropy <= np.log2(width) + 1e-12))
+    print(f"max |batched - python| = {np.max(np.abs(actual - expected[:, None, :])):.3e}")
+    np.testing.assert_allclose(actual, np.repeat(expected[:, None, :], 3, axis=1), atol=2e-6, rtol=2e-6)
+
+
+@pytest.mark.parametrize("change", ["normalize", "transfer_fct", "function"])
+@pytest.mark.usefixtures("batched_runtime")
+def test_scheduled_lca_entropy_rejects_noncanonical_port(change):
+    c, response, _ = _entropy_network(2)
+    assert BatchedCompositionCompiler.diagnose(c).model_supported
+    port = response.output_ports[pnl.ENTROPY]
+    if change == "normalize":
+        port.function.parameters.normalize.set(True)
+    elif change == "transfer_fct":
+        port.function.parameters.transfer_fct.set(pnl.Linear(slope=2.0))
+    else:
+        port.function = pnl.Energy(port.function.defaults.variable)
+    assert not BatchedCompositionCompiler.diagnose(c).model_supported
+
+
 @pytest.mark.parametrize("change", ["selector", "noise", "clip", "matrix-parameter"])
 @pytest.mark.usefixtures("batched_runtime")
 def test_extended_lca_rejects_unrepresented_semantics(change):

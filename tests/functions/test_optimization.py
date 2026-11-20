@@ -32,25 +32,27 @@ results = {
                 },
             },
         },
+        # ENTROPY now = Shannon entropy in bits of p=v/sum(v): min (0) at one-hot points,
+        # max (log2(5)=2.3219) at the uniform point; normalize=True divides by length (5).
         pnl.ENTROPY: {
             True: {
                 pnl.MINIMIZE: {
-                    pnl.FIRST: ((1.0, 1.0, 1.0, 1.0, 1.0), -1.3862943611198906, [], []),
-                    pnl.RANDOM: ((1.0, 1.0, 1.0, 1.0, 1.0), -1.3862943611198906, [], []),
+                    pnl.FIRST: ((EPS, EPS, EPS, EPS, 1.0), 0.0, [], []),
+                    pnl.RANDOM: ((EPS, EPS, 1.0, EPS, EPS), 0.0, [], []),
                 },
                 pnl.MAXIMIZE: {
-                    pnl.FIRST: ((EPS, EPS, EPS, EPS, 1.0), 6.931471805599453, [], []),
-                    pnl.RANDOM: ((EPS, EPS, 1.0, EPS, EPS), 6.931471805599453, [], []),
+                    pnl.FIRST: ((EPS, EPS, EPS, EPS, EPS), 0.4643856189774724, [], []),
+                    pnl.RANDOM: ((EPS, EPS, EPS, EPS, EPS), 0.4643856189774724, [], []),
                 },
             },
             False: {
                 pnl.MINIMIZE: {
-                    pnl.FIRST: ((1.0, 1.0, 1.0, 1.0, 1.0), -6.931471805599453, [], []),
-                    pnl.RANDOM: ((1.0, 1.0, 1.0, 1.0, 1.0), -6.931471805599453, [], []),
+                    pnl.FIRST: ((EPS, EPS, EPS, EPS, 1.0), 0.0, [], []),
+                    pnl.RANDOM: ((EPS, EPS, 1.0, EPS, EPS), 0.0, [], []),
                 },
                 pnl.MAXIMIZE: {
-                    pnl.FIRST: ((EPS, EPS, EPS, EPS, 1.0), 34.657359027997266, [], []),
-                    pnl.RANDOM: ((EPS, EPS, 1.0, EPS, EPS), 34.657359027997266, [], []),
+                    pnl.FIRST: ((EPS, EPS, EPS, EPS, EPS), 2.321928094887362, [], []),
+                    pnl.RANDOM: ((EPS, EPS, EPS, EPS, EPS), 2.321928094887362, [], []),
                 },
             },
         },

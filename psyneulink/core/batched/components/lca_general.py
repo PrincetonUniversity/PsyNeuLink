@@ -13,8 +13,9 @@ from psyneulink.core.batched.specs import (
     lookup_spec, register_batched_specializer, spec_key,
 )
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.nonstateful.objectivefunctions import Energy
-from psyneulink.core.globals.keywords import RESULT, ENERGY, MAX_VAL, OWNER_VALUE
+from psyneulink.core.components.functions.function import EPSILON
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import Energy, Entropy
+from psyneulink.core.globals.keywords import RESULT, ENERGY, ENTROPY, MAX_VAL, OWNER_VALUE
 from psyneulink.core.scheduling.condition import AtTrialStart, Never
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import (
@@ -88,7 +89,7 @@ def _outputs_supported(node):
     if not ports or ports[0].name != RESULT:
         return BatchedDiagnostic(node.name, "unsupported scheduled LCA outputs", "RESULT must be first")
     for port in ports:
-        valid = port.name in {RESULT, ENERGY, MAX_VAL, DECISION_INDEX, DECISION_TIME, DECISION_STEPS}
+        valid = port.name in {RESULT, ENERGY, ENTROPY, MAX_VAL, DECISION_INDEX, DECISION_TIME, DECISION_STEPS}
         standard = node.standard_output_ports.get_port_dict(port.name) if valid else {}
         if valid:
             selector = standard.get("variable", (OWNER_VALUE, 0))
@@ -99,6 +100,15 @@ def _outputs_supported(node):
             valid = (
                 type(port.function) is Energy
                 and np.array_equal(lca._raw_parameter(port.function, "matrix"), lca._raw_parameter(node, "matrix"))
+                and not lca._raw_parameter(port.function, "normalize", False)
+                and lca._raw_parameter(port.function, "transfer_fct", None) is None
+            )
+        elif valid and port.name == ENTROPY:
+            # Shannon entropy in bits of p = v / sum(v) (Stability ENTROPY metric).
+            # The recurrent matrix is unused by this metric, so it is not checked.
+            valid = (
+                type(port.function) is Entropy
+                and lca._raw_parameter(port.function, "metric", None) == ENTROPY
                 and not lca._raw_parameter(port.function, "normalize", False)
                 and lca._raw_parameter(port.function, "transfer_fct", None) is None
             )
@@ -167,7 +177,29 @@ def _readouts(ctx, node):
                      for i, row in enumerate(node.attrs["recurrent_matrix"])
                      for j, w in enumerate(row) if w and i != j]
             result.append(f"(-0.5 * ({' + '.join(terms) or '0.0'}))")
+        elif port == ENTROPY:
+            result.append(_entropy(ctx, node, act))
     return tuple(result)
+
+
+# Stability(metric=ENTROPY) on the CPU: p = v / sum(v) (left unnormalized when
+# sum(v) == 0), entries with p == 0 replaced by EPSILON inside CROSS_ENTROPY,
+# H = -sum(p * ln p) / ln 2 (bits).
+_ENTROPY_ZERO_TERM = float(EPSILON * np.log(EPSILON))
+_LN2 = float(np.log(2))
+
+
+def _entropy(ctx, node, act):
+    stem = ctx.component_symbol(node)
+    total = f"{stem}_entropy_total"
+    ctx.line(f"{total} = {' + '.join(act)}")
+    terms = []
+    for i, value in enumerate(act):
+        p = f"{stem}_entropy_p_{i}"
+        ctx.line(f"{p} = tl.where({total} != 0.0, {value} / {total}, {value})")
+        terms.append(f"tl.where({p} == 0.0, {_ENTROPY_ZERO_TERM!r}, {p} * tl.log({p}))")
+    return f"(-({' + '.join(terms)}) / {_LN2!r})"
+
 
 
 def _step(ctx, node, inputs, outputs, step_var, finished_var):
