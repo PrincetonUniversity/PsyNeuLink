@@ -128,5 +128,10 @@ def resolve(node):
     if (type(getattr(node, "integrator_function", None)) is AdaptiveIntegrator
             and type(node.function) is Linear and _raw_parameter(node, "integrator_mode", False)
             and len(node.input_ports) == 1 and node.input_port.value.size == 1):
+        # Keep the stateless single-update fold (fires once per trial from an AtTrialStart reset) on its
+        # existing path; the retained-state Linear op covers only what the fold cannot.
+        from psyneulink.core.batched.graph import _integrating_transfer_affine
+        if any(_integrating_transfer_affine(node, comp) is not None for comp in tuple(node.compositions)):
+            return None
         return _specialized_linear(tuple(port.name for port in node.output_ports))
     return None
