@@ -34,7 +34,7 @@ from psyneulink.core.batched.backend.triton.emit.lanes import (
     DEFAULT_NORMAL_RNG, FAST_NORMAL_RNG, RNG_STREAM_STRIDE, validate_normal_rng,
 )
 from psyneulink.core.batched.backend.triton.emit.trials import validate_trial_schedule
-from psyneulink.core.batched.backend.triton.state import retained_control_layout
+from psyneulink.core.batched.backend.triton.state import model_value_layout, retained_control_layout
 
 
 _DEFAULT_LAUNCH_OPTIONS = {
@@ -44,7 +44,7 @@ _DEFAULT_LAUNCH_OPTIONS = {
     "normal_rng": DEFAULT_NORMAL_RNG,
     "trial_schedule": "synchronized",
 }
-_SUPPORTED_LAUNCH_OPTIONS = frozenset(_DEFAULT_LAUNCH_OPTIONS)
+_SUPPORTED_LAUNCH_OPTIONS = frozenset(_DEFAULT_LAUNCH_OPTIONS) | {"shared_kernel_parameters"}
 
 
 def _normalize_launch_options(options, *, interpret: bool) -> dict:
@@ -59,7 +59,7 @@ def _normalize_launch_options(options, *, interpret: bool) -> dict:
         raise ValueError(
             "Unknown Triton launch option(s): " + ", ".join(sorted(unknown))
         )
-    if interpret and set(options) - {"normal_rng", "trial_schedule"}:
+    if interpret and set(options) - {"normal_rng", "trial_schedule", "shared_kernel_parameters"}:
         raise ValueError(
             "Custom Triton launch_options require the compiled GPU backend "
             "(device='cuda'), not the CPU interpreter."
@@ -70,6 +70,11 @@ def _normalize_launch_options(options, *, interpret: bool) -> dict:
     if interpret and result["normal_rng"] == FAST_NORMAL_RNG:
         raise ValueError("philox4x_fast_v1 requires the compiled GPU backend (CUDA math intrinsics).")
     validate_trial_schedule(result["trial_schedule"])
+    if "shared_kernel_parameters" in result:
+        names = result["shared_kernel_parameters"]
+        if not isinstance(names, (tuple, list)) or any(not isinstance(n, str) or not n or "." in n for n in names):
+            raise ValueError("shared_kernel_parameters must be a sequence of unqualified parameter names.")
+        result["shared_kernel_parameters"] = tuple(names)
     block_size = result["block_size"]
     if (
         isinstance(block_size, bool)
@@ -109,6 +114,13 @@ def _compiler_launch_options(launch: Mapping) -> dict:
     if launch["maxnreg"] is not None:
         options["maxnreg"] = launch["maxnreg"]
     return options
+
+
+def _model_value_args(torch, ir, device, launch):
+    if "shared_kernel_parameters" not in launch:
+        return ()
+    values, _ = model_value_layout(ir.params, ir.graph.states)
+    return (torch.tensor(values, dtype=torch.float32, device=device),)
 
 
 def _check_step_caps(**caps):
@@ -167,6 +179,10 @@ def run_triton(
 
     ``launch_options`` exposes GPU tuning controls ``block_size``, ``num_warps``
     and ``maxnreg``, defaulting to 128 lanes/four warps without a register cap.
+    For stateful simulation, ``shared_kernel_parameters`` lists unqualified
+    parameter names whose fixed values should be read at launch. This also
+    passes initializer values and lane counts at launch so related plans and
+    differently sized candidate batches can share compiled kernels.
     ``normal_rng='philox4x_v1'`` (default) groups vector Gaussian draws within
     each component execution. ``'legacy'`` reproduces the earlier per-coordinate
     draws. This RNG selection also works in the interpreter and leaves scalar
@@ -233,7 +249,8 @@ def run_triton(
 
     with interpret_scope(interpret):
         module = _load_kernel_module(ir, kernel_ir=kernel_ir, interpret=interpret,
-                                     normal_rng=launch["normal_rng"], trial_schedule=launch["trial_schedule"])
+                                     normal_rng=launch["normal_rng"], trial_schedule=launch["trial_schedule"],
+                                     shared_kernel_parameters=launch.get("shared_kernel_parameters"))
 
         if fusion_kind == STATELESS_GRAPH_FUSION:
             values, truncation = _run_stateless_graph_kernel(
@@ -251,6 +268,7 @@ def run_triton(
                 seed, common_random_numbers, device, slots,
                 subject_slices=subject_slices, launch=launch,
                 initial_states=initial_states,
+                model_value_args=_model_value_args(torch, ir, device, launch),
                 return_final_states=return_final_states,
                 rng_trial_offset=rng_trial_offset,
                 rng_sequence_trials=rng_sequence_trials,
@@ -262,6 +280,7 @@ def run_triton(
                 seed, common_random_numbers, device, slots,
                 kernel_name="pnl_batched_coevolving_graph_kernel",
                 subject_slices=subject_slices, launch=launch,
+                model_value_args=_model_value_args(torch, ir, device, launch),
                 initial_states=initial_states,
                 return_final_states=return_final_states,
                 rng_trial_offset=rng_trial_offset,
@@ -511,7 +530,7 @@ def _run_stateful_graph_kernel(
     launch=None, initial_states=None, return_final_states=False,
     rng_trial_offset=0, rng_sequence_trials=None,
     defer_device_checks=False,
-    extra_kernel_args=(),
+    extra_kernel_args=(), model_value_args=(),
     parallel_trial_lanes=False,
 ):
     graph = ir.graph
@@ -578,7 +597,7 @@ def _run_stateful_graph_kernel(
         *(() if diag is None else (diag,)),
         initial_state, final_state, use_initial_state, bool(return_final_states),
         total_lanes, num_subjects, num_estimates, num_trials,
-        *extra_kernel_args,
+        *model_value_args, *extra_kernel_args,
         LCA_MAX_STEPS=lca_steps, MAX_STEPS=ir.max_steps,
         COMMON_RANDOM=bool(common_random_numbers),
         SEED=0 if seed is None else int(seed),
@@ -638,6 +657,7 @@ def _load_kernel_module(
     interpret: bool = False,
     normal_rng=DEFAULT_NORMAL_RNG,
     trial_schedule="synchronized",
+    shared_kernel_parameters=None,
 ):
     if ir.graph is None or ir.graph.fusion_kind is None:
         raise ValueError(
@@ -645,5 +665,5 @@ def _load_kernel_module(
             "supported fusion kind."
         )
     source = triton_graph_kernel_source(kernel_ir or lower_to_kernel_ir(ir), normal_rng=normal_rng,
-                                        trial_schedule=trial_schedule)
+                                        trial_schedule=trial_schedule, shared_kernel_parameters=shared_kernel_parameters)
     return load_triton_kernel_module(source, ir.graph.fusion_kind, ir.model_kind, interpret=interpret)

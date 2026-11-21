@@ -65,7 +65,12 @@ def load_triton_kernel_module(source: str, module_kind: str | None, model_kind: 
     module_name = f"pnl_batched_{module_kind or model_kind}_{mode}_{digest}"
     module_path = cache_dir / f"{module_name}.py"
     if not module_path.exists():
-        module_path.write_text(source, encoding="utf-8")
+        # Concurrent fits may import the same generated module on first use.
+        # Publish complete source in a single same-filesystem rename.
+        with tempfile.TemporaryDirectory(dir=cache_dir) as staging:
+            staged = Path(staging) / module_path.name
+            staged.write_text(source, encoding="utf-8")
+            staged.replace(module_path)
 
     if module_name in sys.modules:
         return sys.modules[module_name]

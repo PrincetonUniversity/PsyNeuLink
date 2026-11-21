@@ -1,6 +1,17 @@
 """Flat retained-state ABI shared by generated kernels and their launcher."""
 
 
+def model_value_layout(params, states):
+    """Pack uniform FP32 parameter values followed by retained-state initializer inputs."""
+    values = [p.default if p.constant_value is None else p.constant_value for p in params]
+    offsets = {}
+    for state in states:
+        offsets[state.state_id] = len(values)
+        initializer = state.function_initializer
+        values.extend(state.initial_value if initializer is None else initializer.input_value)
+    return values, offsets
+
+
 def retained_control_layout(graph):
     """Return control-value offsets following the mechanism-state prefix.
 

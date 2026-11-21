@@ -90,6 +90,33 @@ def test_specialization_respects_source_constraints_and_validates_ir():
         replace(p.kernel_ir, params=params)
 
 
+def test_shared_kernel_uses_each_plans_values_and_retained_state(batched_backend):
+    shared = {"shared_kernel_parameters": ("slope",)}
+    sources = []
+    for initial, slope, intercept in [(2., .5, .1), (5., .75, .2)]:
+        node = pnl.TransferMechanism(
+            input_shapes=1, integrator_mode=True,
+            integrator_function=pnl.AdaptiveIntegrator(rate=.5, initializer=initial),
+            function=pnl.Linear(slope=slope, intercept=intercept),
+            reset_stateful_function_when=pnl.Never(),
+        )
+        plan = BatchedCompositionCompiler.compile(pnl.Composition(pathways=node), backend=batched_backend)
+        fixed = plan.specialize_parameters({f"{node.name}.slope": slope})
+        sources.append(triton_graph_kernel_source(fixed.kernel_ir, **shared))
+        opts = dict(return_final_states=True, seed=29)
+        inputs = {node: [[1.], [3.], [2.]]}
+        rows = [{}, {f"{node.name}.intercept": .4}]
+        ordinary = fixed.run(inputs, rows, 3, **opts)
+        result = fixed.run(inputs, rows, 3, triton_launch_options=shared, **opts)
+        np.testing.assert_array_equal(result.values, ordinary.values)
+        np.testing.assert_array_equal(result.metadata["final_states"], ordinary.metadata["final_states"])
+        state = initial
+        for trial, stimulus in enumerate((1., 3., 2.)):
+            state = (state + stimulus) / 2
+            np.testing.assert_allclose(result.values[0, 0, trial, :, 0], slope * state + intercept)
+    assert sources[0] == sources[1]
+
+
 def test_specialized_nondefault_values_and_dynamic_trials(batched_backend):
     p, m = _linear(batched_backend)
     inputs = {m: [[2.], [3.], [4.]]}
