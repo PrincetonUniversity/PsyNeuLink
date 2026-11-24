@@ -374,6 +374,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, parameter_keywords
 from psyneulink.core.components.functions.function import FunctionError, get_param_value_for_keyword
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
@@ -705,6 +706,18 @@ class ParameterPort(Port_Base):
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     #endregion
+
+    def _get_compilation_state(self):
+        yield from super()._get_compilation_state()
+        # A mechanism reset reuses the parameter value sampled on its last
+        # execution, even if the controller has since published a new value.
+        yield self.parameters.value
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
+        builder = super()._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+        value_ptr = ctx.get_state_space(builder, self, state, VALUE)
+        builder = pnlvm.helpers.memcpy(builder, value_ptr, arg_out)
+        return builder
 
     @check_user_specified
     @beartype

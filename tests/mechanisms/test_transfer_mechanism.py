@@ -1801,6 +1801,46 @@ def test_integrator_mode_reset(mech_mode, initializer_param):
     reset_result = reset_ex(None if mech_mode == "Python" else [0])
     np.testing.assert_array_equal(reset_result, [[initializer_value * 2]])
 
+
+@pytest.mark.mechanism
+@pytest.mark.control
+def test_reset_preserves_sampled_slope_until_next_execution(mech_mode):
+    """Reset evaluates the transfer function without resampling its ParameterPorts."""
+    mech = pnl.TransferMechanism(
+        integrator_mode=True,
+        integrator_function=pnl.SimpleIntegrator(initializer=1.),
+        function=pnl.Linear(slope=2.),
+    )
+    controller = pnl.ControlMechanism(
+        control_signals=[(pnl.SLOPE, mech)], modulation=pnl.OVERRIDE,
+    )
+    # These standalone calls use no Composition to activate the projection.
+    controller.control_signals[0].efferents[0]._activate_for_compositions(None)
+
+    def execution_input():
+        # Zero input keeps the integrator at 1, so the output reveals the slope.
+        # Compiled calls receive modulation separately from the mechanism input.
+        return [0.] if mech_mode == "Python" else ([[0.]], (controller.control_signals[0].value,))
+
+    controller.execute([2.])
+    execute = pytest.helpers.get_mech_execution(mech, mech_mode)
+    np.testing.assert_array_equal(execute(execution_input()), [[2.]])
+
+    # Publishing 6 does not update the target's previously sampled slope of 2.
+    controller.execute([6.])
+    np.testing.assert_array_equal(controller.control_signals[0].value, [6.])
+    np.testing.assert_array_equal(mech.parameter_ports[pnl.SLOPE].value, [2.])
+
+    reset = pytest.helpers.get_mech_execution(mech, mech_mode, tags={"reset"}, member="reset")
+    np.testing.assert_array_equal(reset(None if mech_mode == "Python" else execution_input()), [[2.]])
+    np.testing.assert_array_equal(mech.parameter_ports[pnl.SLOPE].value, [2.])
+
+    # Normal execution samples the newly published slope.
+    execute = pytest.helpers.get_mech_execution(mech, mech_mode)
+    np.testing.assert_array_equal(execute(execution_input()), [[6.]])
+    np.testing.assert_array_equal(mech.parameter_ports[pnl.SLOPE].value, [6.])
+
+
 @pytest.mark.composition
 @pytest.mark.usefixtures("comp_mode_no_per_node")
 def test_integrator_mode_reset_in_composition(comp_mode):
