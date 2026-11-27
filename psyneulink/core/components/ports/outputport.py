@@ -838,6 +838,15 @@ class OutputPort(Port_Base):
         `mod_afferents <Port.mod_afferents>` attributes, respectively (see `OutputPort_Projections` for additional
         details).
 
+    element_names : list of str : default None
+        optional semantic labels for each element of the OutputPort's
+        `value <OutputPort.value>`, surfaced by the `_debugger`
+        NODE_EXECUTION snapshot and consumed by inspection tools. The
+        list length must equal the size of the port's value; a mismatch
+        raises a `PortError` at construction. Stored as a static,
+        read-only structural `Parameter` that does not participate in
+        execution.
+
     Attributes
     ----------
 
@@ -885,6 +894,10 @@ class OutputPort(Port_Base):
         OutputPorts specified, as well as any that are added to the Mechanism once it is created (see `note
         <Port_Naming_Note>`).
 
+    element_names : list of str or None
+        the value passed to the **element_names** argument of the constructor (or ``None`` if unset). See the
+        argument description for usage and validation rules.
+
     """
 
     #region CLASS ATTRIBUTES
@@ -921,6 +934,7 @@ class OutputPort(Port_Base):
                     :read only: True
         """
         variable = Parameter(np.array([0]), read_only=True, getter=_output_port_variable_getter, pnl_internal=True, constructor_argument='default_variable')
+        element_names = Parameter(None, stateful=False, loggable=False, read_only=True, structural=True)
 
     #endregion
 
@@ -939,9 +953,15 @@ class OutputPort(Port_Base):
                  prefs:   Optional[ValidPrefSet] = None,
                  index=None,
                  assign=None,
+                 element_names=None,
                  **kwargs):
 
         context = kwargs.pop(CONTEXT, None)
+
+        # Normalize element_names up front (copy the list; falsy -> None) so
+        # both the deferred-init capture and super().__init__() see the same
+        # normalized value.
+        element_names = list(element_names) if element_names else None
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:
@@ -995,6 +1015,7 @@ class OutputPort(Port_Base):
             function=function,
             index=index,
             assign=assign,
+            element_names=element_names,
             **kwargs
         )
 
