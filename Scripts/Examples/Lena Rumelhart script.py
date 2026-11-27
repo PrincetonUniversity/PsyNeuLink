@@ -209,9 +209,9 @@ for epoch in range(epochs):
                                          rels_in: rels_onehot[rel_out],
                                          },
                                  targets={out_sig_I: truth_nouns[noun],
-                                          out_sig_is: truth_is[noun],
-                                          out_sig_has: truth_has[noun],
-                                          out_sig_can: truth_can[noun]
+                                          out_sig_is: truth_is[noun] if rel_out == 0 else np.zeros(len(is_list)),
+                                          out_sig_has: truth_has[noun] if rel_out == 1 else np.zeros(len(has_list)),
+                                          out_sig_can: truth_can[noun] if rel_out == 2 else np.zeros(len(can_list)),
                                           },
                                  )
 
