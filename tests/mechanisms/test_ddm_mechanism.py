@@ -878,3 +878,27 @@ def test_DDMMechanism_LCA_equivalent(comp_mode):
     result = comp.run(inputs={ddm:[1]}, execution_mode=comp_mode)
 
     np.testing.assert_allclose(result, [[0.1], [0.1]])
+
+
+@pytest.mark.composition
+@pytest.mark.ddm_mechanism
+@pytest.mark.usefixtures("comp_mode_no_per_node")
+def test_ddm_response_time_with_reset_at_trial_start(comp_mode):
+    ddm = DDM(
+        function=DriftDiffusionIntegrator(
+            starting_value=0,
+            threshold=0.5,
+            noise=0.0,
+            time_step_size=0.1,
+            non_decision_time=0,
+        ),
+        reset_stateful_function_when=pnl.AtTrialStart(),
+        output_ports=[DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        execute_until_finished=True,
+        name='DDM',
+    )
+    comp = Composition()
+    comp.add_node(ddm)
+
+    comp.run(inputs=[[1.0], [1.0]], execution_mode=comp_mode)
+    np.testing.assert_allclose(comp.results, [[[1.0], [0.5]], [[1.0], [0.5]]])

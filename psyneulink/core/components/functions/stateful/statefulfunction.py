@@ -33,7 +33,7 @@ from psyneulink.core.components.functions.nonstateful.distributionfunctions impo
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, _noise_setter
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import (
     contains_type,
@@ -542,7 +542,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 continue
 
             param = getattr(self.parameters, attr)
-            param.set(kwargs[attr], context, override=True)
+            param.set(copy_parameter_value(kwargs[attr]), context, override=True)
             value.append(param._get(context))
 
         self.parameters.value.set(value, context, override=True)
