@@ -458,10 +458,11 @@ def test_stab_flex_cond_fit():
     responseGate = get_node(comp, "RESPONSE_GATE")
 
     fit_parameters = {
-        ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
-        ("slope", congruenceWeighting): np.linspace(0.0, 0.1, 1000),  # Automaticity
-        ("threshold", decisionMaker): np.linspace(0.01, 0.5, 1000),  # Threshold
-        ("non_decision_time", decisionMaker): np.linspace(0.1, 0.4, 1000),  # Threshold
+        # Keep the historical grid explicit for this seeded regression.
+        ("gain", controlModule): {"bounds": (1.0, 10.0), "step": .00901},
+        ("slope", congruenceWeighting): {"bounds": (0.0, 0.1), "step": .0001},
+        ("threshold", decisionMaker): {"bounds": (0.01, 0.5), "step": .00049},
+        ("non_decision_time", decisionMaker): {"bounds": (0.1, 0.4), "step": .0003},
     }
 
     pec = pnl.ParameterEstimationComposition(

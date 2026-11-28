@@ -92,7 +92,7 @@ decisionGate = comp.nodes["DECISION_GATE"]
 responseGate = comp.nodes["RESPONSE_GATE"]
 
 fit_parameters = {
-    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 100),  # Threshold
+    ("threshold", decisionMaker): {"bounds": (0.01, 0.5)},  # Threshold
 }
 
 

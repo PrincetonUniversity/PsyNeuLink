@@ -65,8 +65,8 @@ one saved with its `save <NeuralLikelihood.save>` method, as the ``"artifact"`` 
 
     pec = pnl.ParameterEstimationComposition(
         nodes=[comp],
-        parameters={("rate", decision): np.linspace(-1.5, 1.5, 1000),
-                    ("threshold", decision): np.linspace(0.3, 1.5, 1000)},
+        parameters={("rate", decision): {"bounds": (-1.5, 1.5)},
+                    ("threshold", decision): {"bounds": (0.3, 1.5)}},
         outcome_variables=[decision.output_ports[pnl.DECISION_OUTCOME],
                            decision.output_ports[pnl.RESPONSE_TIME]],
         data=data,

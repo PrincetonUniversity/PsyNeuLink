@@ -67,9 +67,9 @@ data_to_fit["decision"] = data_to_fit["decision"].astype("category")
 # parameters of the DDM.
 
 fit_parameters = {
-    ("rate", decision): np.linspace(-0.5, 0.5, 1000),
-    ("threshold", decision): np.linspace(0.5, 1.0, 1000),
-    ('non_decision_time', decision): np.linspace(0.0, 1.0, 1000),
+    ("rate", decision): {"bounds": (-0.5, 0.5)},
+    ("threshold", decision): {"bounds": (0.5, 1.0)},
+    ('non_decision_time', decision): {"bounds": (0.0, 1.0)},
 }
 
 #%%

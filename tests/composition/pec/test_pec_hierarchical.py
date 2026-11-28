@@ -530,7 +530,7 @@ def test_em_rejects_mismatched_design_matrix():
 class _StubOptimizationFunction:
     def __init__(self, names, bounds):
         self.fit_param_names = list(names)
-        self.fit_param_bounds = {n: (lo, hi, 0.1) for n, (lo, hi) in zip(names, bounds)}
+        self._continuous_fit_param_bounds = dict(zip(names, bounds))
 
 
 class _StubController:
@@ -1584,7 +1584,7 @@ def test_an_ordinary_fit_is_unaffected_by_the_solver_settings():
     pec = pnl.ParameterEstimationComposition(
         name="ordinary",
         nodes=[comp],
-        parameters={("drift_rate", decision): np.linspace(0.1, 0.5, 5)},
+        parameters={("drift_rate", decision): {"bounds": (0.1, 0.5)}},
         outcome_variables=[decision.output_ports[pnl.DECISION_VARIABLE]],
         objective_function=lambda x: 0.0,
         optimization_function="differential_evolution",
